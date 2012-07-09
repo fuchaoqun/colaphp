@@ -27,7 +27,7 @@ class Cola
      *
      * @var Cola_Config
      */
-    protected static $_config;
+    public static $config;
 
     /**
      * Object register
@@ -73,7 +73,7 @@ class Cola
             'Cola_Exception'   => COLA_DIR . '/Exception.php'
         );
 
-        self::$_config = new Cola_Config($config);
+        self::$config = new Cola_Config($config);
 
         Cola::registerAutoload();
     }
@@ -94,7 +94,7 @@ class Cola
             throw new Exception('Boot config must be an array, if you use config file, the variable should be named $config');
         }
 
-        self::$_config->merge($config);
+        self::$config->merge($config);
         return self::$_instance;
     }
 
@@ -119,7 +119,30 @@ class Cola
      */
     public static function config()
     {
-        return self::$_config;
+        return self::$config;
+    }
+
+    /**
+     * Get Config
+     *
+     * @return Cola_Config
+     */
+    public static function getConfig($name, $default = null, $delimiter = '.')
+    {
+        return self::$config->get($name, $default, $delimiter);
+    }
+
+    /**
+     * Set Config
+     *
+     * @param string $name
+     * @param mixed $value
+     * @param string $delimiter
+     * @return Cola_Config
+     */
+    public static function setConfig($name, $value, $delimiter = '.')
+    {
+        return self::$config->set($name, $value, $delimiter);
     }
 
     /**
@@ -157,8 +180,8 @@ class Cola
         }
 
         $key = "_class.{$className}";
-        if (null !== self::$_config->get($key)) {
-            include self::$_config->get($key);
+        if (null !== self::$config->get($key)) {
+            include self::$config->get($key);
             return true;
         }
 
@@ -187,7 +210,7 @@ class Cola
      */
     public static function setClassPath($class, $path = '')
     {
-        $config = self::$_config->reference();
+        $config = self::$config->reference();
 
         if (is_array($class)) {
             $config['_class'] = $class + $config['_class'];
@@ -283,7 +306,7 @@ class Cola
             $router = $this->getRouter();
             // add urls to router from config
 
-            if ($urls = self::$_config->get('_urls')) {
+            if ($urls = self::$config->get('_urls')) {
                 $router->add($urls, false);
             }
             $pathInfo = $this->getPathInfo();
@@ -329,7 +352,7 @@ class Cola
         }
 
         if (isset($controller)) {
-            if (!self::loadClass($controller, self::$_config->get('_controllersHome'))) {
+            if (!self::loadClass($controller, self::$config->get('_controllersHome'))) {
                 throw new Cola_Exception_Dispatch("Can't load controller:{$controller}");
             }
             $cls = new $controller();
