@@ -4,8 +4,6 @@
  */
 class Cola_Com_Cache_Null extends Cola_Com_Cache_Abstract
 {
-
-
     /**
      * Set cache
      *

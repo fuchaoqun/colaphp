@@ -4,9 +4,9 @@
  */
 abstract class Cola_Com_Cache_Abstract
 {
-    protected $_options = array(
-        'ttl' => 900
-    );
+    public $conn;
+
+    public $_options;
 
     /**
      * Constructor
@@ -52,5 +52,16 @@ abstract class Cola_Com_Cache_Abstract
     public function __unset($key)
     {
         return $this->delete($key);
+    }
+
+     /**
+     * Magic method
+     *
+     * @param string $method
+     * @param array $args
+     */
+    public function __call($method, $args)
+    {
+        return call_user_func_array(array($this->conn, $method), $args);
     }
 }

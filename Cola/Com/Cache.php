@@ -6,8 +6,8 @@ class Cola_Com_Cache
 {
 	public static function factory($config)
 	{
-	    extract($config);
+	    $adapter = $config['adapter'];
         $class = 'Cola_Com_Cache_' . ucfirst($adapter);
-        return new $class($params);
+        return new $class($config);
 	}
 }
