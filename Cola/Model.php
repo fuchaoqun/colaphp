@@ -92,7 +92,18 @@ class Cola_Model
      */
     public function cache($name = '_cache')
     {
-        return Cola_Com::cache($name);
+        if (is_array($name)) {
+            return Cola_Com_Cache::factory($name);
+        }
+
+        $regName = "_cache_$name";
+        if (!$cache = Cola::getReg($regName)) {
+            $config = (array)Cola::config()->get($name);
+            $cache = Cola_Com_Cache::factory($config);
+            Cola::setReg($regName, $cache);
+        }
+
+        return $cache;
     }
 
     /**
@@ -247,7 +258,7 @@ class Cola_Model
      * Connect db from config
      *
      * @param array $config
-     * @param string $regName
+     * @param string
      * @return Cola_Com_Db
      */
     public function db($name = null)
@@ -257,15 +268,16 @@ class Cola_Model
         }
 
         if (is_array($name)) {
-            $config = (array)$name + array('adapter' => 'Mysql', 'params' => array());
-            return Cola_Com_Db::factory($config);
+            return Cola_Com_Db::factory($name);
         }
 
-        if ($db = Cola::reg($name)) return $db;
+        $regName = "_db_{$name}";
+        if (!$db = Cola::getReg($regName)) {
+            $config = (array)$this->config->get($name);
+            $db = Cola_Com_Db::factory($config);
+            Cola::setReg($regName, $db);
+        }
 
-        $config = (array)$this->config->get($name) + array('adapter' => 'Mysql', 'params' => array());
-        $db = Cola_Com_Db::factory($config);
-        Cola::reg($name, $db);
         return $db;
     }
 

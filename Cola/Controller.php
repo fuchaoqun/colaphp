@@ -155,27 +155,6 @@ class Cola_Controller
     }
 
     /**
-     * Get var
-     *
-     * @param sting $key
-     * @param mixed $default
-     */
-    protected function getVar($key = null, $default = null)
-    {
-        if (null === $key) {
-            return array_merge(Cola::reg('_params', null, array()), $_GET, $_POST, $_COOKIE, $_SERVER, $_ENV);
-        }
-
-        $funcs = array('param', 'get', 'post', 'cookie', 'server', 'env');
-
-        foreach ($funcs as $func) {
-            if (null !== ($return = $this->request->$func($key, null))) return $return;
-        }
-
-        return $default;
-    }
-
-    /**
      * Post var
      *
      * @param string $key

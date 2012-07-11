@@ -27,7 +27,7 @@ class Cola
      *
      * @var Cola_Config
      */
-    public static $config;
+    public static $_config;
 
     /**
      * Object register
@@ -73,7 +73,7 @@ class Cola
             'Cola_Exception'   => COLA_DIR . '/Exception.php'
         );
 
-        self::$config = new Cola_Config($config);
+        self::$_config = new Cola_Config($config);
 
         Cola::registerAutoload();
     }
@@ -94,7 +94,7 @@ class Cola
             throw new Exception('Boot config must be an array, if you use config file, the variable should be named $config');
         }
 
-        self::$config->merge($config);
+        self::$_config->merge($config);
         return self::$_instance;
     }
 
@@ -119,7 +119,7 @@ class Cola
      */
     public static function config()
     {
-        return self::$config;
+        return self::$_config;
     }
 
     /**
@@ -129,7 +129,7 @@ class Cola
      */
     public static function getConfig($name, $default = null, $delimiter = '.')
     {
-        return self::$config->get($name, $default, $delimiter);
+        return self::$_config->get($name, $default, $delimiter);
     }
 
     /**
@@ -142,28 +142,36 @@ class Cola
      */
     public static function setConfig($name, $value, $delimiter = '.')
     {
-        return self::$config->set($name, $value, $delimiter);
+        return self::$_config->set($name, $value, $delimiter);
     }
 
     /**
-     * Register
+     * Set Registry
      *
      * @param string $name
-     * @param mixed $value
+     * @param mixed $obj
+     * @return Cola
+     */
+    public static function setReg($name, $obj)
+    {
+        self::$_reg[$name] = $value;
+        return self::$_instance;
+    }
+
+    /**
+     * Get Registry
+     *
+     * @param string $name
+     * @param mixed $default
      * @return mixed
      */
-    public static function reg($name = null, $value = null, $default = null)
+    public static function getReg($name = null, $default = null)
     {
         if (null === $name) {
             return self::$_reg;
         }
 
-        if (null === $value) {
-            return isset(self::$_reg[$name]) ? self::$_reg[$name] : $default;
-        }
-
-        self::$_reg[$name] = $value;
-        return self::$_instance;
+        return isset(self::$_reg[$name]) ? self::$_reg[$name] : $default;
     }
 
     /**
@@ -180,8 +188,8 @@ class Cola
         }
 
         $key = "_class.{$className}";
-        if (null !== self::$config->get($key)) {
-            include self::$config->get($key);
+        if (null !== self::$_config->get($key)) {
+            include self::$_config->get($key);
             return true;
         }
 
@@ -210,7 +218,7 @@ class Cola
      */
     public static function setClassPath($class, $path = '')
     {
-        $config = self::$config->reference();
+        $config = self::$_config->reference();
 
         if (is_array($class)) {
             $config['_class'] = $class + $config['_class'];
@@ -306,7 +314,7 @@ class Cola
             $router = $this->getRouter();
             // add urls to router from config
 
-            if ($urls = self::$config->get('_urls')) {
+            if ($urls = self::$_config->get('_urls')) {
                 $router->add($urls, false);
             }
             $pathInfo = $this->getPathInfo();
@@ -342,26 +350,24 @@ class Cola
             throw new Cola_Exception_Dispatch('No dispatch info found');
         }
 
-        extract($this->_dispatchInfo);
-
-        if (isset($file)) {
-            if (!file_exists($file)) {
-                throw new Cola_Exception_Dispatch("Can't find dispatch file:{$file}");
+        if (isset($this->_dispatchInfo['file'])) {
+            if (!file_exists($this->_dispatchInfo['file'])) {
+                throw new Cola_Exception_Dispatch("Can't find dispatch file:{$this->_dispatchInfo['file']}");
             }
-            require_once $file;
+            require_once $this->_dispatchInfo['file'];
         }
 
-        if (isset($controller)) {
-            if (!self::loadClass($controller, self::$config->get('_controllersHome'))) {
-                throw new Cola_Exception_Dispatch("Can't load controller:{$controller}");
+        if (isset($this->_dispatchInfo['controller'])) {
+            if (!self::loadClass($this->_dispatchInfo['controller'], self::$_config->get('_controllersHome'))) {
+                throw new Cola_Exception_Dispatch("Can't load controller:{$this->_dispatchInfo['controller']}");
             }
-            $cls = new $controller();
+            $cls = new $this->_dispatchInfo['controller']();
         }
 
-        if (isset($action)) {
-            $func = isset($cls) ? array($cls, $action) : $action;
+        if (isset($this->_dispatchInfo['action'])) {
+            $func = isset($cls) ? array($cls, $this->_dispatchInfo['action']) : $this->_dispatchInfo['action'];
             if (!is_callable($func, true)) {
-                throw new Cola_Exception_Dispatch("Can't dispatch action:{$action}");
+                throw new Cola_Exception_Dispatch("Can't dispatch action:{$this->_dispatchInfo['action']}");
             }
             call_user_func($func);
         }

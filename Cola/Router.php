@@ -138,7 +138,7 @@ class Cola_Router
             $params[$next] = urldecode(next($tmp));
         }
 
-        Cola::reg('_params', $params);
+        Cola::setReg('_params', $params);
 
         return $dispatchInfo;
     }
@@ -170,7 +170,7 @@ class Cola_Router
 
                 if (isset($rule['defaults'])) $params += $rule['defaults'];
 
-                Cola::reg('_params', $params);
+                Cola::setReg('_params', $params);
             }
 
             return $rule;

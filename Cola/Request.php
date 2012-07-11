@@ -13,7 +13,7 @@ class Cola_Request
      */
     public static function param($key = null, $default = array())
     {
-        $params = (array)Cola::reg('_params');
+        $params = (array)Cola::getReg('_params');
 
         if (null === $key) return $params;
 

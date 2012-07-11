@@ -87,7 +87,7 @@ class Cola_Com_Widget extends Cola_Controller
             }
 
             if (empty($dir)) {
-                $dir = Cola::config('_widgetsHome');
+                $dir = Cola::getConfig('_widgetsHome');
             }
 
             $data = $this->view->fetch($tpl, $dir);
@@ -202,7 +202,11 @@ class Cola_Com_Widget extends Cola_Controller
             $name = $this->_cacheConfig;
         }
 
-        $this->_cache = Cola_Com::cache($name);
+        if (is_string($name)) {
+            $name = Cola::getConfig($name);
+        }
+
+        $this->_cache = Cola_Com_Cache::factory($name);
 
         return $this;
     }
