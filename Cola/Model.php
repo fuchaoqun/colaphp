@@ -316,12 +316,14 @@ class Cola_Model
      *
      * @param array $data
      * @param boolean $ignoreNotExists
+     * @param array $rules
      * @return boolean
      */
-    public function validate($data, $ignoreNotExists = false)
+    public function validate($data, $ignoreNotExists = false, $rules = null)
     {
         $validate = $this->com->validate;
-        $result = $validate->check($data, $this->_validate, $ignoreNotExists);
+        if (is_null($rules)) $rules = $this->_validate;
+        $result = $validate->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
             $this->_error = array('code' => self::VALIDATE_ERROR, 'msg' => $validate->error());

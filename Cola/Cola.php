@@ -149,12 +149,12 @@ class Cola
      * Set Registry
      *
      * @param string $name
-     * @param mixed $obj
+     * @param mixed $res
      * @return Cola
      */
-    public static function setReg($name, $obj)
+    public static function setReg($name, $res)
     {
-        self::$_reg[$name] = $value;
+        self::$_reg[$name] = $res;
         return self::$_instance;
     }
 

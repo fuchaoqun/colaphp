@@ -30,7 +30,7 @@ class Cola_Com_Captcha
      *
      * @var string
      */
-    protected $_seed = '346789ABCDEFGHJKLMNPQRTUVWXYabcdefhjkmnpwxy';
+    protected $_seed = '34678ABCDEFGHJKLMNPQRTUVWXYabcdefhjkmnpwxy';
 
     /**
      * Font
