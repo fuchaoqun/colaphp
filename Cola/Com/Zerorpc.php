@@ -7,10 +7,15 @@ class Cola_Com_Zerorpc
 
     public $sleep   = 1;
 
-    protected $_times;
-
     public $error = array();
 
+    /**
+     * Constructor
+     *
+     * @param string $server like tcp://127.0.0.1:4242
+     * @param int $timeout microsecond
+     * @param int $sleep microsecond
+     */
     public function __construct($server, $timeout = null, $sleep = null)
     {
         $this->_zmq = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
@@ -21,11 +26,8 @@ class Cola_Com_Zerorpc
         if (!is_null($sleep)) {
             $this->sleep = $sleep;
         }
-        $this->_times = ceil($this->timeout/$this->sleep);
 
         $this->_zmq->setSockOpt(ZMQ::SOCKOPT_LINGER, $this->timeout);
-
-
         $this->_zmq->connect($server);
     }
 
@@ -81,7 +83,9 @@ class Cola_Com_Zerorpc
      */
     protected function _receive()
     {
-        for ($i = 0; $i < $this->_times; $i ++) {
+        $times = ceil($this->timeout/$this->sleep);
+
+        for ($i = 0; $i < $times; $i ++) {
             try {
                 if ($rps = $this->_zmq->recv(ZMQ::MODE_NOBLOCK)) {
                     return self::unpack($rps);
