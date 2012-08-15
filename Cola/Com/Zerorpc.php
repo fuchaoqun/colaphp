@@ -11,15 +11,15 @@ class Cola_Com_Zerorpc
 
     public $error = array();
 
-    public function __construct($server, $timeout = null, $retries = null)
+    public function __construct($server, $timeout = null, $sleep = null)
     {
         $this->_zmq = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
 
         if (!is_null($timeout)) {
             $this->timeout = $timeout;
         }
-        if (!is_null($retries)) {
-            $this->retries = $retries;
+        if (!is_null($sleep)) {
+            $this->sleep = $sleep;
         }
         $this->_times = ceil($this->timeout/$this->sleep);
 
