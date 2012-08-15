@@ -5,15 +5,15 @@ class Cola_Com_Zerorpc
 
     public $timeout = 1000;
 
-    public $sleep   = 5;
+    public $sleep   = 1;
 
     protected $_times;
 
     public $error = array();
 
-    public static function __construct($server, $timeout = null, $retries = null)
+    public function __construct($server, $timeout = null, $retries = null)
     {
-        $this->_zmq = new ZMQ(new ZMQContext(), ZMQ::SOCKET_REQ);
+        $this->_zmq = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
 
         if (!is_null($timeout)) {
             $this->timeout = $timeout;
@@ -26,7 +26,7 @@ class Cola_Com_Zerorpc
         $this->_zmq->setSockOpt(ZMQ::SOCKOPT_LINGER, $this->timeout);
 
 
-        $this->_zmq->connect($server); //tcp://127.0.0.1:4242
+        $this->_zmq->connect($server);
     }
 
     /**
@@ -38,8 +38,12 @@ class Cola_Com_Zerorpc
      */
     public function call($func, $args)
     {
-        $data = $this->_formatRequestMessage($func, $args);
-        $msg  = $this->pack($data);
+        if (!is_array($args)) {
+            $this->error = array('code' => -10, '$args must be array');
+            return false;
+        }
+
+        $msg = $this->_formatRequestMessage($func, $args);
         if (!$this->_send($msg)) {
             return false;
         }
@@ -79,10 +83,9 @@ class Cola_Com_Zerorpc
     {
         for ($i = 0; $i < $this->_times; $i ++) {
             try {
-                if ($rps = $this->_zmq->recv(ZMQ::MODE_DONTWAIT)) {
+                if ($rps = $this->_zmq->recv(ZMQ::MODE_NOBLOCK)) {
                     return self::unpack($rps);
                 }
-                continue;
             } catch (Exception $e) {
                 $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
                 return false;
@@ -119,6 +122,6 @@ class Cola_Com_Zerorpc
 
     public static function unpack($str)
     {
-        $data = msgpack_unpack($str);
+        return msgpack_unpack($str);
     }
 }
