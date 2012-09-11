@@ -216,6 +216,36 @@ class Cola_Controller
     }
 
     /**
+     * Abort
+     *
+     * @param mixed $data
+     *
+     */
+    protected function abort($data)
+    {
+        if (!is_string($data)) {
+            $data = json_encode($data);
+        }
+        echo $data;
+        exit();
+    }
+
+    /**
+     * Display JSON
+     *
+     * @param mixed $data
+     * @param string $var
+     */
+    protected function json($data, $var = null)
+    {
+        $str = json_encode($data);
+        if (!is_null($var)) {
+            $str = "var {$var}={$str};";
+        }
+        echo $str;
+    }
+
+    /**
      * Dynamic set vars
      *
      * @param string $key

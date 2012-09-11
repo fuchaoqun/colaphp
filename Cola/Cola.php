@@ -218,13 +218,11 @@ class Cola
      */
     public static function setClassPath($class, $path = '')
     {
-        $config = self::$_config->reference();
-
-        if (is_array($class)) {
-            $config['_class'] = $class + $config['_class'];
-        } else {
-            $config['_class'][$class] = $path;
+        if (!is_array($class)) {
+            $class = array($class => $path);
         }
+
+        self::$_config->merge(array('_class' => $class));
 
         return self::$_instance;
     }

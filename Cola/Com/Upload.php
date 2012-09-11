@@ -64,7 +64,7 @@ class Cola_Com_Upload
      */
     public function __construct($config = array())
     {
-        $this->_config += $config;
+        $this->_config = $config + $this->_config;
 
         $this->_config['savePath'] = rtrim($this->_config['savePath'], DIRECTORY_SEPARATOR);
 
