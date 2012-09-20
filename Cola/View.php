@@ -13,13 +13,6 @@ class Cola_View
     protected $_basePath = '';
 
     /**
-     * Widgets Home
-     *
-     * @var string
-     */
-    protected $_widgetsHome = '';
-
-    /**
      * Constructor
      *
      */
@@ -101,52 +94,6 @@ class Cola_View
         ob_implicit_flush(0);
         include $file;
         return ob_get_clean();
-    }
-
-    /**
-     * Set widgets home dir
-     *
-     * @param strong $dir
-     * @return Cola_View
-     */
-    public function setWidgetsHome($dir)
-    {
-        $this->_widgetsHome = $dir;
-        return $this;
-    }
-
-    /**
-     * Get widgets Home
-     *
-     * @return string
-     */
-    public function getWidgetsHome()
-    {
-        return $this->_widgetsHome;
-    }
-
-    /**
-     * Widget
-     *
-     * @param string $name
-     * @param array $data
-     * @return Cola_Com_Widget
-     */
-    public function widget($name, $data = null)
-    {
-        if (empty($this->_widgetsHome) && $widgetsHome = $this->config->get('_widgetsHome')) {
-            $this->_widgetsHome = $widgetsHome;
-        }
-
-        $class = ucfirst($name) . 'Widget';
-
-        if (!Cola::loadClass($class, $this->_widgetsHome)) {
-            throw new Cola_Exception("Can not find widget:{$class}");
-        }
-
-        $widget = new $class($data);
-
-        return $widget;
     }
 
     /**
