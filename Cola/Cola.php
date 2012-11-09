@@ -65,6 +65,7 @@ class Cola
     {
         $config['_class'] = array(
             'Cola_Router'      => COLA_DIR . '/Router.php',
+            'Cola_Request'     => COLA_DIR . '/Request.php',
             'Cola_Model'       => COLA_DIR . '/Model.php',
             'Cola_View'        => COLA_DIR . '/View.php',
             'Cola_Controller'  => COLA_DIR . '/Controller.php',
