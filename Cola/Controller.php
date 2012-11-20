@@ -9,35 +9,21 @@ class Cola_Controller
      *
      * @var string
      */
-    protected $_modelsHome = null;
+    public $modelsHome = null;
 
     /**
      * The home directory of view
      *
      * @var string
      */
-    protected $_viewsHome = null;
+    public $viewsHome = null;
 
     /**
      * Template file extension
      *
      * @var string
      */
-    protected $_tplExt = '.php';
-
-    /**
-     * Form keys
-     *
-     * @var array
-     */
-    protected $_keys = array();
-
-    /**
-     * Error
-     *
-     * @var array
-     */
-    protected $_error;
+    public $tplExt = '.php';
 
     /**
      * Constructor
@@ -46,11 +32,11 @@ class Cola_Controller
      */
     public function __construct()
     {
-        if (null === $this->_modelsHome) {
-            $this->_modelsHome = $this->config['_modelsHome'];
+        if (null === $this->modelsHome) {
+            $this->modelsHome = $this->config['_modelsHome'];
         }
-        if (null === $this->_viewsHome) {
-            $this->_viewsHome = $this->config['_viewsHome'];
+        if (null === $this->viewsHome) {
+            $this->viewsHome = $this->config['_viewsHome'];
         }
     }
 
@@ -62,7 +48,29 @@ class Cola_Controller
      */
     public function __call($methodName, $args)
     {
-        throw new Exception("Call to undefined method: Cola_Controller::$methodName()");
+        throw new Cola_Exception("Call to undefined method: Cola_Controller::$methodName()");
+    }
+
+    /**
+    * Get var
+    *
+    * @param string $key
+    * @param mixed $default
+    */
+    protected function get($key = null, $default = null)
+    {
+        return Cola_Request::get($key, $default);
+    }
+
+    /**
+    * Post var
+    *
+    * @param string $key
+    * @param mixed $default
+    */
+    protected function post($key = null, $default = null)
+    {
+        return Cola_Request::post($key, $default);
     }
 
     /**
@@ -73,7 +81,7 @@ class Cola_Controller
      */
     protected function view($params = array())
     {
-        $params = (array)$params + array('basePath' => $this->_viewsHome) + (array) Cola::config('_view');
+        $params = (array)$params + array('viewsHome' => $this->_viewsHome) + (array) Cola::config('_view');
 
         return $this->view = new Cola_View($params);
     }
@@ -85,7 +93,9 @@ class Cola_Controller
      */
     protected function display($tpl = null, $dir = null)
     {
-        if (empty($tpl)) $tpl = $this->defaultTemplate();
+        if (empty($tpl)) {
+            $tpl = $this->defaultTemplate();
+        }
 
         $this->view->display($tpl, $dir);
     }
@@ -109,113 +119,6 @@ class Cola_Controller
     }
 
     /**
-     * Instantiated model
-     *
-     * @param string $name
-     * @param string $dir
-     * @return Cola_Model
-     */
-    protected function model($name = null, $dir = null)
-    {
-        if (null === $name) {
-            return $this->model;
-        }
-
-        null === $dir && $dir = $this->_modelsHome;
-        $class = ucfirst($name) . 'Model';
-        if (Cola::loadClass($class, $dir)) {
-            return new $class();
-        }
-
-        throw new exception("Can't load model '$class' from '$dir'");
-    }
-
-    /**
-     * Set model home directory
-     *
-     * @param string $dir
-     * @return Cola_Controller
-     */
-    protected function setModelsHome($dir)
-    {
-        $this->_modelsHome = $dir;
-        return $this;
-    }
-
-    /**
-     * Set view home directory
-     *
-     * @param string $dir
-     * @return Cola_Controller
-     */
-    protected function setViewsHome($dir)
-    {
-        $this->_viewsHome = $dir;
-        return $this;
-    }
-
-    /**
-     * Post var
-     *
-     * @param string $key
-     * @param mixed $default
-     */
-    protected function post($key = null, $default = null)
-    {
-        return $this->request->post($key, $default);
-    }
-
-    /**
-     * Get var
-     *
-     * @param string $key
-     * @param mixed $default
-     */
-    protected function get($key = null, $default = null)
-    {
-        return $this->request->get($key, $default);
-    }
-
-    /**
-     * Get data from form
-     *
-     * @param array $keys
-     * @param string $method
-     * @return array
-     */
-    protected function form($keys = null, $method = 'post')
-    {
-        $data = array();
-
-        if (null === $keys && !$keys = $this->_keys) {
-            return $this->request->{$method}();
-        }
-
-        if (isset($keys[0])) {
-            foreach ($keys as $v) {
-                $fKeys[$v] = $v;
-            }
-        }
-
-        foreach ($fKeys as $k => $v) {
-            $tmp = $this->request->{$method}($k);
-            if (null !== $tmp) $data[$v] = trim($tmp);
-        }
-
-        return $data;
-    }
-
-    /**
-     * Redirect to other url
-     *
-     * @param string $url
-     */
-    protected function redirect($url, $code = 302)
-    {
-        $this->response->redirect($url, $code);
-    }
-
-    /**
      * Abort
      *
      * @param mixed $data
@@ -228,21 +131,6 @@ class Cola_Controller
         }
         echo $data;
         exit();
-    }
-
-    /**
-     * Display JSON
-     *
-     * @param mixed $data
-     * @param string $var
-     */
-    protected function json($data, $var = null)
-    {
-        $str = json_encode($data);
-        if (!is_null($var)) {
-            $str = "var {$var}={$str};";
-        }
-        echo $str;
     }
 
     /**
@@ -267,19 +155,6 @@ class Cola_Controller
             case 'view':
                 $this->view();
                 return $this->view;
-
-            case 'model':
-                $class = get_class($this);
-                $this->model = $this->model(substr($class, 0, -10));
-                return $this->model;
-
-            case 'helper':
-                $this->helper = new Cola_Helper();
-                return $this->helper;
-
-            case 'com':
-                $this->com = new Cola_Com();
-                return $this->com;
 
             case 'request':
                 $this->request = new Cola_Request();

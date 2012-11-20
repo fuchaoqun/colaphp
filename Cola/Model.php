@@ -30,7 +30,7 @@ class Cola_Model
      *
      * @var mixed string | array
      */
-    protected $_error;
+    public $error;
 
     /**
      * Validate rules
@@ -71,7 +71,7 @@ class Cola_Model
      * @param int $expire
      * @return mixed
      */
-    public function cached($func, $args = null, $expire = 60)
+    public function cached($func, $args = array(), $expire = 60)
     {
         $key = md5(get_class($this) . $func . serialize($args));
 
@@ -377,20 +377,12 @@ class Cola_Model
                 $this->cache = $this->cache();
                 return $this->cache;
 
-            case 'helper':
-                $this->helper = new Cola_Helper();
-                return $this->helper;
-
-            case 'com':
-                $this->com = new Cola_Com();
-                return $this->com;
-
             case 'config':
                 $this->config = Cola::config();
                 return $this->config;
 
             default:
-                throw new Exception('Undefined property: ' . get_class($this). '::' . $key);
+                throw new Cola_Exception('Undefined property: ' . get_class($this). '::' . $key);
         }
     }
 }

@@ -194,16 +194,6 @@ class Cola_Config implements ArrayAccess
     }
 
     /**
-     * config reference
-     *
-     * @return array
-     */
-    public function &reference()
-    {
-        return $this->_data;
-    }
-
-    /**
      * ArrayAccess set
      *
      * @param string $offset
