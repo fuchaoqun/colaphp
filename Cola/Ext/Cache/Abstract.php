@@ -2,11 +2,13 @@
 /**
  *
  */
-abstract class Cola_Com_Cache_Abstract
+abstract class Cola_Ext_Cache_Abstract
 {
     public $conn;
 
-    public $_options;
+    public $options = array(
+        'ttl' => 900
+    );
 
     /**
      * Constructor
@@ -15,9 +17,7 @@ abstract class Cola_Com_Cache_Abstract
      */
     public function __construct($options = array())
     {
-        foreach ($options as $key=>$value) {
-            $this->_options[$key] = $value;
-        }
+        $this->options = $options + $this->options;
     }
 
     /**

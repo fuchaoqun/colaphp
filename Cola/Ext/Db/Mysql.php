@@ -3,34 +3,32 @@
  *
  */
 
-class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
+class Cola_Ext_Db_Mysql extends Cola_Ext_Db_Abstract
 {
     /**
      * Connect to MySQL
      *
      * @return resource connection
      */
-    protected function _connect($params)
+    public function connect()
     {
+        if ($this->ping(false)) {
+            return $this->conn;
+        }
+
         if (!extension_loaded('mysql')) {
-            throw new Cola_Com_Db_Exception('Can not find mysql extension.');
+            throw new Cola_Ext_Db_Exception('Can not find mysql extension.');
         }
 
-        $func = ($params['persistent']) ? 'mysql_pconnect' : 'mysql_connect';
+        $func = ($this->config['persistent']) ? 'mysql_pconnect' : 'mysql_connect';
+        $this->conn = @$func("{$this->config['host']}:{$this->config['port']}", $this->config['user'], $this->config['password']);
 
-        $connection = @$func(
-            $params['host'] . ':' . $params['port'],
-            $params['user'],
-            $params['password']
-        );
-
-        if (is_resource($connection) && mysql_select_db($params['database'], $connection)) {
-            $this->_connection = $connection;
-            $this->query("SET NAMES '" . $this->_config['charset'] . "';");
-            return $this->_connection;
+        if (is_resource($this->conn) && $this->selectDb($this->config['database'])) {
+            $this->query("SET NAMES '{$this->config['charset']}';");
+            return $this->conn;
         }
 
-        throw new Cola_Com_Db_Exception($this->error());
+        $this->_throwException();
     }
 
     /**
@@ -41,7 +39,7 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function selectDb($database)
     {
-        return mysql_select_db($database, $this->_connection);
+        return mysql_select_db($database, $this->conn);
     }
 
     /**
@@ -50,8 +48,8 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function close()
     {
-        if (is_resource($this->_connection)) {
-            mysql_close($this->_connection);
+        if (is_resource($this->conn)) {
+            return mysql_close($this->conn);
         }
     }
 
@@ -61,34 +59,18 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function free()
     {
-        mysql_free_result($this->_query);
+        return mysql_free_result($this->query);
     }
 
     /**
      * Query sql
      *
      * @param string $sql
-     * @return Cola_Com_Db_Mysql
+     * @return resource
      */
-    public function query($sql)
+    protected function _query($sql)
     {
-        $this->_lastSql = $sql;
-
-        if ($this->_debug) {
-            $this->log($sql . '@' . date('Y-m-d H:i:s'));
-        }
-
-        $this->ping();
-
-        if ($this->_query = mysql_query($sql, $this->_connection)) {
-            return $this;
-        }
-
-        $msg = $this->error() . '@' . $sql . '@' . date('Y-m-d H:i:s');
-
-        $this->log($msg);
-
-        throw new Cola_Com_Db_Exception($msg);
+        return mysql_query($sql, $this->conn);
     }
 
     /**
@@ -98,7 +80,7 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function affectedRows()
     {
-        return mysql_affected_rows($this->_connection);
+        return mysql_affected_rows($this->conn);
     }
 
     /**
@@ -125,7 +107,7 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
                 $func = 'mysql_fetch_assoc';
         }
 
-        return $func($this->_query);
+        return $func($this->query);
     }
 
     /**
@@ -150,10 +132,10 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
                 $func = 'mysql_fetch_assoc';
         }
         $result = array();
-        while ($row = $func($this->_query)) {
+        while ($row = $func($this->query)) {
             $result[] = $row;
         }
-        mysql_free_result($this->_query);
+        mysql_free_result($this->query);
         return $result;
     }
 
@@ -164,7 +146,7 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function lastInsertId()
     {
-        return mysql_insert_id($this->_connection);
+        return mysql_insert_id($this->conn);
     }
 
     /**
@@ -173,7 +155,7 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function beginTransaction()
     {
-        mysql_query('START TRANSACTION', $this->_connection);
+        mysql_query('START TRANSACTION', $this->conn);
     }
 
     /**
@@ -183,11 +165,11 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function commit()
     {
-        if ($result = mysql_query('COMMIT', $this->_connection)) {
+        if ($result = mysql_query('COMMIT', $this->conn)) {
             return true;
         }
 
-        throw new Cola_Com_Db_Exception($this->error());
+        $this->_throwException();
     }
 
     /**
@@ -197,11 +179,11 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function rollBack()
     {
-        if ($result = mysql_query('ROLLBACK', $this->_connection)) {
+        if ($result = mysql_query('ROLLBACK', $this->conn)) {
             return true;
         }
 
-        throw new Cola_Com_Db_Exception($this->error());
+        $this->_throwException();
     }
 
     /**
@@ -212,30 +194,25 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function escape($str)
     {
-        return mysql_escape_string($str);
+        return $this->conn ? mysql_real_escape_string($str, $this->conn) : mysql_escape_string($str);
     }
 
     /**
      * Get error
      *
-     * @return string|array
+     * @return array
      */
-    public function error($type = 'STRING')
+    public function error()
     {
-        $type = strtoupper($type);
-
-        if (is_resource($this->_connection)) {
-            $errno = mysql_errno($this->_connection);
-            $error = mysql_error($this->_connection);
+        if (is_resource($this->conn)) {
+            $errno = mysql_errno($this->conn);
+            $error = mysql_error($this->conn);
         } else {
             $errno = mysql_errno();
             $error = mysql_error();
         }
 
-        if ('ARRAY' == $type) {
-            return array('code' => $errno, 'msg' => $error);
-        }
-        return $errno . ':' . $error;
+        return array('code' => $errno, 'msg' => $error);
     }
 
     /**
@@ -246,12 +223,16 @@ class Cola_Com_Db_Mysql extends Cola_Com_Db_Abstract
      */
     public function ping($reconnect = true)
     {
-        $this->connect();
-        if (!($ping = mysql_ping($this->_connection)) && $reconnect) {
+        if (is_resource($this->conn) && mysql_ping($this->conn)) {
+            return true;
+        }
+
+        if ($reconnect) {
             $this->close();
             $this->connect();
-            $ping = mysql_ping($this->_connection);
+            return  mysql_ping($this->conn);
         }
-        return $ping;
+
+        return false;
     }
 }

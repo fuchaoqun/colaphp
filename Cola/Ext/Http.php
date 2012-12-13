@@ -3,7 +3,7 @@
  *
  */
 
-class Cola_Com_Http
+class Cola_Ext_Http
 {
     protected static $_http_context_option_keys = array('method', 'header', 'user_agent', 'content','proxy', 'request_fulluri',
                                                         'max_redirects', 'protocol_version', 'timeout', 'ignore_errors');

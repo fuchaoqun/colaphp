@@ -2,29 +2,27 @@
 /**
  *
  */
-abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
+abstract class Cola_Ext_Db_Pdo_Abstract extends Cola_Ext_Db_Abstract
 {
-    /**
-	 * The PDO construct options
-	 *
-	 * @var array
-	 */
-	protected $_options = array(PDO::ATTR_PERSISTENT => true);
-
 	/**
 	 * Create a PDO object and connects to the database.
 	 *
 	 * @param array $config
 	 * @return resource
 	 */
-	protected function _connect($params)
+	public function connect()
 	{
-	    if ($params['persistent']) $params['options'][PDO::ATTR_PERSISTENT] = true;
-	    if ($connection = new PDO($this->_dsn(), $params['user'], $params['password'], $params['options'])) {
-	        $this->_connection = $connection;
-	        $this->query("SET NAMES '" . $params['charset'] . "';");
+	    if ($this->ping(false)) {
+            return $this->conn;
+        }
+
+	    if ($this->config['persistent']) {
+	        $this->config['options'][PDO::ATTR_PERSISTENT] = true;
 	    }
-	    return $this->_connection;
+
+	    $this->conn = new PDO($this->_dsn($this->config), $this->config['user'], $this->config['password'], $this->config['options']);
+	    $this->query("SET NAMES '{$this->config['charset']}';");
+	    return $this->conn;
 	}
 
 	/**
@@ -44,7 +42,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
      */
     public function close()
     {
-        $this->_connection = null;
+        $this->conn = null;
     }
 
     /**
@@ -53,39 +51,18 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
      */
     public function free()
     {
-        $this->_query = null;
+        $this->query = null;
     }
 
     /**
      * Query sql
      *
      * @param string $sql
-     * @return Cola_Com_Db_Mysql
+     * @return Cola_Ext_Db_Mysql
      */
-    public function query($sql)
+    protected function _query($sql)
     {
-        $this->_lastSql = $sql;
-
-        if ($this->_debug) {
-            $this->log($sql . '@' . date('Y-m-d H:i:s'));
-        }
-
-        $this->ping();
-
-        if (!$this->_connection) {
-            $msg = 'No Pdo_Mysql connection found@' . date('Y-m-d H:i:s');
-            $this->log($msg);
-            throw new Exception($msg);
-        }
-
-        if ($this->_query = $this->_connection->query($sql)) {
-            return $this;
-        }
-
-        $msg = $this->error() . '@' . $sql . '@' . date('Y-m-d H:i:s');
-
-        $this->log($msg);
-        throw new Exception($msg);
+        return $this->conn->query($sql);
     }
 
     /**
@@ -95,11 +72,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
      */
     public function affectedRows()
     {
-        if (empty($this->_query)) {
-            throw new Exception('PDOStatement is empty,you may have freed the query or has never queried.');
-        } else {
-            return $this->_query->rowCount();
-        }
+        return $this->query->rowCount();
     }
 
     /**
@@ -139,7 +112,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
     public function fetch($type = 'ASSOC')
     {
         $type = strtoupper($type);
-        return $this->_query->fetch(self::_getFetchStyle($type));
+        return $this->query->fetch(self::_getFetchStyle($type));
     }
 
     /**
@@ -151,7 +124,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
     public function fetchAll($type = 'ASSOC')
     {
         $type = strtoupper($type);
-        $result = $this->_query->fetchAll(self::_getFetchStyle($type));
+        $result = $this->query->fetchAll(self::_getFetchStyle($type));
         $this->free();
         return $result;
     }
@@ -163,7 +136,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
 	 */
 	public function beginTransaction()
 	{
-		return $this->_connection->beginTransaction();
+		return $this->conn->beginTransaction();
 	}
 
 	/**
@@ -173,7 +146,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
 	 */
 	public function commit()
 	{
-		return $this->_connection->commit();
+		return $this->conn->commit();
 	}
 
 	/**
@@ -183,7 +156,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
 	 */
 	public function rollBack()
 	{
-		return $this->_connection->rollBack();
+		return $this->conn->rollBack();
 	}
 
 	/**
@@ -195,7 +168,7 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
 	 */
 	public function lastInsertId($tableName = null, $primaryKey = null)
 	{
-		return $this->_connection->lastInsertId();
+		return $this->conn->lastInsertId();
 	}
 
 	/**
@@ -211,24 +184,19 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
     /**
      * Get error
      *
-     * @return string|array
+     * @return array
      */
-    public function error($type = 'STRING')
+    public function error()
     {
-        $type = strtoupper($type);
-
-        if ($this->_connection->errorCode()) {
-            $errno = $this->_connection->errorCode();
-            $error = $this->_connection->errorInfo();
+        if ($this->conn->errorCode()) {
+            $errno = $this->conn->errorCode();
+            $error = $this->conn->errorInfo();
         } else {
-            $errno = $this->_query->errorCode();
-            $error = $this->_query->errorInfo();
+            $errno = $this->query->errorCode();
+            $error = $this->query->errorInfo();
         }
 
-        if ('ARRAY' == $type) {
-            return array('code' => $errno, 'msg' => $error[2]);
-        }
-        return $errno . ':' . $error[2];
+        return array('code' => $errno, 'msg' => $error[2]);
     }
 
     /**
@@ -239,21 +207,16 @@ abstract class Cola_Com_Db_Pdo_Abstract extends Cola_Com_Db_Abstract
      */
     public function ping($reconnect = true)
     {
-        if ($this->_connection && $this->_connection->query('select 1')) {
-            $ping = true;
-        } else {
-            $ping = false;
+        if ($this->conn && $this->conn->query('select 1')) {
+            return true;
         }
 
-        if ($ping) return $ping;
-        if (!$reconnect) return false;
-
-        try {
+        if ($reconnect) {
             $this->close();
             $this->connect();
             return $this->ping(false);
-        } catch (Exception $e) {
-            return false;
         }
+
+        return false;
     }
 }

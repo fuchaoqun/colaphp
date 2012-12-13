@@ -1,7 +1,7 @@
 <?php
 /**
  * Test
-class TestDaemon extends Cola_Com_Daemon
+class TestDaemon extends Cola_Ext_Daemon
 {
     protected $_options = array(
         'maxTimes' => 3
@@ -17,7 +17,7 @@ $daemon = new TestDaemon();
 $daemon->run();
  *
  */
-abstract class Cola_Com_Daemon
+abstract class Cola_Ext_Daemon
 {
     const LOG_ECHO = 1;
     const LOG_FILE = 2;

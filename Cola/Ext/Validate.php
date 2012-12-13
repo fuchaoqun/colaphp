@@ -1,24 +1,31 @@
 <?php
 /**
- *
- */
+ * usage
+$data = array(
+    'id'     => 8,
+    'sex'    => 'F',
+    'tags'   => array('foo' => 3, 'bar' => 7),
+    'age'    => 8,
+    'email'  => 'foo@bar.com',
+    'date'   => '2012-12-10',
+    'body'   => 'foobarbarfoo',
+);
 
-class Cola_Com_Validate
+$rules = array(
+    'id'     => array('required' => true, 'type' => 'int'),
+    'sex'    => array('in' => array('F', 'M')),
+    'tags'   => array('required' => true, 'each' => array('type' => 'int')),
+    'age'    => array('type' => 'int', 'range' => array(38, 130), 'msg' => 'age must be 18~130'),
+    'email'  => array('type' => 'email'),
+    'date'   => array('type' => 'date'),
+    'body'   => array('required' => true, 'range' => array(1, 500))
+);
+
+var_dump(Cola_Ext_Validate::check($data, $rules));
+**/
+
+class Cola_Ext_Validate
 {
-    protected $_error = array();
-
-    protected static $_message = array(
-        'email'    => 'invalid_email',
-        'required' => 'empty',
-        'max'      => 'above_max',
-        'min'      => 'below_min',
-        'range'    => 'not_in_rang',
-        'ip'       => 'invalid_ip',
-        'number'   => 'not_all_numbers',
-        'int'      => 'not_int',
-        'digit'    => 'not_digit',
-        'string'   => 'not_string'
-    );
     /**
      * Check if is not empty
      *
@@ -55,7 +62,7 @@ class Cola_Com_Validate
      */
     public static function max($value, $max)
     {
-        if (is_string($value)) $value = strlen($value);
+        is_string($value) && $value = strlen($value);
         return $value <= $max;
     }
 
@@ -68,7 +75,7 @@ class Cola_Com_Validate
      */
     public static function min($value, $min)
     {
-        if (is_string($value)) $value = strlen($value);
+        is_string($value) && $value = strlen($value);
         return $value >= $min;
     }
 
@@ -81,8 +88,8 @@ class Cola_Com_Validate
      */
     public static function range($value, $range)
     {
-        if (is_string($value)) $value = strlen($value);
-        return $value >= $range[0] && $value <= $range[1];
+        is_string($value) && $value = strlen($value);
+        return (($value >= $range[0]) && ($value <= $range[1]));
     }
 
     /**
@@ -127,7 +134,7 @@ class Cola_Com_Validate
      */
     public static function ip($ip)
     {
-        return ((false === ip2long($ip)) || (long2ip(ip2long($ip)) !== $ip)) ? false : true;
+        return ((false !== ip2long($ip)) && (long2ip(ip2long($ip)) === $ip));
     }
 
     /**
@@ -204,31 +211,35 @@ class Cola_Com_Validate
      * @param boolean $ignorNotExists
      * @return boolean
      */
-    public function check($data, $rules, $ignorNotExists = false)
+    public static function check($data, $rules, $ignorNotExists = false)
     {
+        $error = array();
         foreach ($rules as $key => $rule) {
-            $rule += array('required' => false, 'msg' => self::$_message);
+            $rule += array('required' => false, 'msg' => 'Unvalidated');
 
             // deal with not existed
             if (!isset($data[$key])) {
-                if (!$rule['required']) continue;
-                if ($ignorNotExists) continue;
-                $this->_error[$key] = $this->_msg($rule, 'required');
+                if ($rule['required'] && !$ignorNotExists) {
+                    $error[$key] = $rule['msg'];
+                }
                 continue;
             }
 
-            $value = $data[$key];
-
-            $result = self::_check($value, $rule);
-
-            if (0 !== $result['code']) $this->_error[$key] = $result['msg'];
+            if (!self::_check($data[$key], $rule)) {
+                $error[$key] = $rule['msg'];
+                continue;
+            }
 
             if (isset($rule['rules'])) {
-                $this->check($value, $rule['rules'], $ignorNotExists);
+                $tmp = $this->check($data[$key], $rule['rules'], $ignorNotExists);
+                if (0 !== $tmp['code']) {
+                    $error[$key] = $tmp['msg'];
+                }
             }
         }
 
-        return $this->_error ? false : true;
+
+        return $error ? array('code' => -1, 'msg' => $error) : array('code' => 0);
     }
 
     /**
@@ -238,70 +249,48 @@ class Cola_Com_Validate
      * @param array $rule
      * @return mixed string as error, true for OK
      */
-    protected function _check($value, $rule)
+    protected static function _check($data, $rule)
     {
-        if ($rule['required'] && !self::notEmpty($value)) {
-            return array('code' => -1, 'msg' => $this->_msg($rule, 'required'));
-        }
+        $flag = true;
+        foreach ($rule as $key => $val) {
+            switch ($key) {
+            	case 'required':
+            		$flag = self::notEmpty($data);
+            		break;
 
-        if (isset($rule['func']) && !call_user_func($rule['func'], $value)) {
-            return array('code' => -1, 'msg' => $this->_msg($rule, 'func'));
-        }
+                case 'func':
+                    $flag = call_user_func($val, $data);
+                    break;
 
-        if (isset($rule['regex']) && !self::match($value, $rule['regex'])) {
-            return array('code' => -1, 'msg' => $this->_msg($rule, 'regex'));
-        }
+                case 'regex':
+                    $flag = self::match($data, $val);
+                    break;
 
-        if (isset($rule['type']) && !self::$rule['type']($value)) {
-            return array('code' => -1, 'msg' => $this->_msg($rule, $rule['type']));
-        }
+                case 'type':
+                    $flag = self::$val($data);
+                    break;
 
-        $acts = array('max', 'min', 'range', 'in');
-        foreach ($acts as $act) {
-            if (isset($rule[$act]) && !self::$act($value, $rule[$act])) {
-                return array('code' => -1, 'msg' => $this->_msg($rule, $act));
+                case 'max':
+                case 'min':
+                case 'max':
+                case 'range':
+                    $flag = self::$key($data, $val);
+                    break;
+
+                case 'each':
+                    $val += array('required' => false);
+                    foreach ($data as $item) {
+                        if (!$flag = self::_check($item, $val)) break;
+                    }
+                    break;
+            	default:
+            		break;
+            }
+            if (!$flag) {
+                return false;
             }
         }
 
-        if (isset($rule['each'])) {
-            $rule['each'] += array('required' => false, 'msg' => self::$_message);
-            if (isset($rule['msg'])) {
-                $rule['each'] += array('msg' => $rule['msg']);
-            }
-            foreach ($value as $item) {
-                $result = $this->_check($item, $rule['each']);
-                if (0 !== $result['code']) {
-                    return $result;
-                }
-            }
-        }
-
-        return array('code' => 0);
-    }
-
-    /**
-     * Get error message
-     *
-     * @param array $rule
-     * @param string $name
-     * @return string
-     */
-    protected function _msg($rule, $name)
-    {
-        if (empty($rule['msg'])) return 'INVALID';
-
-        if (is_string($rule['msg'])) return $rule['msg'];
-
-        return isset($rule['msg'][$name]) ? $rule['msg'][$name] : 'INVALID';
-    }
-
-    /**
-     * Get error
-     *
-     * @return array
-     */
-    public function error()
-    {
-        return $this->_error;
+        return true;
     }
 }

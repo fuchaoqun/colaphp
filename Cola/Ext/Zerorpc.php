@@ -1,5 +1,5 @@
 <?php
-class Cola_Com_Zerorpc
+class Cola_Ext_Zerorpc
 {
     protected $_zmq;
 

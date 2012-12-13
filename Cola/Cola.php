@@ -68,6 +68,7 @@ class Cola
                 'Cola_Router'              => COLA_DIR . '/Router.php',
                 'Cola_Request'             => COLA_DIR . '/Request.php',
                 'Cola_Response'            => COLA_DIR . '/Response.php',
+                'Cola_Ext_Validate'        => COLA_DIR . '/Ext/Validate.php',
                 'Cola_Exception'           => COLA_DIR . '/Exception.php',
                 'Cola_Exception_Dispatch'  => COLA_DIR . '/Exception/Dispatch.php',
             ),
@@ -89,7 +90,7 @@ class Cola
         }
 
         if (!is_array($config)) {
-            throw new Cola_Exception('Boot config must be an array or a php config file with variable $config');
+            throw new Exception('Boot config must be an array or a php config file with variable $config');
         }
 
         self::getInstance()->config->merge($config);
@@ -161,6 +162,20 @@ class Cola
     }
 
     /**
+     * Common factory pattern constructor
+     *
+     * @param string $type
+     * @param array $config
+     * @return Object
+     */
+    public static function factory($type, $config)
+    {
+        $adapter = $config['adapter'];
+        $class = $type . '_' . ucfirst($adapter);
+        return new $class($config);
+    }
+
+    /**
      * Load class
      *
      * @param string $className
@@ -175,14 +190,15 @@ class Cola
 
         if ((!$classFile)) {
             $key = "_class.{$className}";
-            $classFile == self::getConfig($key);
+            $classFile = self::getConfig($key);
         }
 
         /**
          * auto load Cola class
          */
         if ((!$classFile) && ('Cola' === substr($className, 0, 4))) {
-            $classFile = dirname(COLA_DIR) . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
+            $classFile = dirname(COLA_DIR) . DIRECTORY_SEPARATOR
+                       . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
         }
 
         /**
@@ -251,7 +267,7 @@ class Cola
                 $this->router->rules += $urls;
             }
 
-            $this->pathInfo || $this->pathinfo = (isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
+            $this->pathInfo || $this->pathInfo = (isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
 
             $this->dispatchInfo = $this->router->match($this->pathInfo);
         }

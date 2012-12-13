@@ -3,7 +3,7 @@
  *
  */
 
-abstract class Cola_Com_Log_Abstract
+abstract class Cola_Ext_Log_Abstract
 {
     const EMERG   = 0;  // Emergency: system is unusable
     const ALERT   = 1;  // Alert: action must be taken immediately

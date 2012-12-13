@@ -2,7 +2,7 @@
 /**
  *
  */
-class Cola_Com_Cache_Null extends Cola_Com_Cache_Abstract
+class Cola_Ext_Cache_Null extends Cola_Ext_Cache_Abstract
 {
     /**
      * Set cache

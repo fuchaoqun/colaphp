@@ -1,6 +1,6 @@
 <?php
 
-class Cola_Com_Cache_Memcached extends Cola_Com_Cache_Abstract
+class Cola_Ext_Cache_Memcached extends Cola_Ext_Cache_Abstract
 {
     /**
      * Constructor
@@ -9,16 +9,15 @@ class Cola_Com_Cache_Memcached extends Cola_Com_Cache_Abstract
      */
     public function __construct($options=array())
     {
-        $options += array('ttl' => 900);
         parent::__construct($options);
 
-        if (isset($this->_options['persistent'])) {
-            $this->conn = new Memcached($this->_options['persistent']);
+        if (isset($this->options['persistent'])) {
+            $this->conn = new Memcached($this->options['persistent']);
         } else {
             $this->conn = new Memcached();
         }
 
-        $this->conn->addServers($this->_options['servers']);
+        $this->conn->addServers($this->options['servers']);
     }
 
     /**
@@ -32,7 +31,7 @@ class Cola_Com_Cache_Memcached extends Cola_Com_Cache_Abstract
     public function set($id, $data, $ttl = null)
     {
         if (null === $ttl) {
-            $ttl = $this->_options['ttl'];
+            $ttl = $this->options['ttl'];
         }
 
         $this->conn->set($id, $data, $ttl);

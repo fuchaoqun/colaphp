@@ -3,49 +3,51 @@
  *
  */
 
-abstract class Cola_Com_Db_Abstract
+abstract class Cola_Ext_Db_Abstract
 {
     /**
      * Configuration
      *
      * @var array
      */
-    protected $_config = array();
+    public $config = array(
+        'host'       => '127.0.0.1',
+        'port'       => 3306,
+        'user'       => 'test',
+        'password'   => '',
+        'database'   => 'test',
+        'charset'    => 'utf8',
+        'persistent' => false,
+        'options'    => array()
+    );
 
     /**
-     * Database connection
+     * Connection
      *
-     * @var object|resource|null
+     * @var resource
      */
-    protected $_connection = null;
+    public $conn = null;
 
     /**
      * Query handler
      *
      * @var resource
      */
-    protected $_query = null;
+    public $query = null;
 
     /**
      * Debug or not
      *
      * @var boolean
      */
-    protected $_debug = false;
+    public $debug = false;
 
     /**
      * Log
      *
      * @var array
      */
-    protected $_log = array();
-
-    /**
-     * Last query sql
-     *
-     * @var string
-     */
-    protected $_lastSql;
+    public $log = array();
 
     /**
      * Constructor.
@@ -53,10 +55,10 @@ abstract class Cola_Com_Db_Abstract
      * $config is an array of key/value pairs
      * containing configuration options.  These options are common to most adapters:
      *
-     * database       => (string) The name of the database to user
+     * host           => (string) What host to connect to, defaults to localhost
      * user           => (string) Connect to the database as this username.
      * password       => (string) Password associated with the username.
-     * host           => (string) What host to connect to, defaults to localhost
+     * database       => (string) The name of the database to user
      *
      * Some options are used on a case-by-case basis by adapters:
      *
@@ -68,110 +70,32 @@ abstract class Cola_Com_Db_Abstract
      */
     public function __construct($config)
     {
-        $keys = array('host', 'port', 'user', 'password', 'database', 'persistent', 'charset', 'options');
-
-        foreach ($keys as $key) {
-            if (isset($config[$key])) {
-                $this->_config[$key] = $config[$key];
-            }
-        }
-
-        /**
-         * Default config
-         *
-         * @var array
-         */
-        $defaults = array(
-            'host' => '127.0.0.1',
-            'port' => 3306,
-            'user' => 'root',
-            'password' => '',
-            'database' => 'test',
-            'charset' => 'UTF-8',
-            'persistent' => false,
-            'options' => array()
-        );
-
-        $this->_config += $defaults;
-
-        //$this->connect();
+        $this->config = $config + $this->config;
     }
 
     /**
-     * Get db connection
-     *
-     * @return resource
-     */
-    public function connection()
-    {
-        return $this->_connection;
-    }
-
-    /**
-     * Get query statment
-     *
-     * @return resource
-     */
-    public function statment()
-    {
-        return $this->_query;
-    }
-
-    /**
-     * Returns the underlying database connection object or resource.
-     * If not presently connected, this initiates the connection.
-     *
-     * @return object|resource|null
-     */
-    public function connect()
-    {
-        if (null === $this->_connection) {
-            $this->_connect($this->_config);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set Debug or not
-     *
-     * @param boolean $flag
-     */
-    public function debug($flag = true)
-    {
-        $this->_debug = $flag;
-        return $this;
-    }
-
-    /**
-     * Get or set log
-     *
-     * if $msg is null, then will return log
-     *
-     * @param string $msg
-     * @return array|Cola_Com_Db_Abstract
-     */
-    public function log($msg = null)
-    {
-        if (null === $msg) {
-            return $this->_log;
-        }
-
-        $this->_log[] = $msg;
-
-        return $this;
-    }
-
-    /**
-     * Get SQL result
+     * Query sql
      *
      * @param string $sql
-     * @param string $type
-     * @return mixed
+     * @return resource
      */
-    public function result($sql, $type = 'ASSOC')
+    public function query($sql)
     {
-        return $this->sql($sql, $type);
+        if (is_null($this->conn)) {
+            $this->connect();
+        }
+
+        $log = $sql . '@' . date('Y-m-d H:i:s');
+        if ($this->debug) {
+            $this->log[] = $log;
+        }
+
+        if ($this->query = $this->_query($sql)) {
+            return $this->query;
+        }
+
+        $this->log[] = $log;
+        $this->_throwException();
     }
 
     /**
@@ -198,7 +122,7 @@ abstract class Cola_Com_Db_Abstract
                 $result = $this->affectedRows();
                 break;
             default:
-                $result = $this->_query;
+                $result = $this->query;
         }
 
         return $result;
@@ -238,9 +162,9 @@ abstract class Cola_Com_Db_Abstract
      */
     public function find($conditions)
     {
-        $result = array();
-
-        if (is_string($conditions)) $conditions = array('where' => $conditions);
+        if (is_string($conditions)) {
+            $conditions = array('where' => $conditions);
+        }
 
         $conditions = $conditions + array(
             'fileds' => '*',
@@ -250,17 +174,17 @@ abstract class Cola_Com_Db_Abstract
             'limit' => -1
         );
 
-        extract($conditions);
+        $sql = "select {$conditions['fileds']} from {$conditions['table']} where {$conditions['where']}";
 
-        $sql = "select {$fileds} from $table where $where";
+        if ($conditions['order']) {
+            $sql .= " order by {$conditions['order']}";
+        }
 
-        if ($order) $sql .= " order by {$order}";
+        if (0 <= $conditions['start'] && 0 <= $conditions['limit']) {
+            $sql .= " limit {$conditions['start']}, {$conditions['limit']}";
+        }
 
-        if (0 <=$start && 0 <= $limit) $sql .= " limit {$start}, {$limit}";
-
-        $data = $this->result($sql);
-
-        return $data;
+        return $this->sql($sql);
     }
 
     /**
@@ -272,14 +196,16 @@ abstract class Cola_Com_Db_Abstract
      */
     public function insert($data, $table)
     {
-        $keys = '';
-        $values = '';
+        $keys = array();
+        $values = array();
         foreach ($data as $key => $value) {
-            $keys .= "`$key`,";
-            $values .= "'" . $this->escape($value) . "',";
+            $keys[] = "`$key`";
+            $values[] = "'" . $this->escape($value) . "'";
         }
-        $sql = "insert into $table (" . substr($keys, 0, -1) . ") values (" . substr($values, 0, -1) . ");";
-        return $this->result($sql);
+        $keys = implode(',', $keys);
+        $values = implode(',', $values);
+        $sql = "insert into {$table} ({$keys}) values ({$values});";
+        return $this->sql($sql);
     }
 
     /**
@@ -300,9 +226,9 @@ abstract class Cola_Com_Db_Abstract
 
         $str = implode(',', $tmp);
 
-        $sql = "update $table set " . $str . " where $where";
+        $sql = "update {$table} set {$str} where {$where}";
 
-        return $this->result($sql);
+        return $this->sql($sql);
     }
 
     /**
@@ -315,7 +241,7 @@ abstract class Cola_Com_Db_Abstract
     public function delete($where = '0', $table)
     {
         $sql = "delete from $table where $where";
-        return $this->result($sql);
+        return $this->sql($sql);
     }
 
     /**
@@ -334,22 +260,20 @@ abstract class Cola_Com_Db_Abstract
     }
 
     /**
-     * Get last query sql
+     * Throw error exception
      *
-     * @return string
      */
-    public function lastSql()
+    protected function _throwException()
     {
-        return $this->_lastSql;
+        $error = $this->error();
+        throw new Cola_Ext_Db_Exception($error['msg'], $error['code']);
     }
 
-    abstract protected function _connect($params);
-
-    abstract public function error($type = 'STRING');
+    abstract public function connect();
 
     abstract public function close();
 
-    abstract public function query($sql);
+    abstract protected function _query($sql);
 
     abstract public function affectedRows();
 

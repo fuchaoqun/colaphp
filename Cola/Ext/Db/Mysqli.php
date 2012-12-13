@@ -3,38 +3,38 @@
  *
  */
 
-class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
+class Cola_Ext_Db_Mysqli extends Cola_Ext_Db_Abstract
 {
     /**
      * Connect to database
      *
      */
-    protected function _connect($params)
+    public function connect()
     {
+        if ($this->ping(false)) {
+            return $this->conn;
+        }
+
         if (!extension_loaded('mysqli')) {
-            throw new Cola_Com_Db_Exception('NO_MYSQLI_EXTENSION_FOUND');
+            throw new Cola_Ext_Db_Exception('NO_MYSQLI_EXTENSION_FOUND');
         }
 
-        if ($params['persistent']) {
-            throw new Cola_Com_Db_Exception('MYSQLI_EXTENSTION_DOES_NOT_SUPPORT_PERSISTENT_CONNECTION');
+        if ($this->config['persistent']) {
+            throw new Cola_Ext_Db_Exception('MYSQLI_EXTENSTION_DOES_NOT_SUPPORT_PERSISTENT_CONNECTION');
         }
 
-        $this->_connection = mysqli_init();
-
+        $this->conn = mysqli_init();
         $connected = @mysqli_real_connect(
-            $this->_connection,
-            $params['host'],
-            $params['user'],
-            $params['password'],
-            $params['database'],
-            $params['port']
+            $this->conn, $this->config['host'], $this->config['user'],
+            $this->config['password'], $this->config['database'], $this->config['port']
         );
 
-        if (false === $connected) {
-            throw new Cola_Com_Db_Exception($this->error());
+        if ($connected) {
+            $this->query("SET NAMES '{$this->config['charset']}';");
+            return $this->conn;
         }
 
-        $this->query("SET NAMES '" . $this->_config['charset'] . "';");
+        $this->_throwException();
     }
 
     /**
@@ -45,7 +45,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function selectDb($database)
     {
-        return $this->_connection->select_db($database);
+        return $this->conn->select_db($database);
     }
 
     /**
@@ -54,7 +54,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function close()
     {
-        $this->_connection->close();
+        return $this->conn->close();
     }
 
     /**
@@ -63,34 +63,20 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function free()
     {
-        if ($this->_query) $this->_query->free();
+        if ($this->query) {
+            return $this->query->free();
+        }
     }
 
     /**
      * Query SQL
      *
      * @param string $sql
-     * @return Cola_Com_Db_Mysqli
+     * @return Cola_Ext_Db_Mysqli
      */
-    public function query($sql)
+    protected function _query($sql)
     {
-        $this->_lastSql = $sql;
-
-        if ($this->_debug) {
-            $this->log($sql . '@' . date('Y-m-d H:i:s'));
-        }
-
-        $this->ping();
-
-        if ($this->_query = $this->_connection->query($sql)) {
-            return $this;
-        }
-
-        $msg = $this->error() . '@' . $sql . '@' . date('Y-m-d H:i:s');
-
-        $this->log($msg);
-
-        throw new Cola_Com_Db_Exception($msg);
+        return $this->conn->query($sql);
     }
 
     /**
@@ -100,7 +86,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function affectedRows()
     {
-        return $this->_connection->affected_rows;
+        return $this->conn->affected_rows;
     }
 
     /**
@@ -125,7 +111,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
                 $func = 'fetch_assoc';
         }
 
-        return $this->_query->$func();
+        return $this->query->$func();
     }
 
     /**
@@ -151,10 +137,10 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
         }
 
         $result = array();
-        while ($row = $this->_query->$func()) {
+        while ($row = $this->query->$func()) {
             $result[] = $row;
         }
-        $this->_query->free();
+        $this->query->free();
         return $result;
 
 
@@ -167,7 +153,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function lastInsertId()
     {
-        return $this->_connection->insert_id;
+        return $this->conn->insert_id;
     }
 
     /**
@@ -176,7 +162,7 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function beginTransaction()
     {
-        $this->_connection->autocommit(false);
+        return $this->conn->autocommit(false);
     }
 
     /**
@@ -185,8 +171,8 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function commit()
     {
-        $this->_connection->commit();
-        $this->_connection->autocommit(true);
+        $this->conn->commit();
+        $this->conn->autocommit(true);
     }
 
     /**
@@ -195,8 +181,8 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function rollBack()
     {
-        $this->_connection->rollback();
-        $this->_connection->autocommit(true);
+        $this->conn->rollback();
+        $this->conn->autocommit(true);
     }
 
     /**
@@ -207,8 +193,8 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function escape($str)
     {
-        if($this->_connection) {
-            return  $this->_connection->real_escape_string($str);
+        if($this->conn) {
+            return  $this->conn->real_escape_string($str);
         }else{
             return addslashes($str);
         }
@@ -217,24 +203,19 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
     /**
      * Get error
      *
-     * @return string|array
+     * @return array
      */
-    public function error($type = 'STRING')
+    public function error()
     {
-        $type = strtoupper($type);
-
-        if ($this->_connection) {
-            $errno = $this->_connection->errno;
-            $error = $this->_connection->error;
+        if ($this->conn) {
+            $errno = $this->conn->errno;
+            $error = $this->conn->error;
         } else {
             $errno = mysqli_connect_errno();
             $error = mysqli_connect_error();
         }
 
-        if ('ARRAY' == $type) {
-            return array('code' => $errno, 'msg' => $error);
-        }
-        return $errno . ':' . $error;
+        return array('code' => $errno, 'msg' => $error);
     }
 
     /**
@@ -245,12 +226,16 @@ class Cola_Com_Db_Mysqli extends Cola_Com_Db_Abstract
      */
     public function ping($reconnect = true)
     {
-        $this->connect();
-        if (!($ping = $this->_connection->ping()) && $reconnect) {
+        if ($this->conn && $this->conn->ping()) {
+            return true;
+        }
+
+        if ($reconnect) {
             $this->close();
             $this->connect();
-            $ping = $this->_connection->ping();
+            return $this->conn->ping();
         }
-        return $ping;
+
+        return false;
     }
 }

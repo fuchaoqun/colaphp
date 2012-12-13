@@ -11,7 +11,7 @@ class Cola_Request
      * @param mixed $default
      * @return mixed
      */
-    public static function param($key = null, $default = array())
+    public static function param($key = null, $default = null)
     {
         $params = (array)Cola::getReg('_params');
 

@@ -3,7 +3,7 @@
  *
  */
 
-class Cola_Com_Encrypt
+class Cola_Ext_Encrypt
 {
     protected $_config = array(
         'hash'      => 'sha1',

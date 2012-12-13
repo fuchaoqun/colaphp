@@ -1,10 +1,10 @@
 <?php
 /**
- * Cola_Com_Queue_Redis
+ * Cola_Ext_Queue_Redis
  *
  * use https://github.com/nicolasff/phpredis
  */
-class Cola_Com_Queue_Redis extends Cola_Com_Queue_Abstract
+class Cola_Ext_Queue_Redis extends Cola_Ext_Queue_Abstract
 {
     protected $_redis;
 

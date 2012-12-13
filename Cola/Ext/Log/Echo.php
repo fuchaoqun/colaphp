@@ -3,7 +3,7 @@
  *
  */
 
-class Cola_Com_Log_Echo extends Cola_Com_Log_Abstract
+class Cola_Ext_Log_Echo extends Cola_Ext_Log_Abstract
 {
     protected function _handler($text)
     {

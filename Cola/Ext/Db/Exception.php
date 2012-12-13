@@ -1,6 +1,6 @@
 <?php
 
-class Cola_Com_Db_Exception extends Cola_Exception
+class Cola_Ext_Db_Exception extends Cola_Exception
 {
 
 }

@@ -5,20 +5,6 @@
 class Cola_Controller
 {
     /**
-     * The home directory of model
-     *
-     * @var string
-     */
-    public $modelsHome = null;
-
-    /**
-     * The home directory of view
-     *
-     * @var string
-     */
-    public $viewsHome = null;
-
-    /**
      * Template file extension
      *
      * @var string
@@ -28,17 +14,8 @@ class Cola_Controller
     /**
      * Constructor
      *
-     * Init $_modelsHome & $_viewsHome from config if they are null
      */
-    public function __construct()
-    {
-        if (null === $this->modelsHome) {
-            $this->modelsHome = $this->config['_modelsHome'];
-        }
-        if (null === $this->viewsHome) {
-            $this->viewsHome = $this->config['_viewsHome'];
-        }
-    }
+    public function __construct() {}
 
     /**
      * Magic method
@@ -46,9 +23,9 @@ class Cola_Controller
      * @param string $methodName
      * @param array $args
      */
-    public function __call($methodName, $args)
+    public function __call($method, $args)
     {
-        throw new Cola_Exception("Call to undefined method: Cola_Controller::$methodName()");
+        throw new Cola_Exception("Call to undefined method: Cola_Controller::{$method}()");
     }
 
     /**
@@ -74,6 +51,17 @@ class Cola_Controller
     }
 
     /**
+    * Param var
+    *
+    * @param string $key
+    * @param mixed $default
+    */
+    protected function param($key = null, $default = null)
+    {
+        return Cola_Request::param($key, $default);
+    }
+
+    /**
      * View
      *
      * @param array $config
@@ -81,7 +69,7 @@ class Cola_Controller
      */
     protected function view($params = array())
     {
-        $params = (array)$params + array('viewsHome' => $this->_viewsHome) + (array) Cola::config('_view');
+        $params = (array)$params + (array) Cola::config('_view');
 
         return $this->view = new Cola_View($params);
     }
@@ -107,13 +95,12 @@ class Cola_Controller
      */
     protected function defaultTemplate()
     {
-        $cola = Cola::getInstance();
-        $dispatchInfo = $cola->getDispatchInfo();
+        $dispatchInfo = Cola::getInstance()->dispatchInfo;
 
         $tpl = str_replace('_', DIRECTORY_SEPARATOR, substr($dispatchInfo['controller'], 0, -10))
              . DIRECTORY_SEPARATOR
              . substr($dispatchInfo['action'], 0, -6)
-             . $this->_tplExt;
+             . $this->tplExt;
 
         return $tpl;
     }
@@ -165,7 +152,7 @@ class Cola_Controller
                 return $this->response;
 
             case 'config':
-                $this->config = Cola::config();
+                $this->config = Cola::getInstance()->config;
                 return $this->config;
 
             default:

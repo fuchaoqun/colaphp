@@ -1,5 +1,5 @@
 <?php
-Class Cola_Com_Mongo
+Class Cola_Ext_Mongo
 {
     protected $_mongo;
     protected $_db;
@@ -228,7 +228,7 @@ Class Cola_Com_Mongo
             return $id;
         }
 
-        throw new Cola_Exception('Cola_Com_Mongo: gen auto increment id failed');
+        throw new Cola_Exception('Cola_Ext_Mongo: gen auto increment id failed');
     }
 
     /**

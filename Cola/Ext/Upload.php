@@ -3,7 +3,7 @@
  *
  */
 
-class Cola_Com_Upload
+class Cola_Ext_Upload
 {
     /**
      * Upload error message
@@ -171,7 +171,7 @@ class Cola_Com_Upload
         }
 
         $dir = dirname($fileFullName);
-        is_dir($dir) || Cola_Com_Fs::mkdir($dir);
+        is_dir($dir) || Cola_Ext_Fs::mkdir($dir);
 
         if (is_writable($dir) && move_uploaded_file($file['tmp_name'], $fileFullName)) {
             $this->_num++;

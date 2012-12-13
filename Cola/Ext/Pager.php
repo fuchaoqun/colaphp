@@ -3,13 +3,13 @@
  *
  */
 
-class Cola_Com_Pager
+class Cola_Ext_Pager
 {
     protected $_config = array(
         'prevNums'         => 2,
         'nextNums'         => 7,
         'showSinglePage'   => false,
-        'prefix'           => '<style type="text/css">.pages{float:right;font-size:12px;} .pages *{border:1px solid #E6E7E1;height:24px;line-height:24px;padding:3px 6px;margin:1px;color:#0099CC;} .pages b{background-color:#0099CC;border-color:#0099CC;color:#FFFFFF;} .pages a {text-decoration:none;} .pages a:hover{border-color:#0099CC;} .pn{border-color:#0099CC;}</style><div class="pages">',
+        'prefix'           => '<style type="text/css">.pages{float:right;font-size:12px;clear:both;} .pages *{border:1px solid #E6E7E1;height:24px;line-height:24px;padding:3px 6px;margin:1px;color:#0099CC;} .pages b{background-color:#0099CC;border-color:#0099CC;color:#FFFFFF;} .pages a {text-decoration:none;} .pages a:hover{border-color:#0099CC;} .pn{border-color:#0099CC;}</style><div class="pages">',
         'first'            => '<a href="%link%">%page%...</a>',
         'last'             => '<a href="%link%">...%page%</a>',
         'prev'             => '<a class="pn" href="%link%">&lt;&lt;</a>',
@@ -241,7 +241,7 @@ class Cola_Com_Pager
     }
 
     /**
-     * Init Cola_Com_Page
+     * Init Cola_Ext_Page
      *
      */
     public function _init()
