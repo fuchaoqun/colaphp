@@ -265,6 +265,8 @@ class Cola_Com_Captcha
             return false;
         }
 
+        unset($_SESSION[$this->_sessionTtlKey]);
+        unset($_SESSION[$this->_sessionValueKey]);
         return true;
     }
 
