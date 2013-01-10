@@ -234,10 +234,9 @@ class Cola_Com_Captcha
      *
      * @param string $value
      * @param boolean $caseSensitive
-     * @param boolean $flag automatic remove
      * @return boolean
      */
-    public function check($value, $caseSensitive = false, $flag = true)
+    public function check($value, $caseSensitive = false)
     {
         isset($_SESSION) || session_start();
         if (empty($_SESSION[$this->_sessionTtlKey]) || empty($_SESSION[$this->_sessionValueKey])) {
@@ -248,10 +247,8 @@ class Cola_Com_Captcha
         $expireTime = $_SESSION[$this->_sessionTtlKey];
         $captchaCode = $_SESSION[$this->_sessionValueKey];
 
-        if ($flag) {
-            unset($_SESSION[$this->_sessionTtlKey]);
-            unset($_SESSION[$this->_sessionValueKey]);
-        }
+        unset($_SESSION[$this->_sessionTtlKey]);
+        unset($_SESSION[$this->_sessionValueKey]);
 
         if (time() > $expireTime) {
             $this->_error = self::CAPTCHA_IS_EXPIRED;
