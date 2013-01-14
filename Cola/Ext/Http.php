@@ -5,105 +5,112 @@
 
 class Cola_Ext_Http
 {
-    protected static $_http_context_option_keys = array('method', 'header', 'user_agent', 'content','proxy', 'request_fulluri',
-                                                        'max_redirects', 'protocol_version', 'timeout', 'ignore_errors');
-
-    protected static $_responseHeader;
     /**
-     * Http get request
+     * Default params
      *
-     * @param string $uri
+     * @var array
+     */
+    public static $defaultParams = array(
+        'headers' => array(),
+        'timeout' => 15,
+        'ssl'     => false,
+        'opts'    => array(),
+        'debug'   => false,
+    );
+
+    /**
+     * HTTP GET
+     *
+     * @param string $url
      * @param array $data
-     * @param string $timeOut
-     * @param string $host
-     * @return mixed string if ok or false when error
+     * @param array $params
+     * @return string
      */
-    public static function get($uri, $data = null, $config = null)
+    public static function get($url, $data = array(), $params = array())
     {
-        $options = array('http' => array('method' => 'GET'));
+        if ($data) {
+            $queryStr = http_build_query($data);
+            $url .= "?{$queryStr}";
+        }
 
-        if ($config) $options['http'] += self::_buildOptions($config);
-
-        $context = stream_context_create($options);
-
-        if (!is_null($data))  $uri .= '?' . http_build_query($data);
-
-        return self::request($uri, $context);
+        return self::request($url, $params);
     }
 
     /**
-     * Http post request
+     * HTTP POST
      *
-     * @param string $uri
+     * @param string $url
      * @param array $data
-     * @param float $timeOut
-     * @param string $host
-     * @return mixed string if ok or false when error
+     * @param array $params
+     * @return string
      */
-    public static function post($uri, $data, $config = null)
+    public static function post($url, $data, $params = array())
     {
-        $options = array('http' => array('method' => 'POST'));
-
-        if ($config) $options['http'] += self::_buildOptions($config);
-
-        $options['http']['content'] = http_build_query($data);
-
-        $context = stream_context_create($options);
-
-        return self::request($uri, $context);
+        $params['opts'][CURLOPT_POST]       = true;
+        $params['opts'][CURLOPT_POSTFIELDS] = http_build_query($data);
+        return self::request($url, $params);
     }
 
     /**
-     * Http request
+     * HTTP request
      *
      * @param string $uri
-     * @param array $opts @see http://cn2.php.net/manual/en/context.http.php
-     * @return mixed string if ok or false when error
+     * @param array $params
+     * @return string or throw Exception
      */
-    public static function request($uri, $context)
+    public static function request($url, $params)
     {
-        $data = @file_get_contents($uri, null, $context);
+        if (!function_exists('curl_init')) {
+            throw new Cola_Exception('Can not find curl extension');
+        }
 
-        self::$_responseHeader = $http_response_header;
+        $curl = curl_init();
+        $opts = self::initOpts($url, $params);
+        curl_setopt_array($curl, $opts);
+        $response = curl_exec($curl);
 
-        return $data;
+        $errno = curl_errno($curl);
+        $error = curl_error($curl);
+
+        if ($params['debug']) {
+            return array(
+                'url'      => $url,
+                'httpInfo' => curl_getinfo($curl),
+                'response' => $response,
+                'error'    => $error,
+                'errno'    => $errno
+            );
+        }
+
+        if (0 !== $errno) {
+            throw new Cola_Exception($error, $errno);
+        }
+
+        curl_close ($curl);
+        return $response;
     }
 
     /**
-     * Get response header
+     * Init curl opts
      *
+     * @param string $url
+     * @param array $params
      * @return array
      */
-    public static function responseHeader()
+    public static function initOpts($url, $params)
     {
-        return self::$_responseHeader;
-    }
+        $params += self::$defaultParams;
+        $opts = $params['opts'] + array(
+            CURLOPT_URL            => $url,
+            CURLOPT_TIMEOUT        => $params['timeout'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => $params['ssl'],
+        );
 
-    /**
-     * Build options
-     *
-     * @param array $config
-     */
-    protected static function _buildOptions($config)
-    {
-        $options = array('timeout' => 3, 'header' => '');
-        foreach ($config as $key => $value) {
-            if (in_array($key, self::$_http_context_option_keys)) {
-                $options[$key] = $value;
-                continue;
-            }
-            // http headers
-            if ('cookie' == strtolower($key) && is_array($value)) {
-                $cookie = '';
-                foreach ($value as $k => $v) {
-                    $cookie .= "$k=$v;";
-                }
-                $options['header'] .= "Cookie: $cookie\r\n";
-            } else {
-                $options['header'] .= ucfirst($key) . ": $value\r\n";
-            }
+        if ($params['headers']) {
+            $opts[CURLOPT_HTTPHEADER] = $params['headers'];
         }
-        if ('' == $options['header']) unset($options['header']);
-        return $options;
+
+        return $opts;
     }
 }

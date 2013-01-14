@@ -67,11 +67,9 @@ class Cola_Controller
      * @param array $config
      * @return Cola_View
      */
-    protected function view($params = array())
+    protected function view($viewsHome = null)
     {
-        $params = (array)$params + (array) Cola::config('_view');
-
-        return $this->view = new Cola_View($params);
+        return $this->view = new Cola_View($viewsHome);
     }
 
     /**

@@ -97,7 +97,7 @@ class Cola_Ext_Captcha
         for ($i = 0; $i < $this->config['length']; $i++) {
             $char = substr($seed, $i, 1);
             $x = $this->config['padding'] + $i * ($this->config['size'] + $this->config['space']);
-            $y = mt_rand(0.6 * $this->config['height'], 0.8 * $this->config['height']);
+            $y = mt_rand(0.7 * $this->config['height'], 0.9 * $this->config['height']);
             $charColor = imageColorAllocate($this->_image, mt_rand(50, 155), mt_rand(50, 155), mt_rand(50, 155));
             imagettftext($this->_image, $this->config['size'], mt_rand(-18,18), $x, $y, $charColor, $fonts[$i], $char);
         }
@@ -173,33 +173,31 @@ class Cola_Ext_Captcha
      *
      * @param string $value
      * @param boolean $caseSensitive
-     * @param boolean $once automatic remove
      * @return boolean
      */
-    public function check($value, $caseSensitive = false, $once = true)
+    public function check($value, $caseSensitive = false)
     {
         if (empty($_SESSION[$this->config['sessionTtlKey']]) || empty($_SESSION[$this->config['sessionValueKey']])) {
-            $this->_error = array('code' => -1, 'msg' => 'NO_CAPTCHA_FOUND');
+            $this->error = array('code' => -1, 'msg' => 'NO_CAPTCHA_FOUND');
             return false;
         }
 
-        $expireTime = $_SESSION[$this->config['sessionTtlKey']];
+        $expireTime  = $_SESSION[$this->config['sessionTtlKey']];
         $captchaCode = $_SESSION[$this->config['sessionValueKey']];
 
-        if ($once) {
-            unset($_SESSION[$this->config['sessionTtlKey']]);
-            unset($_SESSION[$this->config['sessionValueKey']]);
-        }
+        // clear
+        unset($_SESSION[$this->config['sessionTtlKey']]);
+        unset($_SESSION[$this->config['sessionValueKey']]);
 
         if (time() > $expireTime) {
-            $this->_error = array('code' => -2, 'msg' => 'CAPTCHA_IS_EXPIRED');
+            $this->error = array('code' => -2, 'msg' => 'CAPTCHA_IS_EXPIRED');
             return false;
         }
 
         $func = $caseSensitive ? 'strcmp' : 'strcasecmp';
 
         if (0 !== $func($value, $captchaCode)) {
-            $this->_error = array('code' => -3, 'msg' => 'CAPTCHA_NOT_MATCHED');
+            $this->error = array('code' => -3, 'msg' => 'CAPTCHA_NOT_MATCHED');
             return false;
         }
 

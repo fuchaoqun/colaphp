@@ -196,7 +196,7 @@ abstract class Cola_Ext_Db_Pdo_Abstract extends Cola_Ext_Db_Abstract
             $error = $this->query->errorInfo();
         }
 
-        return array('code' => $errno, 'msg' => $error[2]);
+        return array('code' => intval($errno), 'msg' => $error[2]);
     }
 
     /**

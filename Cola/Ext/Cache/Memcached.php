@@ -34,7 +34,7 @@ class Cola_Ext_Cache_Memcached extends Cola_Ext_Cache_Abstract
             $ttl = $this->options['ttl'];
         }
 
-        $this->conn->set($id, $data, $ttl);
+        return $this->conn->set($id, $data, $ttl);
     }
 
     /**

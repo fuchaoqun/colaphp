@@ -212,7 +212,7 @@ class Cola_Ext_Db_Mysql extends Cola_Ext_Db_Abstract
             $error = mysql_error();
         }
 
-        return array('code' => $errno, 'msg' => $error);
+        return array('code' => intval($errno), 'msg' => $error);
     }
 
     /**

@@ -215,7 +215,7 @@ class Cola_Ext_Db_Mysqli extends Cola_Ext_Db_Abstract
             $error = mysqli_connect_error();
         }
 
-        return array('code' => $errno, 'msg' => $error);
+        return array('code' => intval($errno), 'msg' => $error);
     }
 
     /**

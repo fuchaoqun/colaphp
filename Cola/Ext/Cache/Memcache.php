@@ -31,6 +31,6 @@ class Cola_Ext_Cache_Memcache extends Cola_Ext_Cache_Abstract
             $ttl = $this->options['ttl'];
         }
 
-        $this->conn->set($id, $data, empty($this->options['compressed']) ? 0 : MEMCACHE_COMPRESSED, $ttl);
+        return $this->conn->set($id, $data, empty($this->options['compressed']) ? 0 : MEMCACHE_COMPRESSED, $ttl);
     }
 }

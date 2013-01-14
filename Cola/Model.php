@@ -239,7 +239,7 @@ class Cola_Model
 
         $regName = "_cola_db_{$name}";
         if (!$db = Cola::getReg($regName)) {
-            $config = (array)Cola::getConfig($name);
+            $config = (array)Cola::getConfig($name) + array('adapter' => 'Pdo_Mysql');
             $db = Cola::factory('Cola_Ext_Db', $config);
             Cola::setReg($regName, $db);
         }
@@ -282,6 +282,10 @@ class Cola_Model
     public function cached($func, $args = array(), $ttl = null)
     {
         is_null($ttl) && ($ttl = $this->_ttl);
+
+        if (!is_array($args)) {
+            $args = array($args);
+        }
 
         $key = md5(get_class($this) . $func . serialize($args));
 
