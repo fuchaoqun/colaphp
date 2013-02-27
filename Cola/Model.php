@@ -2,7 +2,7 @@
 /**
  *
  */
-class Cola_Model
+abstract class Cola_Model
 {
     /**
      * Db name
@@ -314,7 +314,7 @@ class Cola_Model
         $result = $validate->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
-            $this->_error = array('code' => self::VALIDATE_ERROR, 'msg' => $validate->error());
+            $this->_error = array('code' => self::VALIDATE_ERROR, 'msg' => $validate->errors);
         }
 
         return $result;

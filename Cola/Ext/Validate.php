@@ -27,6 +27,13 @@ var_dump(Cola_Ext_Validate::check($data, $rules));
 class Cola_Ext_Validate
 {
     /**
+     * Validate Errors
+     *
+     * @var array
+     */
+    public $errors = array();
+
+    /**
      * Check if is not empty
      *
      * @param string $str
@@ -211,35 +218,33 @@ class Cola_Ext_Validate
      * @param boolean $ignorNotExists
      * @return boolean
      */
-    public static function check($data, $rules, $ignorNotExists = false)
+    public function check($data, $rules, $ignorNotExists = false)
     {
-        $error = array();
         foreach ($rules as $key => $rule) {
             $rule += array('required' => false, 'msg' => 'Unvalidated');
 
             // deal with not existed
             if (!isset($data[$key])) {
                 if ($rule['required'] && !$ignorNotExists) {
-                    $error[$key] = $rule['msg'];
+                    $this->errors[$key] = $rule['msg'];
                 }
                 continue;
             }
 
             if (!self::_check($data[$key], $rule)) {
-                $error[$key] = $rule['msg'];
+                $this->errors[$key] = $rule['msg'];
                 continue;
             }
 
             if (isset($rule['rules'])) {
                 $tmp = $this->check($data[$key], $rule['rules'], $ignorNotExists);
                 if (0 !== $tmp['code']) {
-                    $error[$key] = $tmp['msg'];
+                    $this->errors[$key] = $tmp['msg'];
                 }
             }
         }
 
-
-        return $error ? array('code' => -1, 'msg' => $error) : array('code' => 0);
+        return $this->errors ? false : true;
     }
 
     /**

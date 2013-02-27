@@ -2,7 +2,7 @@
 /**
  *
  */
-class Cola_Controller
+abstract class Cola_Controller
 {
     /**
      * Template file extension
