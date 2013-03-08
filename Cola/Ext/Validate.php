@@ -156,6 +156,17 @@ class Cola_Ext_Validate
     }
 
     /**
+     * Check if is datetime
+     *
+     * @param string $datetime
+     * @return boolean
+     */
+    public static function datetime($datetime, $format = 'Y-m-d H:i:s')
+    {
+        return ($time = strtotime($datetime)) && ($datetime == date($format, $time));
+    }
+
+    /**
      * Check if is numbers
      *
      * @param mixed $value

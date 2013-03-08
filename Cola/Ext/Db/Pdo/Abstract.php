@@ -21,7 +21,7 @@ abstract class Cola_Ext_Db_Pdo_Abstract extends Cola_Ext_Db_Abstract
 	    }
 
 	    $this->conn = new PDO($this->_dsn($this->config), $this->config['user'], $this->config['password'], $this->config['options']);
-	    $this->query("SET NAMES '{$this->config['charset']}';");
+	    if ($this->config['charset']) $this->query("SET NAMES '{$this->config['charset']}';");
 	    return $this->conn;
 	}
 

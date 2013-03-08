@@ -4,6 +4,8 @@
  */
 abstract class Cola_Model
 {
+    const ERROR_VALIDATE_CODE = -400;
+
     /**
      * Db name
      *
@@ -77,17 +79,17 @@ abstract class Cola_Model
     /**
      * Find result
      *
-     * @param array $conditions
+     * @param array $opts
      * @return array
      */
-    public function find($conditions = array())
+    public function find($opts = array())
     {
-        is_string($conditions) && $conditions = array('where' => $conditions);
+        is_string($opts) && $opts = array('where' => $opts);
 
-        $conditions += array('table' => $this->_table);
+        $opts += array('table' => $this->_table);
 
         try {
-            $result = $this->db->find($conditions);
+            $result = $this->db->find($opts);
             return $result;
         } catch (Exception $e) {
             $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
@@ -104,27 +106,12 @@ abstract class Cola_Model
      */
     public function count($where, $table = null)
     {
-        is_null($table) && $table = $this->_table;
+        if (is_null($table)) {
+            $table = $this->_table;
+        }
 
         try {
             $result = $this->db->count($where, $table);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Query SQL
-     *
-     * @param string $sql
-     * @return mixed
-     */
-    public function query($sql)
-    {
-        try {
-            $result = $this->db->query($sql);
             return $result;
         } catch (Exception $e) {
             $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
@@ -158,7 +145,9 @@ abstract class Cola_Model
      */
     public function insert($data, $table = null)
     {
-        is_null($table) && $table = $this->_table;
+        if (is_null($table)) {
+            $table = $this->_table;
+        }
 
         try {
             $result = $this->db->insert($data, $table);
@@ -308,16 +297,20 @@ abstract class Cola_Model
     public function validate($data, $ignoreNotExists = false, $rules = null)
     {
         is_null($rules) && $rules = $this->_validate;
+        if (empty($rules)) {
+            return true;
+        }
 
         $validate = new Cola_Ext_Validate();
 
         $result = $validate->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
-            $this->_error = array('code' => self::VALIDATE_ERROR, 'msg' => $validate->errors);
+            $this->error = array('code' => self::ERROR_VALIDATE_CODE, 'msg' => $validate->errors);
+            return false;
         }
 
-        return $result;
+        return true;
     }
 
     /**

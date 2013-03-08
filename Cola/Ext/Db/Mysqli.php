@@ -30,7 +30,7 @@ class Cola_Ext_Db_Mysqli extends Cola_Ext_Db_Abstract
         );
 
         if ($connected) {
-            $this->query("SET NAMES '{$this->config['charset']}';");
+            if ($this->config['charset']) $this->query("SET NAMES '{$this->config['charset']}';");
             return $this->conn;
         }
 

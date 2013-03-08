@@ -157,16 +157,16 @@ abstract class Cola_Ext_Db_Abstract
     /**
      * Find data
      *
-     * @param array $conditions
+     * @param array $opts
      * @return array
      */
-    public function find($conditions)
+    public function find($opts)
     {
-        if (is_string($conditions)) {
-            $conditions = array('where' => $conditions);
+        if (is_string($opts)) {
+            $opts = array('where' => $opts);
         }
 
-        $conditions = $conditions + array(
+        $opts = $opts + array(
             'fileds' => '*',
             'where' => 1,
             'order' => null,
@@ -174,14 +174,14 @@ abstract class Cola_Ext_Db_Abstract
             'limit' => -1
         );
 
-        $sql = "select {$conditions['fileds']} from {$conditions['table']} where {$conditions['where']}";
+        $sql = "select {$opts['fileds']} from {$opts['table']} where {$opts['where']}";
 
-        if ($conditions['order']) {
-            $sql .= " order by {$conditions['order']}";
+        if ($opts['order']) {
+            $sql .= " order by {$opts['order']}";
         }
 
-        if (0 <= $conditions['start'] && 0 <= $conditions['limit']) {
-            $sql .= " limit {$conditions['start']}, {$conditions['limit']}";
+        if (0 <= $opts['start'] && 0 <= $opts['limit']) {
+            $sql .= " limit {$opts['start']}, {$opts['limit']}";
         }
 
         return $this->sql($sql);
