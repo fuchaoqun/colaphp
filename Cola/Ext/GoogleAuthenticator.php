@@ -28,10 +28,10 @@ class Cola_Ext_GoogleAuthenticator
         if (!$time) $time = floor(time() / 30);
         $secret = self::base32Decode($secret);
 
-        $bin  = pack('N*', 0) . pack('N*', $time);		// Counter must be 64-bit int
-	    $hash = hash_hmac('sha1', $bin, $secret, true);
+        $bin  = pack('N*', 0) . pack('N*', $time);        // Counter must be 64-bit int
+        $hash = hash_hmac('sha1', $bin, $secret, true);
 
-	    return str_pad(self::truncate($hash, self::$limit), self::$limit, '0', STR_PAD_LEFT);
+        return str_pad(self::truncate($hash, self::$limit), self::$limit, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -112,19 +112,19 @@ class Cola_Ext_GoogleAuthenticator
     }
 
     /**
-	 * Extracts the OTP from the SHA1 hash.
-	 * @param binary $hash
-	 * @return integer
-	 **/
-	public static function truncate($hash, $limit)
-	{
-	    $offset = ord($hash[19]) & 0xf;
+     * Extracts the OTP from the SHA1 hash.
+     * @param binary $hash
+     * @return integer
+     **/
+    public static function truncate($hash, $limit)
+    {
+        $offset = ord($hash[19]) & 0xf;
 
-	    return (
-	        ((ord($hash[$offset+0]) & 0x7f) << 24 ) |
-	        ((ord($hash[$offset+1]) & 0xff) << 16 ) |
-	        ((ord($hash[$offset+2]) & 0xff) << 8 ) |
-	        (ord($hash[$offset+3]) & 0xff)
-	    ) % pow(10, $limit);
-	}
+        return (
+            ((ord($hash[$offset+0]) & 0x7f) << 24 ) |
+            ((ord($hash[$offset+1]) & 0xff) << 16 ) |
+            ((ord($hash[$offset+2]) & 0xff) << 8 ) |
+            (ord($hash[$offset+3]) & 0xff)
+        ) % pow(10, $limit);
+    }
 }
