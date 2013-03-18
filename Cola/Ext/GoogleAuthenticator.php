@@ -93,9 +93,9 @@ class Cola_Ext_GoogleAuthenticator
             throw new Exception('Invalid characters in the base32 string.');
         }
 
-        $l     = strlen($str);
-        $n    = 0;
-        $j    = 0;
+        $l = strlen($str);
+        $n = 0;
+        $j = 0;
         $binary = "";
 
         for ($i = 0; $i < $l; $i++) {

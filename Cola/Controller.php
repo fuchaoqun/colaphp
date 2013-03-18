@@ -104,6 +104,16 @@ abstract class Cola_Controller
     }
 
     /**
+     * Redirect to other url
+     *
+     * @param string $url
+     */
+    protected function redirect($url, $code = 302)
+    {
+        $this->response->redirect($url, $code);
+    }
+
+    /**
      * Abort
      *
      * @param mixed $data
