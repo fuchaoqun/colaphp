@@ -62,10 +62,9 @@ class Cola_Ext_GoogleAuthenticator
      * @param string $hostname
      * @return string
      */
-    public static function getQrCode($secret, $user, $hostname)
+    public static function getQrCode($secret, $user, $hostname, $prefix = 'https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=')
     {
-        $chl = urlencode("otpauth://totp/{$user}@{$hostname}?secret={$secret}");
-        return "https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl={$chl}";
+        return $prefix . urlencode("otpauth://totp/{$user}@{$hostname}?secret={$secret}");
     }
 
     /**

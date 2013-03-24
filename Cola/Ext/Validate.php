@@ -271,7 +271,7 @@ class Cola_Ext_Validate
         foreach ($rule as $key => $val) {
             switch ($key) {
             	case 'required':
-            		$flag = self::notEmpty($data);
+            		if ($val) $flag = self::notEmpty($data);
             		break;
 
                 case 'func':
