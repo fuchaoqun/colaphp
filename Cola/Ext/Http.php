@@ -72,7 +72,7 @@ class Cola_Ext_Http
         $errno = curl_errno($curl);
         $error = curl_error($curl);
 
-        if ($params['debug']) {
+        if (isset($params['debug']) && $params['debug']) {
             return array(
                 'url'      => $url,
                 'httpInfo' => curl_getinfo($curl),
