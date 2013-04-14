@@ -294,6 +294,22 @@ class Cola_Request
     }
 
     /**
+     * Check if search engine spider
+     *
+     * @return boolean
+     */
+    public static function isSpider($ua = null)
+    {
+        is_null($ua) && $ua = $_SERVER['HTTP_USER_AGENT'];
+        $ua = strtolower($ua);
+        $spiders = array('bot', 'crawl', 'spider' ,'slurp', 'sohu-search', 'lycos', 'robozilla');
+        foreach ($spiders as $spider) {
+            if (false !== strpos($ua, $spider)) return true;
+        }
+        return false;
+    }
+
+    /**
      * Get the request URI scheme
      *
      * @return string
