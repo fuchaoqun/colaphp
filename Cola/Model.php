@@ -173,7 +173,7 @@ abstract class Cola_Model
             $result = $this->db->update($data, $where, $this->_table);
             return true;
         } catch (Exception $e) {
-            $this->error = array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage());
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
