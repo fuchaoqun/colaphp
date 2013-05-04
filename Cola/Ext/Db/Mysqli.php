@@ -54,7 +54,11 @@ class Cola_Ext_Db_Mysqli extends Cola_Ext_Db_Abstract
      */
     public function close()
     {
-        return $this->conn->close();
+        if ($this->conn) {
+            return $this->conn->close();
+        }
+
+        return true;
     }
 
     /**
