@@ -117,14 +117,15 @@ abstract class Cola_Controller
      * Abort
      *
      * @param mixed $data
+     * @param string $var jsonp var name
      *
      */
-    protected function abort($data)
+    protected function abort($data, $var = null)
     {
         if (!is_string($data)) {
             $data = json_encode($data);
         }
-        echo $data;
+        echo $var ? "var {$var}={$data};" : $data;
         exit();
     }
 
