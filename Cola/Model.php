@@ -276,7 +276,7 @@ abstract class Cola_Model
             $args = array($args);
         }
 
-        $key = md5(get_class($this) . $func . serialize($args));
+        $key = sha1(get_class($this) . $func . serialize($args));
 
         if (!$data = $this->cache->get($key)) {
             $data = call_user_func_array(array($this, $func), $args);
