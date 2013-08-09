@@ -15,8 +15,14 @@ class Cola_Ext_Http
         'timeout' => 15,
         'ssl'     => false,
         'opts'    => array(),
-        'debug'   => false,
     );
+
+    /**
+     * Curl Http Info
+     *
+     * @var array
+     */
+    public static $info = array();
 
     /**
      * HTTP GET
@@ -72,15 +78,7 @@ class Cola_Ext_Http
         $errno = curl_errno($curl);
         $error = curl_error($curl);
 
-        if (isset($params['debug']) && $params['debug']) {
-            return array(
-                'url'      => $url,
-                'httpInfo' => curl_getinfo($curl),
-                'response' => $response,
-                'error'    => $error,
-                'errno'    => $errno
-            );
-        }
+        self::$info = curl_getinfo($curl) + array('errno' => $errno, 'error' => $error);
 
         if (0 !== $errno) {
             throw new Cola_Exception($error, $errno);
