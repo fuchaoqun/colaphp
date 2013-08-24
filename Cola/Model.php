@@ -266,9 +266,10 @@ abstract class Cola_Model
      * @param string $func
      * @param mixed $args
      * @param int $ttl
+     * @param string $key
      * @return mixed
      */
-    public function cached($func, $args = array(), $ttl = null)
+    public function cached($func, $args = array(), $ttl = null, $key = null)
     {
         is_null($ttl) && ($ttl = $this->_ttl);
 
@@ -276,7 +277,9 @@ abstract class Cola_Model
             $args = array($args);
         }
 
-        $key = sha1(get_class($this) . $func . serialize($args));
+        if (is_null($key)) {
+            $key = sha1(get_class($this) . $func . serialize($args));
+        }
 
         if (!$data = $this->cache->get($key)) {
             $data = call_user_func_array(array($this, $func), $args);
