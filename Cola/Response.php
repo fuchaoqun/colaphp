@@ -116,6 +116,7 @@ class Cola_Response
             echo "window.location.href=\"$url\";\n";
         }
         echo "</script>\n";
+        if ($url) exit();
     }
 
     /**

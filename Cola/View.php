@@ -10,37 +10,21 @@ class Cola_View
      *
      * @var string
      */
-    protected $_basePath = '';
+    public $viewsHome = '';
 
     /**
      * Constructor
      *
      */
-    public function __construct($params = array())
+    public function __construct($viewsHome = null)
     {
-        if (isset($params['basePath'])) {
-            $this->_basePath = $params['basePath'];
+        if (is_null($viewsHome)) {
+            $viewsHome = Cola::getConfig('_viewsHome');
         }
-    }
 
-    /**
-     * Set base path of views
-     *
-     * @param string $path
-     */
-    public function setBasePath($path)
-    {
-        $this->_basePath = $path;
-    }
-
-    /**
-     * Get base path of views
-     *
-     * @return string
-     */
-    public function getBasePath()
-    {
-        return $this->_basePath;
+        if ($viewsHome) {
+            $this->viewsHome = $viewsHome;
+        }
     }
 
     /**
@@ -49,13 +33,7 @@ class Cola_View
      */
     protected function _render($tpl, $dir = null)
     {
-        if (null === $dir) $dir = $this->_basePath;
-        if ($dir) $dir = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR;
-        ob_start();
-        ob_implicit_flush(0);
-        $file = $dir . $tpl;
-        include $file;
-        return ob_get_clean();
+
     }
 
     /**
@@ -67,7 +45,10 @@ class Cola_View
      */
     public function fetch($tpl, $dir = null)
     {
-        return $this->_render($tpl, $dir);
+        ob_start();
+        ob_implicit_flush(0);
+        $this->display($tpl, $dir);
+        return ob_get_clean();
     }
 
     /**
@@ -78,22 +59,13 @@ class Cola_View
      */
     public function display($tpl, $dir = null)
     {
-        echo $this->_render($tpl, $dir);
-    }
-
-    /**
-     * Slot
-     *
-     * @param string $tpl
-     * @param mixed $data
-     * @return string
-     */
-    public function slot($file, $data = null)
-    {
-        ob_start();
-        ob_implicit_flush(0);
-        include $file;
-        return ob_get_clean();
+        if (null === $dir) {
+            $dir = $this->viewsHome;
+        }
+        if ($dir) {
+            $dir = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR;
+        }
+        include ($dir . $tpl);
     }
 
     /**
@@ -221,7 +193,7 @@ class Cola_View
     {
         switch ($key) {
             case 'config':
-                $this->config = Cola::config();
+                $this->config = Cola::getInstance()->config;
                 return $this->config;
 
             default:

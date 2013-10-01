@@ -11,7 +11,7 @@ class Cola_Request
      * @param mixed $default
      * @return mixed
      */
-    public static function param($key = null, $default = array())
+    public static function param($key = null, $default = null)
     {
         $params = (array)Cola::getReg('_params');
 
@@ -291,6 +291,22 @@ class Cola_Request
     public static function isSecure()
     {
         return ('https' === self::scheme());
+    }
+
+    /**
+     * Check if search engine spider
+     *
+     * @return boolean
+     */
+    public static function isSpider($ua = null)
+    {
+        is_null($ua) && $ua = $_SERVER['HTTP_USER_AGENT'];
+        $ua = strtolower($ua);
+        $spiders = array('bot', 'crawl', 'spider' ,'slurp', 'sohu-search', 'lycos', 'robozilla');
+        foreach ($spiders as $spider) {
+            if (false !== strpos($ua, $spider)) return true;
+        }
+        return false;
     }
 
     /**

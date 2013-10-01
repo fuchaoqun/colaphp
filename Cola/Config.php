@@ -2,13 +2,6 @@
 class Cola_Config implements ArrayAccess
 {
     /**
-     * Whether in-memory modifications to configuration data are allowed
-     *
-     * @var boolean
-     */
-    protected $_overwrite;
-
-    /**
      * Contains array of configuration data
      *
      * @var array
@@ -24,13 +17,10 @@ class Cola_Config implements ArrayAccess
      * facilitate easy access to the data.
      *
      * @param  array   $array
-     * @param  boolean $allowModifications
      * @return void
      */
-    public function __construct(array $data = array(), $overwrite = false)
+    public function __construct(array $data = array())
     {
-        $this->_overwrite = (boolean) $overwrite;
-
         $this->_data = $data;
     }
 
@@ -88,11 +78,8 @@ class Cola_Config implements ArrayAccess
             $key = $name[$cnt - 1];
         }
 
-        if (!$this->_overwrite && isset($pos[$key])) {
-            throw new Cola_Exception('this name of config is read only');
-        } else {
-            $pos[$key] = $value;
-        }
+        $pos[$key] = $value;
+
 
         return $this;
     }
@@ -150,19 +137,6 @@ class Cola_Config implements ArrayAccess
     }
 
     /**
-     * Prevent any more modifications being made to this instance. Useful
-     * after merge() has been used to merge multiple Cola_Config objects
-     * into one object which should then not be modified again.
-     *
-     */
-    public function overwrite($overwrite = null)
-    {
-        if (null === $overwrite) return $this->_overwrite;
-        $this->_overwrite = $overwrite;
-        return $this;
-    }
-
-    /**
      * merge config
      *
      * @param array $config
@@ -191,16 +165,6 @@ class Cola_Config implements ArrayAccess
             }
         }
         return $arr1;
-    }
-
-    /**
-     * config reference
-     *
-     * @return array
-     */
-    public function &reference()
-    {
-        return $this->_data;
     }
 
     /**

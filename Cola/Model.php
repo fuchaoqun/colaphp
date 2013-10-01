@@ -2,8 +2,10 @@
 /**
  *
  */
-class Cola_Model
+abstract class Cola_Model
 {
+    const ERROR_VALIDATE_CODE = -400;
+
     /**
      * Db name
      *
@@ -26,11 +28,18 @@ class Cola_Model
     protected $_pk = 'id';
 
     /**
-     * Error
+     * Cache config
      *
-     * @var mixed string | array
+     * @var mixed, string for config key and array for config
      */
-    protected $_error;
+    protected $_cache = '_cache';
+
+    /**
+     * Cache expire time
+     *
+     * @var int
+     */
+    protected $_ttl = 60;
 
     /**
      * Validate rules
@@ -39,9 +48,12 @@ class Cola_Model
      */
     protected $_validate = array();
 
-    const UNKNOWN_ERROR = -9;
-    const SYSTEM_ERROR = -8;
-    const VALIDATE_ERROR = -7;
+    /**
+     * Error infomation
+     *
+     * @var array
+     */
+    public $error = array();
 
     /**
      * Load data
@@ -51,78 +63,36 @@ class Cola_Model
      */
     public function load($id, $col = null)
     {
-        if (is_null($col)) $col = $this->_pk;
-        $sql = "select * from {$this->_table} where {$col} = " . (is_int($id) ? $id : "'$id'");
+        is_null($col) && $col = $this->_pk;
+
+        $sql = "select * from {$this->_table} where {$col} = '{$id}'";
 
         try {
             $result = $this->db->row($sql);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Get function cache
-     *
-     * @param string $func
-     * @param mixed $args
-     * @param int $expire
-     * @return mixed
-     */
-    public function cached($func, $args = null, $expire = 60)
-    {
-        $key = md5(get_class($this) . $func . serialize($args));
-
-        if (!$data = $this->cache->get($key)) {
-            $data = call_user_func_array(array($this, $func), $args);
-            $this->cache->set($key, $data, $expire);
-        }
-
-        return $data;
-
-    }
-
-    /**
-     * Init Cola_Com_Cache
-     *
-     * @param mixed $name
-     * @return Cola_Com_Cache
-     */
-    public function cache($name = '_cache')
-    {
-        if (is_array($name)) {
-            return Cola_Com_Cache::factory($name);
-        }
-
-        $regName = "_cache_$name";
-        if (!$cache = Cola::getReg($regName)) {
-            $config = (array)Cola::config()->get($name);
-            $cache = Cola_Com_Cache::factory($config);
-            Cola::setReg($regName, $cache);
-        }
-
-        return $cache;
-    }
-
-    /**
      * Find result
      *
-     * @param array $conditions
+     * @param array $opts
      * @return array
      */
-    public function find($conditions = array())
+    public function find($opts = array())
     {
-        if (is_string($conditions)) $conditions = array('where' => $conditions);
+        is_string($opts) && $opts = array('where' => $opts);
 
-        $conditions += array('table' => $this->_table);
+        $opts += array('table' => $this->_table);
 
         try {
-            $result = $this->db->find($conditions);
+            $result = $this->db->find($opts);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -136,30 +106,15 @@ class Cola_Model
      */
     public function count($where, $table = null)
     {
-        if (null == $table) $table = $this->_table;
+        if (is_null($table)) {
+            $table = $this->_table;
+        }
 
         try {
             $result = $this->db->count($where, $table);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
-            return false;
-        }
-    }
-
-    /**
-     * Query SQL
-     *
-     * @param string $sql
-     * @return mixed
-     */
-    public function query($sql)
-    {
-        try {
-            $result = $this->db->query($sql);
-            return $result;
-        } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -176,7 +131,7 @@ class Cola_Model
             $result = $this->db->sql($sql);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -190,13 +145,15 @@ class Cola_Model
      */
     public function insert($data, $table = null)
     {
-        if (null == $table) $table = $this->_table;
+        if (is_null($table)) {
+            $table = $this->_table;
+        }
 
         try {
             $result = $this->db->insert($data, $table);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -216,7 +173,7 @@ class Cola_Model
             $result = $this->db->update($data, $where, $this->_table);
             return true;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -230,15 +187,15 @@ class Cola_Model
      */
     public function delete($id, $col = null)
     {
-        if (is_null($col)) $col = $this->_pk;
-
-        $where = $col . '=' . (is_int($id) ? $id : "'$id'");
+        is_null($col) && $col = $this->_pk;
+        $id = $this->escape($id);
+        $where = "{$col} = '{$id}'";
 
         try {
             $result = $this->db->delete($where, $this->_table);
             return $result;
         } catch (Exception $e) {
-            $this->error(array('code' => self::SYSTEM_ERROR, 'msg' => $e->getMessage()));
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
     }
@@ -259,22 +216,20 @@ class Cola_Model
      *
      * @param array $config
      * @param string
-     * @return Cola_Com_Db
+     * @return Cola_Ext_Db
      */
     public function db($name = null)
     {
-        if (empty($name)) {
-            $name = $this->_db;
-        }
+        is_null($name) && $name = $this->_db;
 
         if (is_array($name)) {
-            return Cola_Com_Db::factory($name);
+            return Cola::factory('Cola_Ext_Db', $name);
         }
 
-        $regName = "_db_{$name}";
+        $regName = "_cola_db_{$name}";
         if (!$db = Cola::getReg($regName)) {
-            $config = (array)$this->config->get($name);
-            $db = Cola_Com_Db::factory($config);
+            $config = (array)Cola::getConfig($name) + array('adapter' => 'Pdo_Mysql');
+            $db = Cola::factory('Cola_Ext_Db', $config);
             Cola::setReg($regName, $db);
         }
 
@@ -282,33 +237,56 @@ class Cola_Model
     }
 
     /**
-     * Set table Name
+     * Init Cola_Ext_Cache
      *
-     * @param string $table
+     * @param mixed $name
+     * @return Cola_Ext_Cache
      */
-    public function table($table = null)
+    public function cache($name = null)
     {
-        if (!is_null($table)) {
-            $this->_table = $table;
-            return $this;
+        is_null($name) && ($name = $this->_cache);
+
+        if (is_array($name)) {
+            return Cola::factory('Cola_Ext_Cache', $name);
         }
 
-        return $this->_table;
+        $regName = "_cola_cache_{$name}";
+        if (!$cache = Cola::getReg($regName)) {
+            $config = (array)Cola::getConfig($name);
+            $cache = Cola::factory('Cola_Ext_Cache', $config);
+            Cola::setReg($regName, $cache);
+        }
+
+        return $cache;
     }
 
     /**
-     * Get or set error
+     * Get function cache
      *
-     * @param mixed $error string|array
-     * @return mixed $error string|array
+     * @param string $func
+     * @param mixed $args
+     * @param int $ttl
+     * @param string $key
+     * @return mixed
      */
-    public function error($error = null)
+    public function cached($func, $args = array(), $ttl = null, $key = null)
     {
-        if (!is_null($error)) {
-            $this->_error = $error;
+        is_null($ttl) && ($ttl = $this->_ttl);
+
+        if (!is_array($args)) {
+            $args = array($args);
         }
 
-        return $this->_error;
+        if (is_null($key)) {
+            $key = sha1(get_class($this) . $func . serialize($args));
+        }
+
+        if (!$data = $this->cache->get($key)) {
+            $data = call_user_func_array(array($this, $func), $args);
+            $this->cache->set($key, $data, $ttl);
+        }
+
+        return $data;
     }
 
     /**
@@ -321,33 +299,21 @@ class Cola_Model
      */
     public function validate($data, $ignoreNotExists = false, $rules = null)
     {
-        $validate = $this->com->validate;
-        if (is_null($rules)) $rules = $this->_validate;
+        is_null($rules) && $rules = $this->_validate;
+        if (empty($rules)) {
+            return true;
+        }
+
+        $validate = new Cola_Ext_Validate();
+
         $result = $validate->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
-            $this->_error = array('code' => self::VALIDATE_ERROR, 'msg' => $validate->error());
+            $this->error = array('code' => self::ERROR_VALIDATE_CODE, 'msg' => $validate->errors);
+            return false;
         }
 
-        return $result;
-    }
-
-    /**
-     * Instantiated model
-     *
-     * @param string $name
-     * @param string $dir
-     * @return Cola_Model
-     */
-    protected function model($name, $dir = null)
-    {
-        null === $dir && $dir = $this->config->get('_modelsHome');
-        $class = ucfirst($name) . 'Model';
-        if (Cola::loadClass($class, $dir)) {
-            return new $class();
-        }
-
-        throw new exception("Can't load model '$class' from '$dir'");
+        return true;
     }
 
     /**
@@ -377,20 +343,12 @@ class Cola_Model
                 $this->cache = $this->cache();
                 return $this->cache;
 
-            case 'helper':
-                $this->helper = new Cola_Helper();
-                return $this->helper;
-
-            case 'com':
-                $this->com = new Cola_Com();
-                return $this->com;
-
             case 'config':
-                $this->config = Cola::config();
+                $this->config = Cola::getInstance()->config;
                 return $this->config;
 
             default:
-                throw new Exception('Undefined property: ' . get_class($this). '::' . $key);
+                throw new Cola_Exception('Undefined property: ' . get_class($this). '::' . $key);
         }
     }
 }
