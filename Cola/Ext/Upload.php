@@ -85,7 +85,7 @@ class Cola_Ext_Upload
             $keys = array('name', 'type', 'tmp_name', 'error', 'size');
 
             for ($i = 0; $i < $cnt; $i++) {
-                if (empty($file['name'][$i])) continue;
+                if (empty($data['name'][$i])) continue;
                 $row = array();
                 foreach ($keys as $key) {
                     if (!isset($data[$key][$i])) {
