@@ -333,7 +333,8 @@ class Cola_Request
             if (empty($_SERVER[$key])) continue;
 		    $ips = explode(',', $_SERVER[$key], 1);
 		    $ip = $ips[0];
-		    if (false != ip2long($ip) && long2ip(ip2long($ip) === $ip)) return $ips[0];
+		    $l  = ip2long($ip);
+		    if ((false !== $l) && ($ip === long2ip($l))) return $ip;
 		}
 
         return $default;
