@@ -278,7 +278,7 @@ abstract class Cola_Model
         }
 
         if (is_null($key)) {
-            $key = sha1(get_class($this) . $func . serialize($args));
+            $key = get_class($this) . '-' . $func . '-' . sha1(serialize($args));
         }
 
         if (!$data = $this->cache->get($key)) {
