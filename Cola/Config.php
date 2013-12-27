@@ -16,7 +16,7 @@ class Cola_Config implements ArrayAccess
      * Cola_Config also implements Countable and Iterator to
      * facilitate easy access to the data.
      *
-     * @param  array   $array
+     * @param  array   $data
      * @return void
      */
     public function __construct(array $data = array())
