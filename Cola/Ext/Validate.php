@@ -248,10 +248,8 @@ class Cola_Ext_Validate
             }
 
             if (isset($rule['rules'])) {
-                $tmp = $this->check($data[$key], $rule['rules'], $ignorNotExists);
-                if (0 !== $tmp['code']) {
-                    $this->errors[$key] = $tmp['msg'];
-                }
+                $this->check($data[$key], $rule['rules'], $ignorNotExists);
+                continue;
             }
         }
 
