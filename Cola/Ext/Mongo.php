@@ -272,6 +272,6 @@ Class Cola_Ext_Mongo
      */
     public function error()
     {
-        return $this->db->lastError();
+        return $this->_db->lastError();
     }
 }
