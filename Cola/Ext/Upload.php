@@ -163,7 +163,7 @@ class Cola_Ext_Upload
         }
 
         $dir = dirname($full);
-        if ((!file_exists($dir)) && is_writable(dirname($dir))) {
+        if (!file_exists($dir)) {
             mkdir($dir, 0755, true);
         }
 

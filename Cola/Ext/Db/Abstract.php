@@ -86,15 +86,12 @@ abstract class Cola_Ext_Db_Abstract
         }
 
         $log = $sql . '@' . date('Y-m-d H:i:s');
-        if ($this->debug) {
-            $this->log[] = $log;
-        }
+        $this->log[] = $log;
 
         if ($this->query = $this->_query($sql)) {
             return $this->query;
         }
 
-        $this->log[] = $log;
         $this->_throwException();
     }
 
