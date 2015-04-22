@@ -164,14 +164,14 @@ abstract class Cola_Ext_Db_Abstract
         }
 
         $opts = $opts + array(
-            'fileds' => '*',
+            'fields' => '*',
             'where' => 1,
             'order' => null,
             'start' => -1,
             'limit' => -1
         );
 
-        $sql = "select {$opts['fileds']} from {$opts['table']} where {$opts['where']}";
+        $sql = "select {$opts['fields']} from {$opts['table']} where {$opts['where']}";
 
         if ($opts['order']) {
             $sql .= " order by {$opts['order']}";
@@ -253,7 +253,7 @@ abstract class Cola_Ext_Db_Abstract
         $sql = "select count(1) as cnt from $table where $where";
         $this->query($sql);
         $result = $this->fetch();
-        return empty($result['cnt']) ? 0 : $result['cnt'];
+        return empty($result['cnt']) ? 0 : intval($result['cnt']);
     }
 
     /**
