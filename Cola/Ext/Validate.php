@@ -189,6 +189,17 @@ class Cola_Ext_Validate
     }
 
     /**
+     * Check if is float
+     *
+     * @param mixed $value
+     * @return boolean
+     */
+    public static function float($value)
+    {
+        return is_float($value);
+    }
+
+    /**
      * Check if is digit
      *
      * @param mixed $value
@@ -242,13 +253,8 @@ class Cola_Ext_Validate
                 continue;
             }
 
-            if (!self::_check($data[$key], $rule)) {
+            if (!$this->_check($data[$key], $rule, $ignorNotExists)) {
                 $this->errors[$key] = $rule['msg'];
-                continue;
-            }
-
-            if (isset($rule['rules'])) {
-                $this->check($data[$key], $rule['rules'], $ignorNotExists);
                 continue;
             }
         }
@@ -263,7 +269,7 @@ class Cola_Ext_Validate
      * @param array $rule
      * @return mixed string as error, true for OK
      */
-    protected static function _check($data, $rule)
+    protected function _check($data, $rule, $ignorNotExists = false)
     {
         $flag = true;
         foreach ($rule as $key => $val) {
@@ -284,6 +290,7 @@ class Cola_Ext_Validate
                     $flag = self::$val($data);
                     break;
 
+                case 'in':
                 case 'max':
                 case 'min':
                 case 'max':
@@ -296,6 +303,9 @@ class Cola_Ext_Validate
                     foreach ($data as $item) {
                         if (!$flag = self::_check($item, $val)) break;
                     }
+                    break;
+                case 'rules':
+                    $flag = $this->check($data, $val, $ignorNotExists);
                     break;
             	default:
             		break;
