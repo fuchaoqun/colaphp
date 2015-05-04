@@ -119,7 +119,8 @@ class Cola_Ext_Validate
      */
     public static function email($email)
     {
-        return false !== filter_var($url, FILTER_VALIDATE_EMAIL);
+        return false !== filter_var($email, FILTER_VALIDATE_EMAIL);
+    }
 
     /**
      * Check if is url
