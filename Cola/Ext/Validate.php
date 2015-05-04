@@ -119,8 +119,7 @@ class Cola_Ext_Validate
      */
     public static function email($email)
     {
-        return preg_match('/^[a-z0-9_\-]+(\.[_a-z0-9\-]+)*@([_a-z0-9\-]+\.)+([a-z]{2}|aero|arpa|biz|com|coop|edu|gov|info|int|jobs|mil|museum|name|nato|net|org|pro|travel)$/', $email) ? true : false;
-    }
+        return false !== filter_var($url, FILTER_VALIDATE_EMAIL);
 
     /**
      * Check if is url
@@ -130,7 +129,7 @@ class Cola_Ext_Validate
      */
     public static function url($url)
     {
-        return preg_match('/^((https?|ftp|news):\/\/)?([a-z]([a-z0-9\-]*\.)+([a-z]{2}|aero|arpa|biz|com|coop|edu|gov|info|int|jobs|mil|museum|name|nato|net|org|pro|travel)|(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))(\/[a-z0-9_\-\.~]+)*(\/([a-z0-9_\-\.]*)(\?[a-z0-9+_\-\.%=&amp;]*)?)?(#[a-z][a-z0-9_]*)?$/i', $url) ? true : false;
+        return false !== filter_var($url, FILTER_VALIDATE_URL);
     }
 
     /**
@@ -301,7 +300,9 @@ class Cola_Ext_Validate
                 case 'each':
                     $val += array('required' => false);
                     foreach ($data as $item) {
-                        if (!$flag = self::_check($item, $val)) break;
+                        if (!$flag = self::_check($item, $val, $ignorNotExists)) {
+                            break;
+                        }
                     }
                     break;
                 case 'rules':
