@@ -53,7 +53,10 @@ class Cola_Ext_Http
     public static function post($url, $data, $params = array())
     {
         $params['opts'][CURLOPT_POST]       = true;
-        $params['opts'][CURLOPT_POSTFIELDS] = http_build_query($data);
+        if (is_array($data)) {
+            $data = http_build_query($data);
+        }
+        $params['opts'][CURLOPT_POSTFIELDS] = $data;
         return self::request($url, $params);
     }
 

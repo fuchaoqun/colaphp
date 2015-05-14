@@ -243,7 +243,7 @@ class Cola_Ext_Validate
     public function check($data, $rules, $ignorNotExists = false)
     {
         foreach ($rules as $key => $rule) {
-            $rule += array('required' => false, 'msg' => 'Unvalidated');
+            $rule += array('required' => false, 'msg' => 'failed');
 
             // deal with not existed
             if (!isset($data[$key])) {
