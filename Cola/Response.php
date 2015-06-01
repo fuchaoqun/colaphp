@@ -4,7 +4,7 @@
  */
 class Cola_Response
 {
-    static protected $statusTexts = array(
+    static protected $status = array(
         '100' => 'Continue',
         '101' => 'Switching Protocols',
         '200' => 'OK',
@@ -55,7 +55,7 @@ class Cola_Response
     * @param string $name  HTTP status text
     *
     */
-    public static function statusCode($code, $text = null)
+    public static function status($code, $text = null)
     {
         $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
         $text = (null === $text) ? self::$statusTexts[$code] : $text;
@@ -86,9 +86,9 @@ class Cola_Response
      * @param string $enc
      * @param string $type
      */
-    public static function charset($enc = 'UTF-8', $type = 'text/html')
+    public static function charset($encode = 'UTF-8', $type = 'text/html')
     {
-        header("Content-Type:$type;charset=$enc");
+        header("Content-Type:{$type};charset={$enc}");
     }
 
     /**

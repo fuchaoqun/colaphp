@@ -5,22 +5,6 @@
 class Cola_Request
 {
     /**
-     * Retrieve a member of the pathinfo params
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
-     */
-    public static function param($key = null, $default = null)
-    {
-        $params = (array)Cola::getReg('_params');
-
-        if (null === $key) return $params;
-
-        return (isset($params[$key]) ? $params[$key] : $default);
-    }
-
-    /**
      * Retrieve a member of the $_GET superglobal
      *
      * If no $key is passed, returns the entire $_GET array.

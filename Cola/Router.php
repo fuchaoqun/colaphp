@@ -33,22 +33,29 @@ class Cola_Router
     {
         $dispatchInfo = $this->defaultDynamicRule;
 
+        if (!preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
+            return $dispatchInfo;
+        }
+
         $tmp = explode('/', $pathInfo);
+        $cnt = count($tmp);
 
-        if ($controller = current($tmp)) {
-            $dispatchInfo['controller'] = ucfirst($controller) . 'Controller';
+        switch ($cnt) {
+            case 1:
+                $dispatchInfo['controller'] = ucfirst($tmp[0]) . 'Controller';
+                break;
+            case 2:
+                $dispatchInfo['controller'] = ucfirst($tmp[0]) . 'Controller';
+                $dispatchInfo['action'] = $tmp[1] . 'Action';
+                break;
+            case 3:
+                $dispatchInfo['sub'] = $tmp[0];
+                $dispatchInfo['controller'] = ucfirst($tmp[1]) . 'Controller';
+                $dispatchInfo['action'] = $tmp[2] . 'Action';
+                break;
+            default:
+                break;
         }
-
-        if ($action = next($tmp)) {
-            $dispatchInfo['action'] = $action . 'Action';
-        }
-
-        $params = array();
-        while (false !== ($next = next($tmp))) {
-            $params[$next] = urldecode(next($tmp));
-        }
-
-        Cola::setReg('_params', $params);
 
         return $dispatchInfo;
     }
@@ -69,19 +76,7 @@ class Cola_Router
                 continue;
             }
 
-            if (isset($rule['maps']) && is_array($rule['maps'])) {
-                $params = array();
-                foreach ($rule['maps'] as $pos => $key) {
-                    if (isset($matches[$pos]) && '' !== $matches[$pos]) {
-                        $params[$key] = urldecode($matches[$pos]);
-                    }
-                }
-                if (isset($rule['defaults'])) {
-                    $params += $rule['defaults'];
-                }
-
-                Cola::setReg('_params', $params);
-            }
+            $rule['params'] = array_slice($matches, 1);
             return $rule;
         }
 

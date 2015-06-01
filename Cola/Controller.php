@@ -15,7 +15,11 @@ abstract class Cola_Controller
      * Constructor
      *
      */
-    public function __construct() {}
+    public function __construct()
+    {
+        $this->get = $_GET;
+        $this->post = $_POST;
+    }
 
     /**
      * Magic method
@@ -51,17 +55,6 @@ abstract class Cola_Controller
     }
 
     /**
-    * Param var
-    *
-    * @param string $key
-    * @param mixed $default
-    */
-    protected function param($key = null, $default = null)
-    {
-        return Cola_Request::param($key, $default);
-    }
-
-    /**
      * View
      *
      * @param array $config
@@ -93,12 +86,7 @@ abstract class Cola_Controller
      */
     protected function defaultTemplate()
     {
-        $dispatchInfo = Cola::getInstance()->dispatchInfo;
-
-        $tpl = str_replace('_', DIRECTORY_SEPARATOR, substr($dispatchInfo['controller'], 0, -10))
-             . DIRECTORY_SEPARATOR
-             . substr($dispatchInfo['action'], 0, -6)
-             . $this->tplExt;
+        $tpl = $_SERVER['PATH_INFO'] . $this->tplExt;
 
         return $tpl;
     }
@@ -114,6 +102,30 @@ abstract class Cola_Controller
     }
 
     /**
+     * JSON
+     *
+     * @param mixed $data
+     * @param string $var jsonp var name
+     *
+     */
+    protected function json($data, $var = null, $encode = 'UTF-8', $exit = true)
+    {
+        if (!is_string($data)) {
+            $data = json_encode($data);
+        }
+
+        if ($var) {
+            Cola_Response::charset($encode, 'application/javascript');
+            echo "var {$var}={$data};";
+        } else {
+            Cola_Response::charset($encode, 'application/json');
+            echo $data;
+        }
+
+        $exit && exit();
+    }
+
+    /**
      * Abort
      *
      * @param mixed $data
@@ -122,11 +134,7 @@ abstract class Cola_Controller
      */
     protected function abort($data, $var = null)
     {
-        if (!is_string($data)) {
-            $data = json_encode($data);
-        }
-        echo $var ? "var {$var}={$data};" : $data;
-        exit();
+        $this->json($data, $var);
     }
 
     /**

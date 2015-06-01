@@ -269,7 +269,21 @@ class Cola
 
             $this->pathInfo || $this->pathInfo = (isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
 
-            $this->dispatchInfo = $this->router->match($this->pathInfo);
+            $dispatchInfo = $this->router->match($this->pathInfo);
+
+            if (empty($dispatchInfo['sub'])) {
+                $dispatchInfo['sub'] = '';
+            } else {
+                $dispatchInfo['sub'] = trim($dispatchInfo['sub'], '/') . '/';
+            }
+
+            $dispatchInfo += array(
+                'file' => self::getConfig('_controllersHome')
+                        . "/{$dispatchInfo['sub']}{$dispatchInfo['controller']}.php",
+                'params' => array()
+            );
+
+            $this->dispatchInfo = $dispatchInfo;
         }
 
         return $this->dispatchInfo;
@@ -293,10 +307,6 @@ class Cola
         }
 
         if (isset($dispatchInfo['controller'])) {
-            $classFile = self::getConfig('_controllersHome') . "/{$dispatchInfo['controller']}.php";
-            if (!self::loadClass($dispatchInfo['controller'], $classFile)) {
-                throw new Cola_Exception_Dispatch("Can't load controller:{$dispatchInfo['controller']}");
-            }
             $controller = new $dispatchInfo['controller']();
         }
 
@@ -305,7 +315,7 @@ class Cola
             if (!is_callable($func, true)) {
                 throw new Cola_Exception_Dispatch("Can't dispatch action:{$dispatchInfo['action']}");
             }
-            call_user_func($func);
+            call_user_func_array($func, $dispatchInfo['params']);
         }
     }
 }

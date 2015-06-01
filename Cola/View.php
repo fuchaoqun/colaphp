@@ -28,15 +28,6 @@ class Cola_View
     }
 
     /**
-     * Render view
-     *
-     */
-    protected function _render($tpl, $dir = null)
-    {
-
-    }
-
-    /**
      * Fetch
      *
      * @param string $tpl

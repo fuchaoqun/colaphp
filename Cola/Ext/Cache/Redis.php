@@ -6,11 +6,11 @@
 class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
 {
     public $options = array(
-        'persistent'            => true,
-        'host'                  => '127.0.0.1',
-        'port'                  => 6379,
-        'timeout'               => 3,
-        'ttl'                   => 0,
+        'persistent' => true,
+        'host'       => '127.0.0.1',
+        'port'       => 6379,
+        'timeout'    => 3,
+        'ttl'        => 0,
     );
 
     public $optionKeys = array(Redis::OPT_SERIALIZER, Redis::OPT_PREFIX);
@@ -71,5 +71,16 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
             return $this->conn->get($id);
         }
         return array_combine($id, $this->conn->mGet($id));
+    }
+
+    /**
+     * Magic method
+     *
+     * @param string $methodName
+     * @param array $args
+     */
+    public function __call($method, $args)
+    {
+        call_user_func_array(array($this->conn, $method), $args);
     }
 }

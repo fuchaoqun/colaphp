@@ -28,13 +28,13 @@ class Cola_Ext_Cache_Memcached extends Cola_Ext_Cache_Abstract
      * @param int $ttl
      * @return boolean
      */
-    public function set($id, $data, $ttl = null)
+    public function set($key, $val, $ttl = null)
     {
         if (null === $ttl) {
             $ttl = $this->options['ttl'];
         }
 
-        return $this->conn->set($id, $data, $ttl);
+        return $this->conn->set($key, $val, $ttl);
     }
 
     /**
@@ -43,8 +43,13 @@ class Cola_Ext_Cache_Memcached extends Cola_Ext_Cache_Abstract
      * @param mixed $id
      * @return array
      */
-    public function get($id)
+    public function get($key)
     {
-        return is_array($id) ? $this->conn->getMulti($id) : $this->conn->get($id);
+        return is_array($key) ? $this->conn->getMulti($key) : $this->conn->get($key);
+    }
+
+    public function del($key)
+    {
+        return $this->conn->delete($key);
     }
 }

@@ -8,6 +8,8 @@ class Cola_Config implements ArrayAccess
      */
     protected $_data = array();
 
+    public $delimiter = '.';
+
     /**
      * Cola_Config provides a property based interface to
      * an array. The data are read-only unless $allowModifications
@@ -106,7 +108,7 @@ class Cola_Config implements ArrayAccess
      */
     public function __isset($name)
     {
-        return isset($this->_data[$name]);
+        return null !== $this->get($name);
     }
 
     /**
@@ -118,11 +120,14 @@ class Cola_Config implements ArrayAccess
      */
     public function __unset($name)
     {
-        if ($this->_allowModifications) {
-            unset($this->_data[$name]);
-        } else {
-            throw new Cola_Exception('Cola_Config is read only');
+        $pos = & $this->_data;
+        $name = explode($delimiter, $name);
+        $cnt = count($name);
+        for ($i = 0; $i < $cnt - 1; $i ++) {
+            if (!isset($pos[$name[$i]])) return;
+            $pos = & $pos[$name[$i]];
         }
+        unset($pos);
     }
 
 

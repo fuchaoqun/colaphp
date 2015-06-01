@@ -29,7 +29,7 @@ abstract class Cola_Ext_Cache_Abstract
      */
     public function __set($key, $value)
     {
-        return null === $value ? $this->delete($key) : $this->set($key, $value);
+        return null === $value ? $this->del($key) : $this->set($key, $value);
     }
 
     /**
@@ -51,7 +51,7 @@ abstract class Cola_Ext_Cache_Abstract
      */
     public function __unset($key)
     {
-        return $this->delete($key);
+        return $this->del($key);
     }
 
      /**

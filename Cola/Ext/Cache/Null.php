@@ -33,7 +33,7 @@ class Cola_Ext_Cache_Null extends Cola_Ext_Cache_Abstract
      * @param string $id
      * @return boolean
      */
-    public function delete($key)
+    public function del($key)
     {
         return true;
     }
