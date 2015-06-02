@@ -269,21 +269,21 @@ class Cola
 
             $this->pathInfo || $this->pathInfo = (isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
 
-            $dispatchInfo = $this->router->match($this->pathInfo);
+            $di = $this->router->match($this->pathInfo);
 
-            if (empty($dispatchInfo['sub'])) {
-                $dispatchInfo['sub'] = '';
+            if (empty($di['sub'])) {
+                $di['sub'] = '';
             } else {
-                $dispatchInfo['sub'] = trim($dispatchInfo['sub'], '/') . '/';
+                $di['sub'] = trim($di['sub'], '/') . '/';
             }
 
-            $dispatchInfo += array(
+            $di += array(
                 'file' => self::getConfig('_controllersHome')
-                        . "/{$dispatchInfo['sub']}{$dispatchInfo['controller']}.php",
+                        . "/{$di['sub']}{$di['controller']}.php",
                 'params' => array()
             );
 
-            $this->dispatchInfo = $dispatchInfo;
+            $this->dispatchInfo = $di;
         }
 
         return $this->dispatchInfo;
@@ -295,27 +295,24 @@ class Cola
      */
     public function dispatch()
     {
-        if (!$dispatchInfo = $this->getDispatchInfo(true)) {
+        if (!$di = $this->getDispatchInfo(true)) {
             throw new Cola_Exception_Dispatch('No dispatch info found');
         }
 
-        if (isset($dispatchInfo['file'])) {
-            if (!file_exists($dispatchInfo['file'])) {
-                throw new Cola_Exception_Dispatch("Can't find dispatch file:{$dispatchInfo['file']}");
-            }
-            require_once $dispatchInfo['file'];
+        if (isset($di['file']) && file_exists($di['file'])) {
+            require_once $di['file'];
         }
 
-        if (isset($dispatchInfo['controller'])) {
-            $controller = new $dispatchInfo['controller']();
+        if (isset($di['controller'])) {
+            $controller = new $di['controller']();
         }
 
-        if (isset($dispatchInfo['action'])) {
-            $func = isset($controller) ? array($controller, $dispatchInfo['action']) : $dispatchInfo['action'];
+        if (isset($di['action'])) {
+            $func = isset($controller) ? array($controller, $di['action']) : $di['action'];
             if (!is_callable($func, true)) {
-                throw new Cola_Exception_Dispatch("Can't dispatch action:{$dispatchInfo['action']}");
+                throw new Cola_Exception_Dispatch("Can't dispatch action:{$di['action']}");
             }
-            call_user_func_array($func, $dispatchInfo['params']);
+            call_user_func_array($func, $di['params']);
         }
     }
 }
