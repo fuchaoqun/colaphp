@@ -85,8 +85,7 @@ abstract class Cola_Ext_Db_Abstract
             $this->connect();
         }
 
-        $log = $sql . '@' . date('Y-m-d H:i:s');
-        $this->log[] = $log;
+        $this->log[] = array('time' => date('Y-m-d H:i:s'), 'sql' => $sql);
 
         if ($this->query = $this->_query($sql)) {
             return $this->query;
@@ -113,10 +112,16 @@ abstract class Cola_Ext_Db_Abstract
                 break;
             case 'INSERT':
                 $result = $this->lastInsertId();
+                if ('0' === $result) {
+                    $result = true;
+                } else if (0 < $result) {
+                    $result = intval($result);
+                }
                 break;
             case 'UPDATE':
             case 'DELETE':
                 $result = $this->affectedRows();
+                (0 === $result) && ($result = true);
                 break;
             default:
                 $result = $this->query;

@@ -11,7 +11,7 @@ class Cola_Ext_Upload
      * @var array
      */
     public $config = array(
-        'savePath'     => '/tmp',
+        'dir'     => '/tmp',
         'minSize'      => -1,
         'maxSize'      => -1,
         'minWidth'     => -1,
@@ -20,7 +20,7 @@ class Cola_Ext_Upload
         'maxHeight'    => -1,
         'allowedExts'  => '*',
         'allowedTypes' => '*',
-        'imageExts'    => array('.png', '.jpg', '.gif', '.jpeg'),
+        'imageExts'    => array('.png', '.jpg', '.gif', '.jpeg', '.bmp'),
         'override'     => false,
         'error'        => array(
             1 => 'Exceeds upload_max_filesize',
@@ -57,7 +57,7 @@ class Cola_Ext_Upload
     {
         $this->config = $config + $this->config;
 
-        $this->config['savePath'] = rtrim($this->config['savePath'], DIRECTORY_SEPARATOR);
+        $this->config['dir'] = rtrim($this->config['dir'], DIRECTORY_SEPARATOR);
 
         $this->files();
     }
@@ -94,54 +94,22 @@ class Cola_Ext_Upload
                     }
                     $row[$key] = $data[$key][$i];
                 }
-                if ($row) {
-                    $row['ext'] = $this->getExt($data['name'][$i], true);
-                    $files[] = $row;
-                }
+                if (!$row) continue;
+                $row['ext'] = $this->getExt($data['name'][$i], true);
+                $files[] = $row;
             }
         }
 
         foreach ($files as $file) {
-            if ($this->check($file)) continue;
-            $files = array();
-            break;
+            if (!$this->check($file)) {
+                $files = array();
+                break;
+            }
         }
 
         $this->files = $files;
 
         return $this->files;
-    }
-
-    /**
-     * Save uploaded files
-     *
-     * @param array $file
-     * @return array
-     */
-    public function save($namedBy = 'Cola_Ext_Upload::defaultName')
-    {
-        $ret = array();
-
-        foreach ($this->files as $file) {
-            $name = is_callable($namedBy, true) ?  call_user_func($namedBy, $file) : null;
-
-            if ($tmp = $this->move($file, $name)) {
-                $ret[] = $tmp;
-            }
-        }
-
-        return $ret;
-    }
-
-    /**
-     * Default Name function
-     *
-     * @param array $file
-     * @return array
-     */
-    public static function defaultName($file)
-    {
-        return date('Ym') . DIRECTORY_SEPARATOR . uniqid('') . $file['ext'];
     }
 
     /**
@@ -155,7 +123,7 @@ class Cola_Ext_Upload
     {
         if (null === $name) $name = $file['name'];
 
-        $full = $this->config['savePath'] . DIRECTORY_SEPARATOR . $name;
+        $full = $this->config['dir'] . DIRECTORY_SEPARATOR . $name;
 
         if (file_exists($full) && !$this->config['override']) {
             $this->error = array('code' => -25, 'msg' => "{$name}: File exited");
@@ -217,7 +185,7 @@ class Cola_Ext_Upload
      * @param string $file
      * @return array like array(x, y),x is width, y is height
      */
-    public function getImageSize($name)
+    public static function getImageSize($name)
     {
         if (function_exists('getimagesize')) {
 			$size = @getimagesize($name);

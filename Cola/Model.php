@@ -4,7 +4,7 @@
  */
 abstract class Cola_Model
 {
-    const ERROR_VALIDATE_CODE = -400;
+    const ERR_CODE_INVALID = -400;
 
     /**
      * Db name
@@ -42,11 +42,11 @@ abstract class Cola_Model
     protected $_ttl = 60;
 
     /**
-     * Validate rules
+     * Validator rules
      *
      * @var array
      */
-    protected $_validate = array();
+    protected $_rules = array();
 
     /**
      * Error infomation
@@ -299,17 +299,17 @@ abstract class Cola_Model
      */
     public function validate($data, $ignoreNotExists = false, $rules = null)
     {
-        is_null($rules) && $rules = $this->_validate;
+        is_null($rules) && $rules = $this->_rules;
         if (empty($rules)) {
             return true;
         }
 
-        $validate = new Cola_Ext_Validate();
+        $validator = new Cola_Ext_Validator();
 
-        $result = $validate->check($data, $rules, $ignoreNotExists);
+        $result = $validator->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
-            $this->error = array('code' => self::ERROR_VALIDATE_CODE, 'msg' => $validate->errors);
+            $this->error = array('code' => self::ERR_CODE_INVALID, 'msg' => $validator->errors);
             return false;
         }
 

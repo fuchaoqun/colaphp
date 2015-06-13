@@ -1,5 +1,1 @@
-A KISS PHP Framework
-
-Some old documents can be found here: http://code.google.com/p/colaphp/
-
-Read the codes, not the documents.
+This branch is under heavy refactoring, !!! NOT_USE_IN_PRODUCTION !!!

@@ -49,7 +49,7 @@ class Cola_Router
                 $dispatchInfo['action'] = $tmp[1] . 'Action';
                 break;
             case 3:
-                $dispatchInfo['sub'] = $tmp[0];
+                $dispatchInfo['module'] = $tmp[0];
                 $dispatchInfo['controller'] = ucfirst($tmp[1]) . 'Controller';
                 $dispatchInfo['action'] = $tmp[2] . 'Action';
                 break;

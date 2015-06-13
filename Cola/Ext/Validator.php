@@ -24,7 +24,7 @@ $rules = array(
 var_dump(Cola_Ext_Validate::check($data, $rules));
 **/
 
-class Cola_Ext_Validate
+class Cola_Ext_Validator
 {
     /**
      * Validate Errors
@@ -246,11 +246,20 @@ class Cola_Ext_Validate
             $rule += array('required' => false, 'msg' => 'failed');
 
             // deal with not existed
-            if (!isset($data[$key])) {
-                if ($rule['required'] && !$ignorNotExists) {
-                    $this->errors[$key] = $rule['msg'];
-                }
+            if ((!isset($data[$key])) && $rule['required'] && (!$ignorNotExists)) {
+                $this->errors[$key] = $rule['msg'];
                 continue;
+            }
+
+            if (!isset($data[$key])) continue;
+
+            if (isset($rule['rules'])) {
+                $class = get_class();
+                $validator = new $class();
+                if (!$validator->check($data[$key], $rule['rules'], $ignorNotExists)) {
+                    $this->errors[$key] = $validator->errors;
+                    continue;
+                }
             }
 
             if (!$this->_check($data[$key], $rule, $ignorNotExists)) {
@@ -271,23 +280,30 @@ class Cola_Ext_Validate
      */
     protected function _check($data, $rule, $ignorNotExists = false)
     {
-        $flag = true;
         foreach ($rule as $key => $val) {
             switch ($key) {
-            	case 'required':
-            		if ($val) $flag = self::notEmpty($data);
-            		break;
+                case 'required':
+                    if ($val && !self::notEmpty($data)) {
+                        return false;
+                    }
+                    break;
 
                 case 'func':
-                    $flag = call_user_func($val, $data);
+                    if (!call_user_func($val, $data)) {
+                        return false;
+                    }
                     break;
 
                 case 'regex':
-                    $flag = self::match($data, $val);
+                    if (!self::match($data, $val)) {
+                        return false;
+                    }
                     break;
 
                 case 'type':
-                    $flag = self::$val($data);
+                    if (!self::$val($data)) {
+                        return false;
+                    }
                     break;
 
                 case 'in':
@@ -295,25 +311,20 @@ class Cola_Ext_Validate
                 case 'min':
                 case 'max':
                 case 'range':
-                    $flag = self::$key($data, $val);
+                    if (!self::$key($data, $val)) {
+                        return false;
+                    }
                     break;
 
                 case 'each':
-                    $val += array('required' => false);
                     foreach ($data as $item) {
-                        if (!$flag = self::_check($item, $val, $ignorNotExists)) {
-                            break;
+                        if (!self::_check($item, $val, $ignorNotExists)) {
+                            return false;
                         }
                     }
                     break;
-                case 'rules':
-                    $flag = $this->check($data, $val, $ignorNotExists);
+                default:
                     break;
-            	default:
-            		break;
-            }
-            if (!$flag) {
-                return false;
             }
         }
 

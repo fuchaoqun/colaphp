@@ -86,7 +86,11 @@ abstract class Cola_Controller
      */
     protected function defaultTemplate()
     {
-        $tpl = $_SERVER['PATH_INFO'] . $this->tplExt;
+        $pi = $_SERVER['PATH_INFO'];
+        if (empty($pi)) {
+            $pi = 'index/index';
+        }
+        $tpl = trim($pi, '/') . $this->tplExt;
 
         return $tpl;
     }

@@ -5,24 +5,42 @@
 
 class Cola_Ext_Http
 {
-    /**
-     * Default params
-     *
-     * @var array
-     */
-    public static $defaultParams = array(
-        'headers' => array(),
-        'timeout' => 15,
-        'ssl'     => false,
-        'opts'    => array(),
-    );
+    public $url;
+    public $data;
 
     /**
-     * Curl Http Info
+     * Default Options
      *
      * @var array
      */
-    public static $info = array();
+    public $opts = array(
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_RETURNTRANSFER => true,
+    );
+
+    protected $maps = array(
+        'timeout' => CURLOPT_TIMEOUT,
+        'ssl'     => CURLOPT_SSL_VERIFYPEER,
+        'headers' => CURLOPT_HTTPHEADER
+    );
+
+    public $response;
+    public $info = array();
+
+
+
+    public function __construct($url, $data = array(), $opts = array())
+    {
+        $this->url = $url;
+        $this->data = $data;
+        foreach ($opts as $key => $val) {
+            if (isset($this->maps[$key])) {
+                $this->opts[$this->maps[$key]] = $val;
+            } else {
+                $this->opts[$key] = $val;
+            }
+        }
+    }
 
     /**
      * HTTP GET
@@ -32,14 +50,16 @@ class Cola_Ext_Http
      * @param array $params
      * @return string
      */
-    public static function get($url, $data = array(), $params = array())
+    public function get()
     {
-        if ($data) {
-            $queryStr = http_build_query($data);
+        $url = $this->url;
+
+        if ($this->data) {
+            $queryStr = http_build_query($this->data);
             $url .= "?{$queryStr}";
         }
 
-        return self::request($url, $params);
+        return $this->request($url, $this->opts);
     }
 
     /**
@@ -50,68 +70,46 @@ class Cola_Ext_Http
      * @param array $params
      * @return string
      */
-    public static function post($url, $data, $params = array())
+    public function post()
     {
-        $params['opts'][CURLOPT_POST]       = true;
-        if (is_array($data)) {
-            $data = http_build_query($data);
+        $opts = $this->opts;
+        $opts[CURLOPT_POST] = true;
+
+        if (!empty($this->data)) {
+            $opts[CURLOPT_POSTFIELDS] = http_build_query($data);
         }
-        $params['opts'][CURLOPT_POSTFIELDS] = $data;
-        return self::request($url, $params);
+
+        return $this->request($this->url, $opts);
     }
 
     /**
      * HTTP request
      *
      * @param string $uri
-     * @param array $params
+     * @param array $opts
      * @return string or throw Exception
      */
-    public static function request($url, $params)
+    public function request($url, $opts)
     {
         if (!function_exists('curl_init')) {
             throw new Cola_Exception('Can not find curl extension');
         }
 
         $curl = curl_init();
-        $opts = self::initOpts($url, $params);
+        $opts[CURLOPT_URL] = $url;
         curl_setopt_array($curl, $opts);
-        $response = curl_exec($curl);
+        $this->response = curl_exec($curl);
 
         $errno = curl_errno($curl);
         $error = curl_error($curl);
 
-        self::$info = curl_getinfo($curl) + array('errno' => $errno, 'error' => $error);
+        $this->info = curl_getinfo($curl) + array('errno' => $errno, 'error' => $error);
 
         if (0 !== $errno) {
             throw new Cola_Exception($error, $errno);
         }
 
         curl_close ($curl);
-        return $response;
-    }
-
-    /**
-     * Init curl opts
-     *
-     * @param string $url
-     * @param array $params
-     * @return array
-     */
-    public static function initOpts($url, $params)
-    {
-        $params += self::$defaultParams;
-        $opts = $params['opts'] + array(
-            CURLOPT_URL            => $url,
-            CURLOPT_TIMEOUT        => $params['timeout'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => $params['ssl'],
-        );
-
-        if ($params['headers']) {
-            $opts[CURLOPT_HTTPHEADER] = $params['headers'];
-        }
-
-        return $opts;
+        return $this->response;
     }
 }

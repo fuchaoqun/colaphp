@@ -271,17 +271,13 @@ class Cola
 
             $di = $this->router->match($this->pathInfo);
 
-            if (empty($di['sub'])) {
-                $di['sub'] = '';
+            if (empty($di['module'])) {
+                $file = self::getConfig('_controllersHome') . "/{$di['controller']}.php";
             } else {
-                $di['sub'] = trim($di['sub'], '/') . '/';
+                $file = self::getConfig('_controllersHome') . "/{$di['module']}/{$di['controller']}.php";
             }
 
-            $di += array(
-                'file' => self::getConfig('_controllersHome')
-                        . "/{$di['sub']}{$di['controller']}.php",
-                'params' => array()
-            );
+            $di += array('file' => $file, 'params' => array());
 
             $this->dispatchInfo = $di;
         }

@@ -88,7 +88,7 @@ class Cola_Response
      */
     public static function charset($encode = 'UTF-8', $type = 'text/html')
     {
-        header("Content-Type:{$type};charset={$enc}");
+        header("Content-Type:{$type};charset={$encode}");
     }
 
     /**
