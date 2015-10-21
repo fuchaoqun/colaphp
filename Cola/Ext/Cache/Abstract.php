@@ -6,18 +6,18 @@ abstract class Cola_Ext_Cache_Abstract
 {
     public $conn;
 
-    public $options = array(
-        'ttl' => 900
+    public $config = array(
+        'ttl' => 86400
     );
 
     /**
      * Constructor
      *
-     * @param array $options
+     * @param array $config
      */
-    public function __construct($options = array())
+    public function __construct($config = array())
     {
-        $this->options = $options + $this->options;
+        $this->config = $config + $this->config;
     }
 
     /**

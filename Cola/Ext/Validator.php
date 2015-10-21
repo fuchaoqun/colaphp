@@ -200,17 +200,6 @@ class Cola_Ext_Validator
     }
 
     /**
-     * Check if is digit
-     *
-     * @param mixed $value
-     * @return boolean
-     */
-    public static function digit($value)
-    {
-        return is_int($value) || ctype_digit($value);
-    }
-
-    /**
      * Check if is string
      *
      * @param mixed $value

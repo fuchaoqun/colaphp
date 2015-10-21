@@ -48,6 +48,19 @@ class Cola_Response
         '505' => 'HTTP Version Not Supported',
     );
 
+    static protected $mime = array(
+        'css'  => 'text/css',
+        'html' => 'text/html',
+        'htm'  => 'text/html',
+        'xml'  => 'text/xml',
+        'txt'  => 'text/plain',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'js'   => 'application/javascript',
+    );
+
     /**
     * Sets response status code.
     *
@@ -176,5 +189,34 @@ class Cola_Response
     {
         $time = date('D, d M Y H:i:s', time() + $seconds) . ' GMT';
         header("Expires: $time");
+    }
+
+    public static function sendfile($path, $mime = null, $attachment = null)
+    {
+        if (is_null($mime)) {
+            $pathinfo = pathinfo($path);
+            $ext = $pathinfo['extension'];
+            if (isset(self::$mime[$ext])) {
+                $mime =  self::$mime[$ext];
+            } else {
+                $mime = 'application/octet-stream';
+                empty($attachment) && $attachment = basename($path);
+            }
+        }
+
+        header("Content-type: {$mime}");
+        if ($attachment) {
+            $ua = $_SERVER["HTTP_USER_AGENT"];
+            $encode = rawurldecode($attachment);
+            if (false !== strpos($ua, 'MSIE')) {
+                header("Content-Disposition: attachment; filename=\"{$encode}\"");
+            } else if (false !== strpos($ua, Firefox)) {
+                header("Content-Disposition: attachment; filename*=\"utf8''{$attachment}");
+            } else {
+                header("Content-Disposition: attachment; filename=\"{$attachment}\"");
+            }
+        }
+
+        header("X-Accel-Redirect: {$path}");
     }
 }

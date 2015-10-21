@@ -70,7 +70,6 @@ class Cola
                 'Cola_Response'            => COLA_DIR . '/Response.php',
                 'Cola_Ext_Validate'        => COLA_DIR . '/Ext/Validate.php',
                 'Cola_Exception'           => COLA_DIR . '/Exception.php',
-                'Cola_Exception_Dispatch'  => COLA_DIR . '/Exception/Dispatch.php',
             ),
         ));
 
@@ -178,48 +177,48 @@ class Cola
     /**
      * Load class
      *
-     * @param string $className
-     * @param string $classFile
+     * @param string $class
+     * @param string $file
      * @return boolean
      */
-    public static function loadClass($className, $classFile = '')
+    public static function loadClass($class, $file = '')
     {
-        if (class_exists($className, false) || interface_exists($className, false)) {
+        if (class_exists($class, false) || interface_exists($class, false)) {
             return true;
         }
 
-        if ((!$classFile)) {
-            $key = "_class.{$className}";
-            $classFile = self::getConfig($key);
+        if ((!$file)) {
+            $key = "_class.{$class}";
+            $file = self::getConfig($key);
         }
 
         /**
          * auto load Cola class
          */
-        if ((!$classFile) && ('Cola' === substr($className, 0, 4))) {
-            $classFile = dirname(COLA_DIR) . DIRECTORY_SEPARATOR
-                       . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
+        if ((!$file) && ('Cola' === substr($class, 0, 4))) {
+            $file = dirname(COLA_DIR) . DIRECTORY_SEPARATOR
+                  . str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
         }
 
         /**
          * auto load controller class
          */
-        if ((!$classFile) && ('Controller' === substr($className, -10))) {
-            $classFile = self::getConfig('_controllersHome') . "/{$className}.php";
+        if ((!$file) && ('Controller' === substr($class, -10))) {
+            $file = self::getConfig('_controllersHome') . "/{$class}.php";
         }
 
         /**
          * auto load model class
          */
-        if ((!$classFile) && ('Model' === substr($className, -5))) {
-            $classFile = self::getConfig('_modelsHome') . "/{$className}.php";
+        if ((!$file) && ('Model' === substr($class, -5))) {
+            $file = self::getConfig('_modelsHome') . "/{$class}.php";
         }
 
-        if (file_exists($classFile)) {
-            include $classFile;
+        if (file_exists($file)) {
+            include $file;
         }
 
-        return (class_exists($className, false) || interface_exists($className, false));
+        return (class_exists($class, false) || interface_exists($class, false)) || self::psr4($class);
     }
 
     /**
@@ -237,6 +236,43 @@ class Cola
         self::getInstance()->config->merge(array('_class' => $class));
 
         return self::$_instance;
+    }
+
+    /**
+     * psr-4 autoloading
+     * @param string $class
+     * @return boolean
+     *
+     */
+    public static function psr4($class)
+    {
+        $prefix = $class;
+        $psr4 = self::getConfig('_psr4');
+        while (false !== ($pos = strrpos($prefix, '\\'))) {
+            $prefix = substr($class, 0, $pos + 1);
+            $rest = substr($class, $pos + 1);
+            if (empty($psr4[$prefix])) continue;
+            $file = $psr4[$prefix] . DIRECTORY_SEPARATOR
+                  . str_replace('\\', DIRECTORY_SEPARATOR, $rest)
+                  . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Add psr-4 namespace
+     *
+     */
+    public static function addNamespace($prefix, $base)
+    {
+        $prefix = trim($prefix, '\\') . '\\';
+        $base = rtrim($base, DIRECTORY_SEPARATOR);
+        $key = $key;
+        self::setConfig($key, $base);
     }
 
     /**
@@ -267,19 +303,8 @@ class Cola
                 $this->router->rules += $urls;
             }
 
-            $this->pathInfo || $this->pathInfo = (isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '');
-
-            $di = $this->router->match($this->pathInfo);
-
-            if (empty($di['module'])) {
-                $file = self::getConfig('_controllersHome') . "/{$di['controller']}.php";
-            } else {
-                $file = self::getConfig('_controllersHome') . "/{$di['module']}/{$di['controller']}.php";
-            }
-
-            $di += array('file' => $file, 'params' => array());
-
-            $this->dispatchInfo = $di;
+            $this->pathInfo || $this->pathInfo = $_SERVER['PATH_INFO'];
+            $this->dispatchInfo = $this->router->match($this->pathInfo);
         }
 
         return $this->dispatchInfo;
@@ -292,23 +317,24 @@ class Cola
     public function dispatch()
     {
         if (!$di = $this->getDispatchInfo(true)) {
-            throw new Cola_Exception_Dispatch('No dispatch info found');
+            throw new Cola_Exception('No dispatch info found');
         }
+
+        $defaultModuleHome = self::getConfig('_appHome') . '/' . $di['module'];
+        $this->config->setnx('_moduleHome', $defaultModuleHome);
+        $this->config->setnx('_controllersHome', $defaultModuleHome);
 
         if (isset($di['file']) && file_exists($di['file'])) {
             require_once $di['file'];
         }
 
         if (isset($di['controller'])) {
-            $controller = new $di['controller']();
+            $controller = new $di['controller'];
         }
 
         if (isset($di['action'])) {
             $func = isset($controller) ? array($controller, $di['action']) : $di['action'];
-            if (!is_callable($func, true)) {
-                throw new Cola_Exception_Dispatch("Can't dispatch action:{$di['action']}");
-            }
-            call_user_func_array($func, $di['params']);
+            call_user_func_array($func, $di['args']);
         }
     }
 }

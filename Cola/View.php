@@ -6,25 +6,19 @@
 class Cola_View
 {
     /**
-     * Base path of views
+     * view file
      *
      * @var string
      */
-    public $viewsHome = '';
+    public $file;
 
     /**
      * Constructor
      *
      */
-    public function __construct($viewsHome = null)
+    public function __construct($file)
     {
-        if (is_null($viewsHome)) {
-            $viewsHome = Cola::getConfig('_viewsHome');
-        }
-
-        if ($viewsHome) {
-            $this->viewsHome = $viewsHome;
-        }
+        $this->file = $file;
     }
 
     /**
@@ -34,11 +28,11 @@ class Cola_View
      * @param string $dir
      * @return string
      */
-    public function fetch($tpl, $dir = null)
+    public function fetch()
     {
         ob_start();
         ob_implicit_flush(0);
-        $this->display($tpl, $dir);
+        $this->display();
         return ob_get_clean();
     }
 
@@ -48,15 +42,9 @@ class Cola_View
      * @param string $tpl
      * @param string $dir
      */
-    public function display($tpl, $dir = null)
+    public function display()
     {
-        if (null === $dir) {
-            $dir = $this->viewsHome;
-        }
-        if ($dir) {
-            $dir = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR;
-        }
-        include ($dir . $tpl);
+        include $this->file;
     }
 
     /**
@@ -97,71 +85,13 @@ class Cola_View
      * @param string $regex
      * @return string
      */
-    public static function truncate($str, $limit, $encoding = 'UTF-8', $suffix = '...', $regex = null)
-    {
-        if (function_exists('mb_strwidth')) {
-            return  self::mbTruncate($str, $limit, $encoding, $suffix);
-        }
-        return self::regexTruncate($str, $limit, $encoding, $suffix, $regex = null);
-    }
-
-    /**
-     * Truncate with mbstring
-     *
-     * @param string $str
-     * @param int $limit
-     * @param string $encoding
-     * @param string $suffix
-     * @return string
-     */
-    public static function mbTruncate($str, $limit, $encoding = 'UTF-8', $suffix = '...')
+    public static function truncate($str, $limit, $encoding = 'UTF-8', $suffix = '...')
     {
         if (mb_strwidth($str, $encoding) <= $limit) return $str;
 
         $limit -= mb_strwidth($suffix, $encoding);
         $tmp = mb_strimwidth($str, 0, $limit, '', $encoding);
         return $tmp . $suffix;
-    }
-
-    /**
-     * Truncate with regex
-     *
-     * @param string $str
-     * @param int $limit
-     * @param string $encoding
-     * @param string $suffix
-     * @param string $regex
-     * @return string
-     */
-    public static function regexTruncate($str, $limit, $encoding = 'UTF-8', $suffix = '...', $regex = null)
-    {
-        $defaultRegex = array(
-            'UTF-8'  => "/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xff][\x80-\xbf]{3}/",
-            'GB2312' => "/[\x01-\x7f]|[\xb0-\xf7][\xa0-\xfe]/",
-            'GBK'    => "/[\x01-\x7f]|[\x81-\xfe][\x40-\xfe]/",
-            'BIG5'   => "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/"
-        );
-
-        $encoding = strtoupper($encoding);
-
-        if (null === $regex && !isset($defaultRegex[$encoding])) {
-            throw new Exception("Truncate failed: not supported encoding, you should supply a regex for $encoding encoding");
-        }
-
-        $regex || $regex = $defaultRegex[$encoding];
-
-        preg_match_all($regex, $str, $match);
-
-        $trueLimit = $limit - strlen($suffix);
-        $len = $pos = 0;
-
-        foreach ($match[0] as $word) {
-            $len += strlen($word) > 1 ? 2 : 1;
-            if ($len > $trueLimit) continue;
-            $pos ++;
-        }
-        if ($len <= $limit) return $str;
-        return join("",array_slice($match[0], 0, $pos)) . $suffix;
     }
 
     /**

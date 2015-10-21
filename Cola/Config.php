@@ -87,6 +87,19 @@ class Cola_Config implements ArrayAccess
     }
 
     /**
+     * Set if not exists
+     *
+     */
+    public function setnx($name, $value, $delimiter = '.')
+    {
+        if (is_null($this->get($name, null, $delimiter))) {
+            return $this->set($name, $value, $delimiter);
+        }
+
+        return $this;
+    }
+
+    /**
      * Only allow setting of a property if $allowModifications
      * was set to true on construction. Otherwise, throw an exception.
      *

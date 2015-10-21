@@ -4,10 +4,11 @@
  */
 class Cola_Router
 {
-    public $enableDynamicMatch = true;
-    public $defaultDynamicRule = array(
+    public $default = array(
+        'module'     => 'home',
         'controller' => 'IndexController',
-        'action'     => 'indexAction'
+        'action'     => 'indexAction',
+        'args'       => array()
     );
 
     /**
@@ -27,37 +28,22 @@ class Cola_Router
      * Dynamic Match
      *
      * @param string $pathInfo
-     * @return array $dispatchInfo
+     * @return array $di
      */
-    public function dynamicMatch($pathInfo)
+    public function dynamic($pathInfo)
     {
-        $dispatchInfo = $this->defaultDynamicRule;
+        $di = $this->default;
 
         if (!preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
-            return $dispatchInfo;
+            return $di;
         }
 
         $tmp = explode('/', $pathInfo);
-        $cnt = count($tmp);
+        isset($tmp[0]) && $di['module'] = $tmp[0];
+        isset($tmp[1]) && $di['controller'] = ucfirst($tmp[1]) . 'Controller';
+        isset($tmp[2]) && $di['action'] = "{$tmp[2]}Action";
 
-        switch ($cnt) {
-            case 1:
-                $dispatchInfo['controller'] = ucfirst($tmp[0]) . 'Controller';
-                break;
-            case 2:
-                $dispatchInfo['controller'] = ucfirst($tmp[0]) . 'Controller';
-                $dispatchInfo['action'] = $tmp[1] . 'Action';
-                break;
-            case 3:
-                $dispatchInfo['module'] = $tmp[0];
-                $dispatchInfo['controller'] = ucfirst($tmp[1]) . 'Controller';
-                $dispatchInfo['action'] = $tmp[2] . 'Action';
-                break;
-            default:
-                break;
-        }
-
-        return $dispatchInfo;
+        return $di;
     }
 
     /**
@@ -71,18 +57,20 @@ class Cola_Router
         $pathInfo = trim($pathInfo, '/');
 
         foreach ($this->rules as $regex => $rule) {
-
+            $rule += array('maps' => array(), 'args' => array());
             if (!preg_match($regex, $pathInfo, $matches)) {
                 continue;
             }
 
-            $rule['params'] = array_slice($matches, 1);
+            if ($rule['maps']) {
+                foreach ($rule['maps'] as $pos => $key) {
+                    $rule['args'][$key] = urldecode($matches[$pos]);
+                }
+            }
+
             return $rule;
         }
 
-        if ($this->enableDynamicMatch) {
-            return $this->dynamicMatch($pathInfo);
-        }
-        return false;
+        return $this->dynamic($pathInfo);
     }
 }

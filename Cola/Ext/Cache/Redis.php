@@ -5,36 +5,34 @@
  */
 class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
 {
-    public $options = array(
+    public $config = array(
         'persistent' => true,
         'host'       => '127.0.0.1',
         'port'       => 6379,
         'timeout'    => 3,
         'ttl'        => 0,
+        'options'    => array()
     );
 
-    public $optionKeys = array(Redis::OPT_SERIALIZER, Redis::OPT_PREFIX);
     /**
      * Constructor
      *
-     * @param array $options
+     * @param array $config
      */
-    public function __construct($options=array())
+    public function __construct($config = array())
     {
-        parent::__construct($options);
+        parent::__construct($config);
 
         $this->conn = new Redis();
 
-        if (empty($this->options['persistent'])) {
-            $this->conn->connect($this->options['host'], $this->options['port'], $this->options['timeout']);
+        if (empty($this->config['persistent'])) {
+            $this->conn->connect($this->config['host'], $this->config['port'], $this->config['timeout']);
         } else {
-            $this->conn->pconnect($this->options['host'], $this->options['port'], $this->options['timeout']);
+            $this->conn->pconnect($this->config['host'], $this->config['port'], $this->config['timeout']);
         }
 
-        foreach ($this->optionKeys as $key) {
-            if (isset($this->options[$key])) {
-                $this->conn->setOption($key, $this->options[$key]);
-            }
+        foreach ($this->config['options'] as $key => $val) {
+            $this->conn->setOption($key, $val);
         }
     }
 
@@ -49,7 +47,7 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
     public function set($id, $data, $ttl = null)
     {
         if (null === $ttl) {
-            $ttl = $this->options['ttl'];
+            $ttl = $this->config['ttl'];
         }
 
         if (empty($ttl)) {
@@ -71,6 +69,30 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
             return $this->conn->get($id);
         }
         return array_combine($id, $this->conn->mGet($id));
+    }
+
+    /**
+     * Put into Queue
+     *
+     */
+    public function qput($queue, $value)
+    {
+        return $this->conn->lPush($queue, $value);
+    }
+
+    /**
+     * Get from queue
+     *
+     * @param int $timeout >=0 for block, negative for non-blocking
+     */
+    public function qget($queue, $timeout = 0)
+    {
+        if (0 > $timeout) {
+            return $this->conn->rPop($queue);
+        } else {
+            $data = $this->conn->brPop((array)$queue, $timeout);
+            return isset($data[1]) ? $data[1] : false;
+        }
     }
 
     /**

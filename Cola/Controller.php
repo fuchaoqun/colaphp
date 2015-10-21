@@ -5,13 +5,6 @@
 abstract class Cola_Controller
 {
     /**
-     * Template file extension
-     *
-     * @var string
-     */
-    public $tplExt = '.php';
-
-    /**
      * Constructor
      *
      */
@@ -57,12 +50,13 @@ abstract class Cola_Controller
     /**
      * View
      *
-     * @param array $config
+     * @param array $file
      * @return Cola_View
      */
-    protected function view($viewsHome = null)
+    protected function view($file = null)
     {
-        return $this->view = new Cola_View($viewsHome);
+        empty($file) && $file = $this->defaultTemplate();
+        return $this->view = new Cola_View($file);
     }
 
     /**
@@ -70,13 +64,9 @@ abstract class Cola_Controller
      *
      * @param string $tpl
      */
-    protected function display($tpl = null, $dir = null)
+    protected function display($file = null)
     {
-        if (empty($tpl)) {
-            $tpl = $this->defaultTemplate();
-        }
-
-        $this->view->display($tpl, $dir);
+        $this->view($file)->display();
     }
 
     /**
@@ -86,13 +76,11 @@ abstract class Cola_Controller
      */
     protected function defaultTemplate()
     {
-        $pi = $_SERVER['PATH_INFO'];
-        if (empty($pi)) {
-            $pi = 'index/index';
-        }
-        $tpl = trim($pi, '/') . $this->tplExt;
-
-        return $tpl;
+        $di = Cola::getDispatchInfo();
+        $controller = strtolower(substr($di['controller'], 0, -10));
+        $action = strtolower(substr($di['action'], 0, -6));
+        $home = Cola::getConfig('_moduleHome');
+        return "{$home}/views/{$controller}.{$action}.php";
     }
 
     /**
@@ -114,17 +102,7 @@ abstract class Cola_Controller
      */
     protected function json($data, $var = null, $encode = 'UTF-8', $exit = true)
     {
-        if (!is_string($data)) {
-            $data = json_encode($data);
-        }
 
-        if ($var) {
-            Cola_Response::charset($encode, 'application/javascript');
-            echo "var {$var}={$data};";
-        } else {
-            Cola_Response::charset($encode, 'application/json');
-            echo $data;
-        }
 
         $exit && exit();
     }
@@ -138,7 +116,17 @@ abstract class Cola_Controller
      */
     protected function abort($data, $var = null)
     {
-        $this->json($data, $var);
+        is_string($data) || $data = json_encode($data);
+
+        if ($var) {
+            Cola_Response::charset($encode, 'application/javascript');
+            echo "var {$var}={$data};";
+        } else {
+            Cola_Response::charset($encode, 'application/json');
+            echo $data;
+        }
+
+        exit();
     }
 
     /**
@@ -161,8 +149,7 @@ abstract class Cola_Controller
     {
         switch ($key) {
             case 'view':
-                $this->view();
-                return $this->view;
+                return $this->view();
 
             case 'request':
                 $this->request = new Cola_Request();
