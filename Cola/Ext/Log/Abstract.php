@@ -14,60 +14,80 @@ abstract class Cola_Ext_Log_Abstract
     const INFO    = 6;  // Informational: informational messages
     const DEBUG   = 7;  // Debug: debug messages
 
-    protected $_options = array(
-        'mode' => '0755',
-        'file' => '/tmp/Cola.log',
-        'format' => '%time%|%event%|%msg%'
+    public static $events = array(
+        'emerg'  => 0, 'emergency' => 0,
+        'crit'   => 2, 'critical'  => 2,
+        'err'    => 3, 'error'     => 3,
+        'warn'   => 4, 'warning'   => 4,
+        'alert'  => 1, 'notice'    => 5,
+        'info'   => 6, 'debug'     => 7
     );
 
-    public function __construct($options = array())
+    public $config = array();
+
+    public function __construct($config = array())
     {
-        foreach ($options as $key=>$value) {
-            $this->_options[$key] = $value;
+        $this->config = $config + $this->config;
+    }
+
+    public function log($event, $log, $context = array())
+    {
+        $event = strtolower($event);
+        $context += array('event' => self::$events[$event]);
+        $log = $this->format($log, $context);
+        $this->write($log);
+    }
+
+    public function emergency($log, $context = array())
+    {
+        return $this->log('emergency', $log, $context);
+    }
+
+    public function alert($log, $context = array())
+    {
+        return $this->log('alert', $log, $context);
+    }
+
+    public function critical($log, $context = array())
+    {
+        return $this->log('critical', $log, $context);
+    }
+
+    public function error($log, $context = array())
+    {
+        return $this->log('error', $log, $context);
+    }
+
+    public function warning($log, $context = array())
+    {
+        return $this->log('warning', $log, $context);
+    }
+
+    public function notice($log, $context = array())
+    {
+        return $this->log('notice', $log, $context);
+    }
+
+    public function info($log, $context = array())
+    {
+        return $this->log('info', $log, $context);
+    }
+
+    public function debug($log, $context = array())
+    {
+        return $this->log('debug', $log, $context);
+    }
+
+    public function format($log, $context = array())
+    {
+        $keys = array();
+        $vals = array();
+        foreach ($variable as $key => $val) {
+            $keys[] = "{{$val}";
+            $vals[] = $val;
         }
+        return str_replace($keys, $vals, $log);
     }
 
-    protected function _getTime($log = null)
-    {
-        return is_array($log) && isset($log['time']) ? $log['time'] : date('Y-m-d H:i:s');
-    }
-
-    protected function _getEvent($log, $default = '*')
-    {
-        return is_array($log) && isset($log['event']) ? $log['event'] : $default;
-    }
-
-    protected function _getMsg($log)
-    {
-        return is_array($log) && isset($log['msg']) ? $log['msg'] : $log;
-    }
-
-    protected function _format($log, $defaultEvent = '*')
-    {
-        $data = array(
-            '%time%' => $this->_getTime($log),
-            '%event%' => $this->_getEvent($log, $defaultEvent),
-            '%msg%' => $this->_getMsg($log)
-        );
-        $text = str_replace(array('%time%', '%event%', '%msg%'), $data,$this->_options['format']);
-
-        return $text;
-    }
-
-    public function log($log, $event = '*')
-    {
-        $this->_handler($this->_format($log, $event));
-    }
-
-    public function error($log)
-    {
-        $this->_handler($this->_format($log, self::ERR));
-    }
-
-    public function debug($log)
-    {
-        $this->_handler($this->_format($log, self::DEBUG));
-    }
-
-    protected abstract function _handler($text);
+    public abstract function write($text);
 }
