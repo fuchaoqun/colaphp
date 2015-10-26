@@ -188,6 +188,11 @@ class Cola_Ext_Validator
         return is_int($value);
     }
 
+    public static function digit($value)
+    {
+        return ctype_digit($value);
+    }
+
     /**
      * Check if is float
      *

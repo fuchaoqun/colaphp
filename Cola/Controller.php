@@ -76,7 +76,7 @@ abstract class Cola_Controller
      */
     protected function defaultTemplate()
     {
-        $di = Cola::getDispatchInfo();
+        $di = Cola::getInstance()->getDispatchInfo();
         $controller = strtolower(substr($di['controller'], 0, -10));
         $action = strtolower(substr($di['action'], 0, -6));
         $home = Cola::getConfig('_moduleHome');
@@ -94,29 +94,15 @@ abstract class Cola_Controller
     }
 
     /**
-     * JSON
-     *
-     * @param mixed $data
-     * @param string $var jsonp var name
-     *
-     */
-    protected function json($data, $var = null, $encode = 'UTF-8', $exit = true)
-    {
-
-
-        $exit && exit();
-    }
-
-    /**
      * Abort
      *
      * @param mixed $data
      * @param string $var jsonp var name
      *
      */
-    protected function abort($data, $var = null)
+    protected function abort($data, $var = null, $encode = 'utf-8')
     {
-        is_string($data) || $data = json_encode($data);
+        is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
         if ($var) {
             Cola_Response::charset($encode, 'application/javascript');

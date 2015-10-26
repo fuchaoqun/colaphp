@@ -110,6 +110,11 @@ class Cola
         return self::$_instance;
     }
 
+    public function __invoke()
+    {
+        return Cola::getInstance();
+    }
+
     /**
      * Set Config
      *

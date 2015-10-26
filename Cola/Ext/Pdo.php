@@ -38,18 +38,17 @@ class Cola_Ext_Pdo
      * @param string $sql
      * @return Cola_Ext_Db_Mysql
      */
-    public function query($sql)
+    public function query($sql, $data = array())
     {
-        $this->log[] = array('time' => date('Y-m-d H:i:s'), 'sql' => $sql);
-        $this->stmt = $this->pdo->query($sql);
+        $this->log[] = array('time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data);
+        $this->stmt = $this->pdo->prepare($sql);
+        $this->stmt->execute($data);
         return $this->stmt;
     }
 
     public function sql($sql, $data = array())
     {
-        $this->log[] = array('time' => date('Y-m-d H:i:s'), 'sql' => $sql);
-        $this->stmt = $this->pdo->prepare($sql);
-        $this->stmt->execute($data);
+        $this->query($sql, $data);
         $tags = explode(' ', $sql, 2);
         switch (strtoupper($tags[0])) {
             case 'SELECT':
@@ -75,10 +74,10 @@ class Cola_Ext_Pdo
      * @param int $style
      * @return array
      */
-    public function row($sql, $style = PDO::FETCH_ASSOC)
+    public function row($sql, $data = array())
     {
-        $this->query($sql);
-        return $this->fetch($style);
+        $result = $this->sql($sql, $data);
+        return empty($result) ? false : $result[0];
     }
 
     /**
@@ -87,11 +86,10 @@ class Cola_Ext_Pdo
      * @param string $sql
      * @return string
      */
-    public function col($sql)
+    public function col($sql, $data = array())
     {
-        $this->query($sql);
-        $result = $this->fetch();
-        return empty($result) ? null : current($result);
+        $result = $this->sql($sql, $data);
+        return empty($result) ? false : current($result[0]);
     }
 
     /**
@@ -163,7 +161,7 @@ class Cola_Ext_Pdo
 
     public function del($table, $where = '0')
     {
-        return $this->delete($table, $where = '0');
+        return $this->delete($table, $where);
     }
 
     /**
@@ -175,8 +173,12 @@ class Cola_Ext_Pdo
      */
     public function count($table, $where)
     {
-        $sql = "select count(1) as cnt from {$table} where {$where}";
-        return intval($this->col($sql));
+        if (is_string($where)) {
+            $where = array($where, array());
+        }
+
+        $sql = "select count(1) as cnt from {$table} where {$where[0]}";
+        return intval($this->col($sql, $where[1]));
     }
 
     /**

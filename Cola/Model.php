@@ -4,7 +4,7 @@
  */
 abstract class Cola_Model
 {
-    const ERR_CODE_INVALID = -400;
+    protected $_invalidErrorCode = -400;
 
     /**
      * Db name
@@ -279,7 +279,11 @@ abstract class Cola_Model
         $result = $validator->check($data, $rules, $ignoreNotExists);
 
         if (!$result) {
-            $this->error = array('code' => self::ERR_CODE_INVALID, 'msg' => $validator->errors);
+            $this->error = array(
+                'code' => $this->_invalidErrorCode,
+                'msg'  => 'INVALID',
+                'data' => $validator->errors
+            );
             return false;
         }
 

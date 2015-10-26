@@ -76,7 +76,7 @@ class Cola_Ext_Http
         $opts[CURLOPT_POST] = true;
 
         if (!empty($this->data)) {
-            $opts[CURLOPT_POSTFIELDS] = http_build_query($data);
+            $opts[CURLOPT_POSTFIELDS] = http_build_query($this->data);
         }
 
         return $this->request($this->url, $opts);
