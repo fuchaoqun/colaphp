@@ -55,6 +55,8 @@ abstract class Cola_Model
      */
     public $error = array();
 
+    public function __construct() {}
+
     /**
      * Load data
      *

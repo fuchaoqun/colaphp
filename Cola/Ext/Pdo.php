@@ -118,6 +118,39 @@ class Cola_Ext_Pdo
     }
 
     /**
+     * Multiple insert
+     *
+     * @param string $table
+     * @param array $rows
+     * @return boolean
+     */
+    public function minsert($table, $rows)
+    {
+        if (empty($rows)) {
+            return true;
+        }
+        $bindOne = array_fill(0, count($rows[0]), '?');
+        $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
+        $bind = '(' . implode('),(', $bindAll) . ')';
+        $keys = array_keys($rows[0]);
+        $values = array();
+        foreach ($rows as $row) {
+            foreach ($keys as $key) {
+                $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
+                $values[] = $value;
+            }
+        }
+        if (is_int($keys[0])) {
+            $fields = '';
+        } else {
+            $fields = ' (`' . implode('`,`', $keys) . '`) ';
+        }
+
+        $sql = "insert into {$table}{$fields} values {$bind}";
+        return $this->sql($sql, $values);
+    }
+
+    /**
      * Update table
      *
      * @param string $table
