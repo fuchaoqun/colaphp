@@ -167,12 +167,12 @@ class Cola_Ext_Validator
     }
 
     /**
-     * Check if is numbers
+     * Check if is number or numberic string
      *
      * @param mixed $value
      * @return boolean
      */
-    public static function number($value)
+    public static function numberic($value)
     {
         return is_numeric($value);
     }
@@ -202,6 +202,14 @@ class Cola_Ext_Validator
     public static function float($value)
     {
         return is_float($value);
+    }
+
+    /**
+     * Check if is int or float
+     */
+    public static function number($value)
+    {
+        return is_int($value) || is_float($value);
     }
 
     /**
