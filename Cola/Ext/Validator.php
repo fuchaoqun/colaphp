@@ -256,8 +256,7 @@ class Cola_Ext_Validator
             if (!isset($data[$key])) continue;
 
             if (isset($rule['rules'])) {
-                $class = get_class();
-                $validator = new $class();
+                $validator = new self();
                 if (!$validator->check($data[$key], $rule['rules'], $ignorNotExists)) {
                     $this->errors[$key] = $validator->errors;
                     continue;
@@ -320,7 +319,14 @@ class Cola_Ext_Validator
 
                 case 'each':
                     foreach ($data as $item) {
-                        if (!self::_check($item, $val, $ignorNotExists)) {
+                        if (!$this->_check($item, $val, $ignorNotExists)) {
+                            return false;
+                        }
+                    }
+                    break;
+                case 'key':
+                    foreach ($data as $k => $v) {
+                        if (!$this->_check($k, $val, false)) {
                             return false;
                         }
                     }

@@ -71,7 +71,38 @@ abstract class Cola_Model
 
         try {
             $result = $this->db->sql($sql, array($id));
-            return empty($result) ? false : $result[0];
+            return empty($result) ? null : $result[0];
+        } catch (Exception $e) {
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Multi load data
+     *
+     * @param int $ids
+     * @return array
+     */
+    public function mload($ids, $col = null)
+    {
+        is_null($col) && $col = $this->_pk;
+        if (empty($ids)) {
+            return null;
+        }
+        $bind = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "select * from {$this->_table} where {$col} in ({$bind})";
+
+        try {
+            if ($raw = $this->db->sql($sql, $ids)) {
+                $result = array();
+                foreach ($raw as $row) {
+                    $result[$row[$col]] = $row;
+                }
+                return $result;
+            } else {
+                return null;
+            }
         } catch (Exception $e) {
             $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
@@ -133,6 +164,24 @@ abstract class Cola_Model
     }
 
     /**
+     * Replace
+     *
+     * @param array $data
+     * @param string $table
+     * @return boolean
+     */
+    public function replace($data)
+    {
+        try {
+            $result = $this->db->replace($this->_table, $data);
+            return $result;
+        } catch (Exception $e) {
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Update
      *
      * @param int $id
@@ -150,6 +199,17 @@ abstract class Cola_Model
             $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
             return false;
         }
+    }
+
+    public function mupdate($todos)
+    {
+        foreach ($todos as $id => $data) {
+            if (!$this->update($id, $data)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -175,6 +235,11 @@ abstract class Cola_Model
     public function del($id, $col = null)
     {
         return $this->delete($id, $col = null);
+    }
+
+    public function mdel($ids, $col = null)
+    {
+
     }
 
     /**
@@ -283,8 +348,8 @@ abstract class Cola_Model
         if (!$result) {
             $this->error = array(
                 'code' => $this->_invalidErrorCode,
-                'msg'  => 'INVALID',
-                'data' => $validator->errors
+                'msg'  => current($validator->errors),
+                'ref' => $validator->errors
             );
             return false;
         }

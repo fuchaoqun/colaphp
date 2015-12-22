@@ -59,6 +59,7 @@ class Cola_Ext_Pdo
                 break;
             case 'UPDATE':
             case 'DELETE':
+            case 'REPLACE':
                 $result = (0 <= $this->affectedRows());
                 break;
             default:
@@ -113,7 +114,7 @@ class Cola_Ext_Pdo
 
         $keys = implode(',', $keys);
         $marks = implode(',', $marks);
-        $sql = "insert into {$table} ({$keys}) values ({$marks});";
+        $sql = "insert into {$table} ({$keys}) values ({$marks})";
         return $this->sql($sql, $values);
     }
 
@@ -125,6 +126,64 @@ class Cola_Ext_Pdo
      * @return boolean
      */
     public function minsert($table, $rows)
+    {
+        if (empty($rows)) {
+            return true;
+        }
+        $bindOne = array_fill(0, count(current($rows)), '?');
+        $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
+        $bind = '(' . implode('),(', $bindAll) . ')';
+        $keys = array_keys(current($rows));
+        $values = array();
+        foreach ($rows as $row) {
+            foreach ($keys as $key) {
+                $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
+                $values[] = $value;
+            }
+        }
+        if (is_int($keys[0])) {
+            $fields = '';
+        } else {
+            $fields = ' (`' . implode('`,`', $keys) . '`) ';
+        }
+
+        $sql = "insert into {$table}{$fields} values {$bind}";
+        return $this->sql($sql, $values);
+    }
+
+    /**
+     * Replace
+     *
+     * @param string $table
+     * @param array $data
+     * @return boolean
+     */
+    public function replace($table, $data)
+    {
+        $keys = array();
+        $marks = array();
+        $values = array();
+        foreach ($data as $key => $val) {
+            is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
+            $keys[] = "`{$key}`";
+            $marks[] = '?';
+            $values[] = $val;
+        }
+
+        $keys = implode(',', $keys);
+        $marks = implode(',', $marks);
+        $sql = "replace into {$table} ({$keys}) values ({$marks})";
+        return $this->sql($sql, $values);
+    }
+
+    /**
+     * Multiple Replace
+     *
+     * @param string $table
+     * @param array $rows
+     * @return boolean
+     */
+    public function mreplace($table, $rows)
     {
         if (empty($rows)) {
             return true;
@@ -146,7 +205,7 @@ class Cola_Ext_Pdo
             $fields = ' (`' . implode('`,`', $keys) . '`) ';
         }
 
-        $sql = "insert into {$table}{$fields} values {$bind}";
+        $sql = "replace into {$table}{$fields} values {$bind}";
         return $this->sql($sql, $values);
     }
 

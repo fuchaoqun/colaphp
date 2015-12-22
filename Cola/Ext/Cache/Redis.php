@@ -94,15 +94,4 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
             return isset($data[1]) ? $data[1] : false;
         }
     }
-
-    /**
-     * Magic method
-     *
-     * @param string $methodName
-     * @param array $args
-     */
-    public function __call($method, $args)
-    {
-        call_user_func_array(array($this->conn, $method), $args);
-    }
 }

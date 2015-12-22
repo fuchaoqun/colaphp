@@ -6,7 +6,6 @@
 class Cola_Ext_Http
 {
     public $url;
-    public $data;
 
     /**
      * Default Options
@@ -18,24 +17,23 @@ class Cola_Ext_Http
         CURLOPT_RETURNTRANSFER => true,
     );
 
-    protected $maps = array(
+    protected $_maps = array(
         'timeout' => CURLOPT_TIMEOUT,
         'ssl'     => CURLOPT_SSL_VERIFYPEER,
         'headers' => CURLOPT_HTTPHEADER
     );
 
-    public $response;
+    public $rps;
     public $info = array();
 
 
 
-    public function __construct($url, $data = array(), $opts = array())
+    public function __construct($url, $opts = array())
     {
         $this->url = $url;
-        $this->data = $data;
         foreach ($opts as $key => $val) {
-            if (isset($this->maps[$key])) {
-                $this->opts[$this->maps[$key]] = $val;
+            if (isset($this->_maps[$key])) {
+                $this->opts[$this->_maps[$key]] = $val;
             } else {
                 $this->opts[$key] = $val;
             }
@@ -50,12 +48,12 @@ class Cola_Ext_Http
      * @param array $params
      * @return string
      */
-    public function get()
+    public function get($params = array())
     {
         $url = $this->url;
 
-        if ($this->data) {
-            $queryStr = http_build_query($this->data);
+        if ($params) {
+            $queryStr = http_build_query($params);
             $url .= "?{$queryStr}";
         }
 
@@ -70,14 +68,16 @@ class Cola_Ext_Http
      * @param array $params
      * @return string
      */
-    public function post()
+    public function post($data)
     {
         $opts = $this->opts;
         $opts[CURLOPT_POST] = true;
 
-        if (!empty($this->data)) {
-            $opts[CURLOPT_POSTFIELDS] = http_build_query($this->data);
+        if ($data && is_array($data)) {
+            $data = http_build_query($data);
         }
+
+        $opts[CURLOPT_POSTFIELDS] = $data;
 
         return $this->request($this->url, $opts);
     }
