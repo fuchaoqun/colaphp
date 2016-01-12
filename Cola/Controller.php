@@ -22,7 +22,8 @@ abstract class Cola_Controller
      */
     public function __call($method, $args)
     {
-        throw new Cola_Exception("Call to undefined method: Cola_Controller::{$method}()");
+        $cls = get_class($this);
+        throw new Cola_Exception("Call to undefined method: {$cls}->{$method}()");
     }
 
     /**

@@ -254,7 +254,7 @@ class Cola
         $prefix = $class;
         $psr4 = self::getConfig('_psr4');
         while (false !== ($pos = strrpos($prefix, '\\'))) {
-            $prefix = substr($class, 0, $pos + 1);
+            $prefix = substr($class, 0, $pos);
             $rest = substr($class, $pos + 1);
             if (empty($psr4[$prefix])) continue;
             $file = $psr4[$prefix] . DIRECTORY_SEPARATOR
