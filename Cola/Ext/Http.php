@@ -15,6 +15,7 @@ class Cola_Ext_Http
     public $opts = array(
         CURLOPT_TIMEOUT => 15,
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
     );
 
     protected $_maps = array(
