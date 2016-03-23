@@ -41,6 +41,18 @@ class Cola_Ext_Http
         }
     }
 
+    public static function getUrl($url, $params = array(), $opts = array())
+    {
+        $http = new self($url, $opts);
+        return $http->get($params);
+    }
+
+    public static function postUrl($url, $data = array(), $opts = array())
+    {
+        $http = new self($url, $opts);
+        return $http->post($params);
+    }
+
     /**
      * HTTP GET
      *
