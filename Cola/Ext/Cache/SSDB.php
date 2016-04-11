@@ -6,8 +6,8 @@ class Cola_Ext_Cache_SSDB extends Cola_Ext_Cache_Abstract
 {
     public $config = array(
         'host'       => '127.0.0.1',
-        'port'       => 6379,
-        'timeout'    => 3,
+        'port'       => 8888,
+        'timeout'    => 3000,
         'ttl'        => 0,
     );
 
