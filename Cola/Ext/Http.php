@@ -50,7 +50,7 @@ class Cola_Ext_Http
     public static function postUrl($url, $data = array(), $opts = array())
     {
         $http = new self($url, $opts);
-        return $http->post($params);
+        return $http->post($data);
     }
 
     /**
@@ -67,7 +67,7 @@ class Cola_Ext_Http
 
         if ($params) {
             $queryStr = http_build_query($params);
-            $url .= "?{$queryStr}";
+            $url .= ((false === strpos($url, '?')) ? "?{$queryStr}" : "&{$queryStr}");
         }
 
         return $this->request($url, $this->opts);

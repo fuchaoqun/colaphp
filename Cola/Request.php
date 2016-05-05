@@ -154,7 +154,7 @@ class Cola_Request
 
         if ('on' == self::server('HTTPS')) $url .= 's';
 
-        $url .= "://" . self::server('SERVER_NAME');
+        $url .= "://" . self::server('HTTP_HOST');
 
         $port = self::server('SERVER_PORT');
         if (80 != $port) $url .= ":{$port}";
