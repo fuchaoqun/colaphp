@@ -64,7 +64,7 @@ class Cola_Ext_Cache_SSDB extends Cola_Ext_Cache_Abstract
 
     public function hmget($key, $fields)
     {
-        $result = $this->conn->multi_hget($key);
+        $result = $this->conn->multi_hget($key, $fields);
         foreach ($fields as $field) {
             if (!isset($result[$field])) $result[$field] = null;
         }
