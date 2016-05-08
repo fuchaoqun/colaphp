@@ -59,7 +59,7 @@ class Cola_Ext_Cache_SSDB extends Cola_Ext_Cache_Abstract
 
     public function hmset($key, $data)
     {
-        return $this->conn->multi_hset($key, $data);
+        return false !== $this->conn->multi_hset($key, $data);
     }
 
     public function hmget($key, $fields)
