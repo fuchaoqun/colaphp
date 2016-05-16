@@ -105,7 +105,7 @@ abstract class Cola_Controller
     {
         is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        if ($var) {
+        if ($var && (preg_match('/^[a-zA-Z\d_]+$/', $var))) {
             Cola_Response::charset($encode, 'application/javascript');
             echo "var {$var}={$data};";
         } else {
