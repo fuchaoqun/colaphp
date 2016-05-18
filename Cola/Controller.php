@@ -98,16 +98,16 @@ abstract class Cola_Controller
      * Abort
      *
      * @param mixed $data
-     * @param string $var jsonp var name
+     * @param string $callback callback function name
      *
      */
-    protected function abort($data, $var = null, $encode = 'utf-8')
+    protected function abort($data, $callback = null, $encode = 'utf-8')
     {
         is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        if ($var && (preg_match('/^[a-zA-Z\d_]+$/', $var))) {
+        if ($callback && (preg_match('/^[a-zA-Z\d_]+$/', $callback))) {
             Cola_Response::charset($encode, 'application/javascript');
-            echo "var {$var}={$data};";
+            echo "{$callback}({$data})";
         } else {
             Cola_Response::charset($encode, 'application/json');
             echo $data;
