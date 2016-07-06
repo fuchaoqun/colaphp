@@ -103,7 +103,7 @@ abstract class Cola_Controller
      */
     protected function abort($data, $callback = null, $encode = 'utf-8')
     {
-        is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
+        is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE|JSON_HEX_QUOT);
 
         if ($callback && (preg_match('/^[a-zA-Z\d_]+$/', $callback))) {
             Cola_Response::charset($encode, 'application/javascript');
