@@ -92,7 +92,6 @@ abstract class Cola_Model
         }
         $bind = implode(',', array_fill(0, count($ids), '?'));
         $sql = "select * from {$this->_table} where {$col} in ({$bind})";
-
         try {
             if ($raw = $this->db->sql($sql, $ids)) {
                 $result = array();
@@ -319,11 +318,11 @@ abstract class Cola_Model
         }
 
         if (!$data = $this->cache->get($key)) {
-            $data = call_user_func_array(array($this, $func), $args);
+            $data = json_encode(call_user_func_array(array($this, $func), $args));
             $this->cache->set($key, $data, $ttl);
         }
 
-        return $data;
+        return json_decode($data, true);
     }
 
     /**

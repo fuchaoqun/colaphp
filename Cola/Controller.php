@@ -67,7 +67,9 @@ abstract class Cola_Controller
      */
     protected function display($file = null)
     {
-        $this->view($file)->display();
+        empty($file) && $file = $this->defaultTemplate();
+        $this->view->file = $file;
+        $this->view->display();
     }
 
     /**
