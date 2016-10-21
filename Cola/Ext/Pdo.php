@@ -8,10 +8,25 @@ class Cola_Ext_Pdo
 
     public $log = array();
 
+    public $dsn;
+    public $user;
+    public $password;
+    public $options;
+
     public function __construct($dsn, $user = '', $password = '', $options = array())
     {
         $options += array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
-        $this->pdo = new PDO($dsn, $user, $password, $options);
+        $this->dsn = $dsn;
+        $this->user = $user;
+        $this->password = $password;
+        $this->options = $options;
+        $this->connect();
+    }
+
+    public function connect()
+    {
+        $this->pdo = new PDO($this->dsn, $this->user, $this->password, $this->options);
+        return $this->pdo;
     }
 
     /**
