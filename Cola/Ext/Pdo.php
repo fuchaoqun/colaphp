@@ -353,9 +353,14 @@ class Cola_Ext_Pdo
      */
     public function ping($reconnect = true)
     {
-        if ($this->pdo && $this->pdo->query('select 1')) {
-            return true;
+        try {
+            if ($this->pdo && $this->pdo->query('select 1')) {
+                return true;
+            }
+        } catch (Exception $e) {
+
         }
+
 
         if ($reconnect) {
             $this->close();
