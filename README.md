@@ -1,1 +1,1 @@
-This branch is under heavy refactoring, !!! NOT_USE_IN_PRODUCTION !!!
+这是一个新的Cola分支，代号coke，大量重构并减少代码，与之前的版本有些许不兼容，已在两个项目中使用。
