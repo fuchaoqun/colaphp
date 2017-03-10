@@ -27,8 +27,6 @@ class Cola_Ext_Http
     public $rps;
     public $info = array();
 
-
-
     public function __construct($url, $opts = array())
     {
         $this->url = $url;
