@@ -162,6 +162,17 @@ abstract class Cola_Model
         }
     }
 
+    public function upsert($data)
+    {
+        try {
+            $result = $this->db->upsert($this->_table, $data);
+            return $result;
+        } catch (Exception $e) {
+            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
+            return false;
+        }
+    }
+
     /**
      * Replace
      *

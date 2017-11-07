@@ -70,6 +70,7 @@ class Cola_Ext_Validator
     public static function max($value, $max)
     {
         is_string($value) && $value = strlen($value);
+        is_array($value) && $value = count($value);
         return $value <= $max;
     }
 
@@ -83,6 +84,7 @@ class Cola_Ext_Validator
     public static function min($value, $min)
     {
         is_string($value) && $value = strlen($value);
+        is_array($value) && $value = count($value);
         return $value >= $min;
     }
 
@@ -96,6 +98,7 @@ class Cola_Ext_Validator
     public static function range($value, $range)
     {
         is_string($value) && $value = strlen($value);
+        is_array($value) && $value = count($value);
         return (($value >= $range[0]) && ($value <= $range[1]));
     }
 

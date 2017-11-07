@@ -166,6 +166,60 @@ class Cola_Ext_Pdo
         return $this->sql($sql, $values);
     }
 
+    public function upsert($table, $data)
+    {
+        $keys = array();
+        $marks = array();
+        $values = array();
+        $dp = [];
+        foreach ($data as $key => $val) {
+            is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
+            $keys[] = "`{$key}`";
+            $marks[] = '?';
+            $values[] = $val;
+            $dp[] = "`{$key}`=values(`{$key}`)";
+        }
+
+        $keys = implode(',', $keys);
+        $marks = implode(',', $marks);
+        $dp = implode(',', $dp);
+
+        $sql = "insert into {$table} ({$keys}) values ({$marks}) ON DUPLICATE KEY UPDATE {$dp}";
+        return $this->sql($sql, $values);
+    }
+
+    public function mupsert($table, $rows)
+    {
+        if (empty($rows)) {
+            return true;
+        }
+        $bindOne = array_fill(0, count(current($rows)), '?');
+        $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
+        $bind = '(' . implode('),(', $bindAll) . ')';
+        $keys = array_keys(current($rows));
+        $values = array();
+        foreach ($rows as $row) {
+            foreach ($keys as $key) {
+                $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
+                $values[] = $value;
+            }
+        }
+        if (is_int($keys[0])) {
+            $fields = '';
+        } else {
+            $fields = ' (`' . implode('`,`', $keys) . '`) ';
+        }
+
+        $dp = [];
+        foreach ($keys as $k) {
+            $dp[] = "`{$k}`=values(`{$k}`)";
+        }
+        $dp = implode(',', $dp);
+
+        $sql = "insert into {$table}{$fields} values {$bind} ON DUPLICATE KEY UPDATE {$dp}";
+        return $this->sql($sql, $values);
+    }
+
     /**
      * Replace
      *
