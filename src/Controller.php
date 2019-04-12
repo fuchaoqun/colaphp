@@ -1,19 +1,9 @@
 <?php
-/**
- *
- */
-abstract class Cola_Controller
-{
-    /**
-     * Constructor
-     *
-     */
-    public function __construct()
-    {
-        $this->get = $_GET;
-        $this->post = $_POST;
-    }
 
+namespace Cola;
+
+abstract class Controller
+{
     /**
      * Magic method
      *
@@ -23,7 +13,7 @@ abstract class Cola_Controller
     public function __call($method, $args)
     {
         $cls = get_class($this);
-        throw new Cola_Exception("Call to undefined method: {$cls}->{$method}()");
+        throw new \Cola\Exception("Call to undefined method: {$cls}->{$method}()");
     }
 
     /**
@@ -34,7 +24,7 @@ abstract class Cola_Controller
     */
     protected function get($key = null, $default = null)
     {
-        return Cola_Request::get($key, $default);
+        return \Cola\Request::get($key, $default);
     }
 
     /**
@@ -45,7 +35,7 @@ abstract class Cola_Controller
     */
     protected function post($key = null, $default = null)
     {
-        return Cola_Request::post($key, $default);
+        return \Cola\Request::post($key, $default);
     }
 
     /**
@@ -57,7 +47,7 @@ abstract class Cola_Controller
     protected function view($file = null)
     {
         empty($file) && $file = $this->defaultTemplate();
-        return $this->view = new Cola_View($file);
+        return $this->view = new \Cola\View($file);
     }
 
     /**
@@ -137,6 +127,12 @@ abstract class Cola_Controller
     public function __get($key)
     {
         switch ($key) {
+            case 'get':
+                return $_GET;
+
+            case 'post':
+                return $_POST;
+
             case 'view':
                 return $this->view();
 

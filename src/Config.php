@@ -1,38 +1,42 @@
 <?php
-class Cola_Config implements ArrayAccess
+
+namespace Cola;
+
+class Config implements ArrayAccess
 {
     /**
      * Contains array of configuration data
      *
      * @var array
      */
-    protected $_data = array();
+    protected $_data = [];
 
     public $delimiter = '.';
 
     /**
-     * Cola_Config provides a property based interface to
+     * Cola\Config provides a property based interface to
      * an array. The data are read-only unless $allowModifications
      * is set to true on construction.
      *
-     * Cola_Config also implements Countable and Iterator to
+     * Cola\Config also implements Countable and Iterator to
      * facilitate easy access to the data.
      *
-     * @param  array   $data
+     * @param array $data
      * @return void
      */
-    public function __construct(array $data = array())
+    public function __construct(array $data = [])
     {
         $this->_data = $data;
     }
 
-    /**
-     * Retrieve a value and return $default if there is no element set.
-     *
-     * @param string $name
-     * @param mixed $default
-     * @return mixed
-     */
+/**
+ * Retrieve a value and return $default if there is no element set.
+ *
+ * @param string $name
+ * @param mixed $default
+ * @param string $delimiter
+ * @return mixed
+ */
     public function get($name = null, $default = null, $delimiter = '.')
     {
         if (null === $name) {
@@ -88,7 +92,10 @@ class Cola_Config implements ArrayAccess
 
     /**
      * Set if not exists
-     *
+     * @param $name
+     * @param $value
+     * @param string $delimiter
+     * @return Config
      */
     public function setnx($name, $value, $delimiter = '.')
     {
@@ -134,7 +141,7 @@ class Cola_Config implements ArrayAccess
     public function __unset($name)
     {
         $pos = & $this->_data;
-        $name = explode($delimiter, $name);
+        $name = explode($this->delimiter, $name);
         $cnt = count($name);
         for ($i = 0; $i < $cnt - 1; $i ++) {
             if (!isset($pos[$name[$i]])) return;
@@ -158,7 +165,7 @@ class Cola_Config implements ArrayAccess
      * merge config
      *
      * @param array $config
-     * @return Cola_Config
+     * @return Config
      */
     public function merge($config)
     {

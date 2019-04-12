@@ -1,8 +1,8 @@
 <?php
-/**
- *
- */
-class Cola_Request
+
+namespace Cola;
+
+class Request
 {
     /**
      * Retrieve a member of the $_GET superglobal

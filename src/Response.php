@@ -1,10 +1,10 @@
 <?php
-/**
- *
- */
-class Cola_Response
+
+namespace Cola;
+
+class Response
 {
-    static protected $status = array(
+    static protected $status = [
         '100' => 'Continue',
         '101' => 'Switching Protocols',
         '200' => 'OK',
@@ -46,9 +46,9 @@ class Cola_Response
         '503' => 'Service Unavailable',
         '504' => 'Gateway Timeout',
         '505' => 'HTTP Version Not Supported',
-    );
+    ];
 
-    static protected $mime = array(
+    static protected $mime = [
         'css'  => 'text/css',
         'html' => 'text/html',
         'htm'  => 'text/html',
@@ -59,7 +59,8 @@ class Cola_Response
         'jpg'  => 'image/jpeg',
         'jpeg' => 'image/jpeg',
         'js'   => 'application/javascript',
-    );
+        'json' => 'application/json',
+    ];
 
     /**
     * Sets response status code.
