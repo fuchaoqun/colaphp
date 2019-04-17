@@ -1,9 +1,18 @@
 <?php
 
-namespace Cola;
+namespace Cola\Http;
 
 class Request
 {
+    public static function getWithDefault($data, $key, $default)
+    {
+        if (null === $key) {
+            return $data;
+        }
+
+        return (isset($data[$key])) ? $data[$key] : $default;
+    }
+
     /**
      * Retrieve a member of the $_GET superglobal
      *
@@ -15,11 +24,7 @@ class Request
      */
     public static function get($key = null, $default = null)
     {
-        if (null === $key) {
-            return $_GET;
-        }
-
-        return (isset($_GET[$key])) ? $_GET[$key] : $default;
+        return self::getWithDefault($_GET, $key, $default);
     }
 
     /**
@@ -33,11 +38,7 @@ class Request
      */
     public static function post($key = null, $default = null)
     {
-        if (null === $key) {
-            return $_POST;
-        }
-
-        return (isset($_POST[$key])) ? $_POST[$key] : $default;
+        return self::getWithDefault($_POST, $key, $default);
     }
 
     /**
@@ -51,11 +52,7 @@ class Request
      */
     public static function cookie($key = null, $default = null)
     {
-        if (null === $key) {
-            return $_COOKIE;
-        }
-
-        return (isset($_COOKIE[$key])) ? $_COOKIE[$key] : $default;
+        return self::getWithDefault($_COOKIE, $key, $default);
     }
 
     /**
@@ -69,11 +66,7 @@ class Request
      */
     public static function server($key = null, $default = null)
     {
-        if (null === $key) {
-            return $_SERVER;
-        }
-
-        return (isset($_SERVER[$key])) ? $_SERVER[$key] : $default;
+        return self::getWithDefault($_SERVER, $key, $default);
     }
 
     /**
@@ -87,11 +80,7 @@ class Request
      */
     public static function env($key = null, $default = null)
     {
-        if (null === $key) {
-            return $_ENV;
-        }
-
-        return (isset($_ENV[$key])) ? $_ENV[$key] : $default;
+        return self::getWithDefault($_ENV, $key, $default);
     }
 
     /**
@@ -104,11 +93,7 @@ class Request
     public static function session($key = null, $default = null)
     {
         isset($_SESSION) || session_start();
-        if (null === $key) {
-            return $_SESSION;
-        }
-
-        return (isset($_SESSION[$key])) ? $_SESSION[$key] : $default;
+        return self::getWithDefault($_SESSION, $key, $default);
     }
 
     /**
@@ -144,35 +129,13 @@ class Request
     }
 
     /**
-     * Return current url
-     *
-     * @return string
-     */
-    public static function currentUrl()
-    {
-        $url = 'http';
-
-        if ('on' == self::server('HTTPS')) $url .= 's';
-
-        $url .= "://" . self::server('HTTP_HOST');
-
-        $port = self::server('SERVER_PORT');
-        if (80 != $port) $url .= ":{$port}";
-
-        return $url . self::server('REQUEST_URI');
-    }
-    /**
      * Was the request made by POST?
      *
      * @return boolean
      */
     public static function isPost()
     {
-        if ('POST' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'POST' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -182,11 +145,7 @@ class Request
      */
     public static function isGet()
     {
-        if ('GET' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'GET' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -196,11 +155,7 @@ class Request
      */
     public static function isPut()
     {
-        if ('PUT' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'PUT' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -210,11 +165,7 @@ class Request
      */
     public static function isDelete()
     {
-        if ('DELETE' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'DELETE' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -224,11 +175,7 @@ class Request
      */
     public static function isHead()
     {
-        if ('HEAD' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'HEAD' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -238,11 +185,7 @@ class Request
      */
     public static function isOptions()
     {
-        if ('OPTIONS' == self::server('REQUEST_METHOD')) {
-            return true;
-        }
-
-        return false;
+        return 'OPTIONS' === self::server('REQUEST_METHOD');
     }
 
     /**
@@ -254,7 +197,7 @@ class Request
      */
     public static function isAjax()
     {
-        return ('XMLHttpRequest' == self::header('X_REQUESTED_WITH'));
+        return 'XMLHttpRequest' === self::header('X_REQUESTED_WITH');
     }
 
     /**
@@ -264,7 +207,7 @@ class Request
      */
     public static function isFlashRequest()
     {
-        return ('Shockwave Flash' == self::header('USER_AGENT'));
+        return 'Shockwave Flash' === self::header('USER_AGENT');
     }
 
     /**
@@ -274,7 +217,7 @@ class Request
      */
     public static function isSecure()
     {
-        return ('https' === self::scheme());
+        return 'https' === self::scheme();
     }
 
     /**
@@ -300,7 +243,7 @@ class Request
      */
     public static function scheme()
     {
-        return ('on' == self::server('HTTPS')) ? 'https' : 'http';
+        return ('on' === self::server('HTTPS')) ? 'https' : 'http';
     }
 
     /**
@@ -309,7 +252,7 @@ class Request
      * @param string $default
      * @return string
      */
-    public static function clientIp($default = '0.0.0.0')
+    public static function getClientIp($default = '0.0.0.0')
     {
         $keys = array('HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'REMOTE_ADDR');
 
@@ -322,5 +265,60 @@ class Request
 		}
 
         return $default;
+    }
+
+    /**
+     * Return current url
+     *
+     * @return string
+     */
+    public static function getCurrentUrl()
+    {
+        $url = 'http';
+
+        if ('on' == self::server('HTTPS')) $url .= 's';
+
+        $url .= "://" . self::server('HTTP_HOST');
+
+        $port = self::server('SERVER_PORT');
+        if (80 != $port) $url .= ":{$port}";
+
+        return $url . self::server('REQUEST_URI');
+    }
+
+    /**
+     * Format uploaded files
+     */
+    public static function getUploadedFiles()
+    {
+        $files = [];
+
+        $keys = ['name', 'type', 'tmp_name', 'error', 'size'];
+
+        foreach ($_FILES as $field => $data) {
+            if (empty($data['name'])) continue;
+            if (is_string($data['name'])) {
+                $pathinfo = pathinfo($data['name']);
+                $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
+                $files[] = $data + ['field' => $field, 'ext' => $ext];
+                continue;
+            }
+
+            if (!is_array($data['name'])) continue;
+            $cnt = count($data['name']);
+
+            for ($i = 0; $i < $cnt; $i++) {
+                if (empty($data['name'][$i])) continue;
+                $pathinfo = pathinfo($data['name']);
+                $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
+                $row = ['field' => $field, 'ext' => $ext];
+                foreach ($keys as $key) {
+                    isset($data[$key][$i]) && ($row[$key] = $data[$key][$i]);
+                }
+                $files[] = $row;
+            }
+        }
+
+        return $files;
     }
 }

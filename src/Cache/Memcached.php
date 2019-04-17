@@ -1,13 +1,10 @@
 <?php
 
-class Cola_Ext_Cache_Memcached extends Cola_Ext_Cache_Abstract
+namespace Cola\Cache;
+
+class Memcached extends SimpleCache
 {
-    /**
-     * Constructor
-     *
-     * @param array $config
-     */
-    public function __construct($config = array())
+    public function __construct($config = [])
     {
         parent::__construct($config);
 

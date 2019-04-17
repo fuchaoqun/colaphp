@@ -1,8 +1,8 @@
 <?php
-/**
- *
- */
-class Cola_Ext_Captcha
+
+namespace Cola;
+
+class Captcha
 {
     /**
      * Captch config
@@ -12,16 +12,16 @@ class Cola_Ext_Captcha
     public $config = array(
         'type'            => 'png',
         'seed'            => '3478ABCDEFGHJKLMNPQRTUVWXYacdefhjkmnpwxy',
-        'fonts'           => array(),
-        'size'            => array(16, 24),              // min & max font size
+        'fonts'           => [],
+        'size'            => [16, 24],              // min & max font size
         'width'           => 100,
         'height'          => 35,
-        'count'           => array(4, 4),                // min & max num of chars in captcha
+        'count'           => [4, 4],                // min & max num of chars in captcha
         'bgColor'         => '#f8f8f8',
         'ttl'             => 120,
-        'points'          => array(256, 512),
-        'sessionValueKey' => '_COLA_CAPTCHA_VALUE_',
-        'sessionTtlKey'   => '_COLA_CAPTCHA_TTL_',
+        'points'          => [256, 512],
+        'sessionValueKey' => '__COLA_CAPTCHA_VALUE_',
+        'sessionTtlKey'   => '__COLA_CAPTCHA_TTL_',
     );
 
     /**
@@ -50,7 +50,7 @@ class Cola_Ext_Captcha
      *
      * @param array $config
      */
-    public function __construct($config = array())
+    public function __construct($config = [])
     {
         isset($_SESSION) || session_start();
 
@@ -58,7 +58,7 @@ class Cola_Ext_Captcha
 
         if (!is_array($this->config['size'])) {
             $size = intval($this->config['size']);
-            $this->config['size'] = array($size, $size);
+            $this->config['size'] = [$size, $size];
         }
 
         if (is_array($this->config['count'])) {

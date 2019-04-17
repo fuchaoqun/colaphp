@@ -1,8 +1,8 @@
 <?php
-/**
- *
- */
-abstract class Cola_Model
+
+namespace Cola;
+
+abstract class Model
 {
     protected $_invalidErrorCode = -400;
 

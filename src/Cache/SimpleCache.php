@@ -1,21 +1,24 @@
 <?php
+
+namespace Cola\Cache;
+
 /**
- *
+ * PSR-16 SimpleCache
  */
-abstract class Cola_Ext_Cache_Abstract
+abstract class SimpleCache
 {
     public $conn;
 
-    public $config = array(
+    public $config = [
         'ttl' => 86400
-    );
+    ];
 
     /**
      * Constructor
      *
      * @param array $config
      */
-    public function __construct($config = array())
+    public function __construct($config = [])
     {
         $this->config = $config + $this->config;
     }
@@ -51,7 +54,7 @@ abstract class Cola_Ext_Cache_Abstract
      */
     public function __unset($key)
     {
-        return $this->del($key);
+        return $this->delete($key);
     }
 
      /**
@@ -64,4 +67,17 @@ abstract class Cola_Ext_Cache_Abstract
     {
         return call_user_func_array(array($this->conn, $method), $args);
     }
+
+    public function clear()
+    {
+        return false;
+    }
+
+    abstract public function set($key, $val, $ttl = null);
+    abstract public function get($key, $default = null);
+    abstract public function setMultiple($values, $ttl = null);
+    abstract public function getMultiple($keys, $default = null);
+    abstract public function deleteMultiple($keys);
+    abstract public function delete($key);
+    abstract public function has($key);
 }

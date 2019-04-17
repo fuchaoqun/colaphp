@@ -1,9 +1,8 @@
 <?php
-/**
- * use https://github.com/nicolasff/phpredis
- *
- */
-class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
+
+namespace Cola\Cache;
+
+class Redis extends SimpleCache
 {
     public $config = array(
         'persistent' => true,
@@ -11,14 +10,9 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
         'port'       => 6379,
         'timeout'    => 3,
         'ttl'        => 0,
-        'options'    => array()
+        'options'    => []
     );
 
-    /**
-     * Constructor
-     *
-     * @param array $config
-     */
     public function __construct($config = array())
     {
         parent::__construct($config);
@@ -50,11 +44,7 @@ class Cola_Ext_Cache_Redis extends Cola_Ext_Cache_Abstract
             $ttl = $this->config['ttl'];
         }
 
-        if (empty($ttl)) {
-            return $this->conn->set($id, $data);
-        } else {
-            return $this->conn->setex($id, $ttl, $data);
-        }
+        return (empty($ttl)) ? $this->conn->set($id, $data) : $this->conn->setex($id, $ttl, $data);
     }
 
     /**

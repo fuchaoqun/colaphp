@@ -1,9 +1,8 @@
 <?php
-/**
- *
- */
 
-class Cola_View
+namespace Cola;
+
+class View
 {
     /**
      * view file
@@ -114,7 +113,7 @@ class Cola_View
     {
         switch ($key) {
             case 'config':
-                $this->config = Cola::getInstance()->config;
+                $this->config = App::getInstance()->config;
                 return $this->config;
 
             default:

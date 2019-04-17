@@ -4,6 +4,7 @@ namespace Cola;
 
 defined('COLA_DIR') || define('COLA_DIR', dirname(__FILE__));
 require_once COLA_DIR . '/Config.php';
+require_once COLA_DIR . '/Container.php';
 
 class App
 {
@@ -27,9 +28,9 @@ class App
     /**
      * Object container
      *
-     * @var array
+     * @var Container
      */
-    public $container = [];
+    public $container;
 
     /**
      * Router
@@ -59,8 +60,14 @@ class App
     protected function __construct()
     {
         $this->config = new Config([
-
+            '_class' => [
+                '\Cola\Controller' => COLA_DIR . '/Controller.php',
+                '\Cola\Model'      => COLA_DIR . '/Model.php',
+                '\Cola\View'       => COLA_DIR . '/View.php',
+                '\Cola\Exception'  => COLA_DIR . '/Exception.php',
+            ],
         ]);
+        $this->container = new Container();
 
         $this->registerAutoload([$this, 'loadClass']);
     }
@@ -190,12 +197,23 @@ class App
      * Register autoload function
      *
      * @param string $func
-     * @param boolean $enable
      * @return App
      */
     public function registerAutoload($func, $enable = true)
     {
-        $enable ? spl_autoload_register($func) : spl_autoload_unregister($func);
+        spl_autoload_register($func);
+        return $this;
+    }
+
+    /**
+     * Unregister autoload function
+     *
+     * @param string $func
+     * @return App
+     */
+    public function unregisterAutoload($func)
+    {
+        spl_autoload_unregister($func);
         return $this;
     }
 

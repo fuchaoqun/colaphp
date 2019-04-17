@@ -27,7 +27,14 @@ class Router
     {
         $config += ['defaults' => [], 'rules' => []];
         $this->defaults = $config['defaults'] + $this->defaults;
-        $this->rules = $config['rules'] + $this->rules;
+        foreach($config['rules'] as $rule) {
+            $rule += [
+                'namespace' => $this->defaults['namespace'],
+                'methods' => ['*'],
+            ];
+            $rule['methods'] = array_map('strtoupper', $rule['methods']);
+            $this->rules[] = $rule;
+        }
     }
 
     /**
@@ -42,7 +49,7 @@ class Router
 
         if (preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
             $tmp = explode('/', $pathInfo);
-            isset($tmp[0]) && $es['module'] = $tmp[0];
+            isset($tmp[0]) && $es['module'] = ucfirst($tmp[0]);
             isset($tmp[1]) && $es['controller'] = ucfirst($tmp[1]) . 'Controller';
             isset($tmp[2]) && $es['action'] = "{$tmp[2]}Action";
         }
@@ -65,8 +72,8 @@ class Router
     public function match($pathInfo = null)
     {
         $pathInfo = trim($pathInfo, '/');
-
         $method = $_SERVER['REQUEST_METHOD'];
+
         foreach ($this->rules as $rule) {
             $rule += [
                 'namespace' => $this->defaults['namespace'],

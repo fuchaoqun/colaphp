@@ -1,6 +1,8 @@
 <?php
 
-class Cola_Ext_Pdo
+namespace Cola\Db;
+
+class Pdo
 {
     public $pdo = null;
 

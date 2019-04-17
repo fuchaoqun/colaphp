@@ -1,4 +1,7 @@
 <?php
+
+namespace Cola\Validation;
+
 /**
  * usage
 $data = array(
@@ -24,7 +27,7 @@ $rules = array(
 var_dump(Cola_Ext_Validate::check($data, $rules));
 **/
 
-class Cola_Ext_Validator
+class Validator
 {
     /**
      * Validate Errors

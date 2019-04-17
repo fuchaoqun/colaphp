@@ -1,9 +1,8 @@
 <?php
-/**
- *
- */
 
-class Cola_Ext_Pagination
+namespace Pagination;
+
+class Paginator
 {
     public $config = array(
         'prevNums'         => 2,

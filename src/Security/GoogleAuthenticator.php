@@ -1,5 +1,8 @@
 <?php
-class Cola_Ext_GoogleAuthenticator
+
+namespace Cola;
+
+class GoogleAuthenticator
 {
     public static $ttl   = 30;
     public static $limit = 6;

@@ -1,8 +1,8 @@
 <?php
-/**
- *
- */
-class Cola_Ext_Cache_Null extends Cola_Ext_Cache_Abstract
+
+namespace Cola\Cache;
+
+class Fake extends SimpleCache
 {
     /**
      * Set cache

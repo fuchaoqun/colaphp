@@ -1,11 +1,14 @@
 <?php
-class Cola_Ext_Image
+
+namespace Cola\Image;
+
+class Utils
 {
     public static $convert = '/usr/bin/convert';
     public static $identify = '/usr/bin/identify';
 
     /**
-     * 优化图片大小
+     * Minimize image file size
      *
      * @param string $src
      * @param string $des
@@ -33,7 +36,7 @@ class Cola_Ext_Image
     }
 
     /**
-     * 获得唯一颜色值数
+     * Get image file color number
      *
      * @param string $img
      * @return int

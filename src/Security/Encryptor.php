@@ -1,16 +1,15 @@
 <?php
-/**
- *
- */
 
-class Cola_Ext_Encrypt
+namespace Cola;
+
+class Encryptor
 {
     public $key;
     public $method = 'aes-256-cbc';
     public $options = 0;
-    public $iv = "";
+    public $iv = '';
 
-    public function __construct($key, $iv = "")
+    public function __construct($key, $iv = '')
     {
         $this->key = $key;
         $this->iv = $iv;

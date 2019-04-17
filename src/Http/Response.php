@@ -1,6 +1,6 @@
 <?php
 
-namespace Cola;
+namespace Cola\Http;
 
 class Response
 {

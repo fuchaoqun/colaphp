@@ -2,7 +2,7 @@
 
 namespace Cola;
 
-class Config implements ArrayAccess
+class Config implements \ArrayAccess
 {
     /**
      * Contains array of configuration data
