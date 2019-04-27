@@ -24,7 +24,7 @@ class Config implements \ArrayAccess
      * @param array $data
      * @return void
      */
-    public function __construct(array $data = [])
+    public function __construct($data = [])
     {
         $this->_data = $data;
     }

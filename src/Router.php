@@ -4,20 +4,16 @@ namespace Cola;
 
 class Router
 {
-    public $defaults = [
-        'namespace'  => 'App',
-        'module'     => 'Home',
-        'controller' => 'IndexController',
-        'action'     => 'indexAction',
-        'args'       => []
+    public $config = [
+        'namespace' => 'App',
+        'rules' => [],
+        'defaults' => [
+            'module'     => 'Home',
+            'controller' => 'IndexController',
+            'action'     => 'indexAction',
+            'args'       => []
+        ]
     ];
-
-    /**
-     * Router urls
-     *
-     * @var array
-     */
-    public $rules = [];
 
     /**
      * Constructor
@@ -25,16 +21,11 @@ class Router
      */
     public function __construct($config = [])
     {
-        $config += ['defaults' => [], 'rules' => []];
-        $this->defaults = $config['defaults'] + $this->defaults;
-        foreach($config['rules'] as $rule) {
-            $rule += [
-                'namespace' => $this->defaults['namespace'],
-                'methods' => ['*'],
-            ];
-            $rule['methods'] = array_map('strtoupper', $rule['methods']);
-            $this->rules[] = $rule;
-        }
+        if (!empty($config['defaults'])) {
+            $config['defaults'] = $config['defaults'] + $this->config['defaults'];
+        };
+
+        $this->config = $config + $this->config;
     }
 
     /**
@@ -45,7 +36,7 @@ class Router
      */
     public function dynamic($pathInfo)
     {
-        $es = $this->defaults;
+        $es = $this->config['defaults'];
 
         if (preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
             $tmp = explode('/', $pathInfo);
@@ -54,7 +45,7 @@ class Router
             isset($tmp[2]) && $es['action'] = "{$tmp[2]}Action";
         }
 
-        $controller = implode('\\', [$es['namespace'], $es['module'], $es['controller']]);
+        $controller = implode('\\', [$this->config['namespace'], $es['module'], $es['controller']]);
 
         return [
             'controller' => $controller,
@@ -74,13 +65,15 @@ class Router
         $pathInfo = trim($pathInfo, '/');
         $method = $_SERVER['REQUEST_METHOD'];
 
-        foreach ($this->rules as $rule) {
+        foreach ($this->config['rules'] as $rule) {
             $rule += [
-                'namespace' => $this->defaults['namespace'],
+                'namespace' => $this->config['namespace'],
                 'methods' => ['*'],
                 'maps' => [],
                 'args' => []
             ];
+
+            $rule['methods'] = array_map('strtoupper', $rule['methods']);
 
             if ((!in_array('*', $rule['methods'])) && (!in_array($method, $rule['methods']))) {
                 continue;

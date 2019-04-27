@@ -1,5 +1,7 @@
 <?php
 
+namespace Cola\Log\Handler;
+
 class Cola_Ext_Log_Redis extends Cola_Ext_Log_Abstract
 {
     public $config = array(
@@ -11,9 +13,15 @@ class Cola_Ext_Log_Redis extends Cola_Ext_Log_Abstract
         'queue'      => '_cola_redis_queue'
     );
 
+    protected $_redis = null;
+
     public function write($text)
     {
-        $redis = new Cola_Ext_Cache_Redis($this->config);
+        if (is_null($this->_redis)) {
+            $factory = $this->config + ['adapter' => 'RedisAdapter'];
+            $this->_redis = \Cola\Cache\SimpleCache::factory($factory);
+        }
+
         return $redis->qput($this->config['queue'], $text);
     }
 }

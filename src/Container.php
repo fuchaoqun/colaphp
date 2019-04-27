@@ -34,4 +34,24 @@ class Container implements \ArrayAccess
     {
         return isset($this->_data[$id]);
     }
+
+    public function offsetExists($offset)
+    {
+        return isset($this->_data[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        $this->_data[$offset] = $value;
+    }
+
+    public function offsetUnset($offset)
+    {
+        unset($this->_data[$offset]);
+    }
 }

@@ -61,10 +61,17 @@ class App
     {
         $this->config = new Config([
             '_class' => [
-                '\Cola\Controller' => COLA_DIR . '/Controller.php',
-                '\Cola\Model'      => COLA_DIR . '/Model.php',
-                '\Cola\View'       => COLA_DIR . '/View.php',
-                '\Cola\Exception'  => COLA_DIR . '/Exception.php',
+                'Cola\Controller'                 => COLA_DIR . '/Controller.php',
+                'Cola\Model'                      => COLA_DIR . '/Model.php',
+                'Cola\View'                       => COLA_DIR . '/View.php',
+                'Cola\Router'                     => COLA_DIR . '/Router.php',
+                'Cola\Exception'                  => COLA_DIR . '/Exception.php',
+                'Cola\Http\Request'               => COLA_DIR . '/Http/Request.php',
+                'Cola\Http\Response'              => COLA_DIR . '/Http/Response.php',
+                'Cola\Db\Pdo'                     => COLA_DIR . '/Db/Pdo.php',
+                'Cola\Cache\SimpleCache'          => COLA_DIR . '/Cache/SimpleCache.php',
+                'Cola\Cache\Redis'                => COLA_DIR . '/Cache/Redis.php',
+                'Cola\Validation\Validator'       => COLA_DIR . '/Validation/Validator.php',
             ],
         ]);
         $this->container = new Container();

@@ -13,7 +13,7 @@ abstract class Controller
     public function __call($method, $args)
     {
         $cls = get_class($this);
-        throw new \Cola\Exception("Call to undefined method: {$cls}->{$method}()");
+        throw new Exception("Call to undefined method: {$cls}->{$method}()");
     }
 
     /**
@@ -24,7 +24,7 @@ abstract class Controller
     */
     protected function get($key = null, $default = null)
     {
-        return \Cola\Request::get($key, $default);
+        return Request::get($key, $default);
     }
 
     /**
@@ -35,7 +35,7 @@ abstract class Controller
     */
     protected function post($key = null, $default = null)
     {
-        return \Cola\Request::post($key, $default);
+        return Request::post($key, $default);
     }
 
     /**
@@ -69,11 +69,14 @@ abstract class Controller
      */
     protected function defaultTemplate()
     {
-        $di = Cola::getInstance()->getDispatchInfo();
-        $controller = strtolower(substr($di['controller'], 0, -10));
+        $di = App::getInstance()->dispatchInfo;
+        $parts = explode('\\', $di['controller']);
+        $controller = strtolower(substr(end($parts), 0, -10));
         $action = strtolower(substr($di['action'], 0, -6));
-        $home = Cola::getConfig('_moduleHome');
-        return "{$home}/views/{$controller}.{$action}.php";
+
+        $reflector = new \ReflectionClass(\get_class($this));
+        $dir = dirname($reflector->getFileName());
+        return "{$dir}/views/{$controller}.{$action}.php";
     }
 
     /**
@@ -106,6 +109,16 @@ abstract class Controller
         }
 
         exit();
+    }
+
+    protected function error($code, $message = null, $ref = null)
+    {
+        $data = ['code' => $code];
+
+        if (!is_null($message)) $data['message'] = $message;
+        if (!is_null($ref)) $data['ref'] = $ref;
+
+        $this->abort($data);
     }
 
     /**

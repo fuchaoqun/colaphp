@@ -11,7 +11,7 @@ abstract class Model
      *
      * @var string
      */
-    protected $_db = '_db';
+    protected $_db = 'db';
 
     /**
      * Table name, with prefix and main name
@@ -32,7 +32,7 @@ abstract class Model
      *
      * @var mixed, string for config key and array for config
      */
-    protected $_cache = '_cache';
+    protected $_cache = 'cache';
 
     /**
      * Cache expire time
@@ -46,14 +46,14 @@ abstract class Model
      *
      * @var array
      */
-    protected $_rules = array();
+    protected $_rules = [];
 
     /**
      * Error infomation
      *
      * @var array
      */
-    public $error = array();
+    public $error = [];
 
     public function __construct() {}
 
@@ -69,13 +69,8 @@ abstract class Model
 
         $sql = "select * from {$this->_table} where {$col} = ? limit 1";
 
-        try {
-            $result = $this->db->sql($sql, array($id));
-            return empty($result) ? null : $result[0];
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        $result = $this->db->sql($sql, array($id));
+        return empty($result) ? null : $result[0];
     }
 
     /**
@@ -84,28 +79,29 @@ abstract class Model
      * @param int $ids
      * @return array
      */
-    public function mload($ids, $col = null)
+    public function loadMultiple($ids, $col = null)
     {
         is_null($col) && $col = $this->_pk;
         if (empty($ids)) {
-            return null;
+            return [];
         }
         $bind = implode(',', array_fill(0, count($ids), '?'));
         $sql = "select * from {$this->_table} where {$col} in ({$bind})";
-        try {
-            if ($raw = $this->db->sql($sql, $ids)) {
-                $result = array();
-                foreach ($raw as $row) {
-                    $result[$row[$col]] = $row;
-                }
-                return $result;
-            } else {
-                return null;
-            }
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
+
+        if (!$raw = $this->db->sql($sql, $ids)) {
+            return [];
         }
+
+        $result = [];
+        foreach ($raw as $row) {
+            $result[$row[$col]] = $row;
+        }
+        return $result;
+    }
+
+    public function mload($ids, $col = null)
+    {
+        return $this->loadMultiple($ids, $col);
     }
 
     /**
@@ -117,13 +113,7 @@ abstract class Model
      */
     public function count($where)
     {
-        try {
-            $result = $this->db->count($this->_table, $where);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->count($this->_table, $where);
     }
 
     /**
@@ -133,15 +123,9 @@ abstract class Model
      * @param array $data
      * @return array
      */
-    public function sql($sql, $data = array())
+    public function sql($sql, $data = [])
     {
-        try {
-            $result = $this->db->sql($sql, $data);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->sql($sql, $data);
     }
 
     /**
@@ -153,24 +137,33 @@ abstract class Model
      */
     public function insert($data)
     {
-        try {
-            $result = $this->db->insert($this->_table, $data);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->insert($this->_table, $data);
+    }
+
+    public function insertMultiple($rows)
+    {
+        return $this->db->insertMultiple($this->_table, $rows);
+    }
+
+    public function minsert($rows)
+    {
+        return $this->insertMultiple($rows);
     }
 
     public function upsert($data)
     {
-        try {
-            $result = $this->db->upsert($this->_table, $data);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+
+        return $this->db->upsert($this->_table, $data);
+    }
+
+    public function upsertMultiple($rows)
+    {
+        return $this->db->upsertMultiple($rows);
+    }
+
+    public function mupsert($rows)
+    {
+        return $this->upsertMultiple($rows);
     }
 
     /**
@@ -182,13 +175,17 @@ abstract class Model
      */
     public function replace($data)
     {
-        try {
-            $result = $this->db->replace($this->_table, $data);
-            return $result;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->replace($this->_table, $data);
+    }
+
+    public function replaceMultiple($rows)
+    {
+        return $this->db->replaceMultiple($this->_table, $rows);
+    }
+
+    public function mreplace($rows)
+    {
+        return $this->replaceMultiple($rows);
     }
 
     /**
@@ -200,26 +197,25 @@ abstract class Model
      */
     public function update($id, $data)
     {
-        $where = array("{$this->_pk}=?", array($id));
+        $where = ["{$this->_pk}=?", array($id)];
 
-        try {
-            $result = $this->db->update($this->_table, $data, $where);
-            return true;
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->update($this->_table, $data, $where);
     }
 
-    public function mupdate($todos)
+    public function updateMultiple($rows)
     {
-        foreach ($todos as $id => $data) {
+        foreach ($rows as $id => $data) {
             if (!$this->update($id, $data)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    public function mupdate($rows)
+    {
+        return $this->updateMultiple($rows);
     }
 
     /**
@@ -234,22 +230,12 @@ abstract class Model
         is_null($col) && $col = $this->_pk;
         $sql = "delete from {$this->_table} where {$col} = ?";
 
-        try {
-            return $this->db->sql($sql, array($id));
-        } catch (Exception $e) {
-            $this->error = array('code' => $e->getCode(), 'msg' => $e->getMessage());
-            return false;
-        }
+        return $this->db->sql($sql, array($id));
     }
 
     public function del($id, $col = null)
     {
-        return $this->delete($id, $col = null);
-    }
-
-    public function mdel($ids, $col = null)
-    {
-
+        return $this->delete($id, $col);
     }
 
     /**
@@ -257,51 +243,47 @@ abstract class Model
      *
      * @param array $config
      * @param string
-     * @return Cola_Ext_Db
+     * @return Db\Pdo
      */
     public function db($name = null)
     {
-        is_null($name) && $name = $this->_db;
+        is_null($name) && ($name = $this->_db);
 
         if (is_array($name)) {
-            $name += array('user' => '', 'password' => '', 'options' => array());
-            return new Cola_Ext_Pdo(
-                $name['dsn'], $name['user'], $name['password'], $name['options']
-            );
+            return new Db\Pdo($name);
         }
 
-        $regName = "_cola_db_{$name}";
-        if (!$db = Cola::getReg($regName)) {
-            $config = (array)Cola::getConfig($name)
-                    + array('user' => '', 'password' => '', 'options' => array());
-            $db = new Cola_Ext_Pdo(
-                $config['dsn'], $config['user'], $config['password'], $config['options']
-            );
-            Cola::setReg($regName, $db);
+        $id = "__db_{$name}";
+        $app = App::getInstance();
+        if (!$db = $app->container->get($id)) {
+            $pdoConfig = $app->config->get($name);
+            $db = new Db\Pdo($pdoConfig);
+            $app->container->set($id, $db);
         }
 
         return $db;
     }
 
     /**
-     * Init Cola_Ext_Cache
+     * Init cache
      *
      * @param mixed $name
-     * @return Cola_Ext_Cache
+     * @return Cache\SimpleCache
      */
     public function cache($name = null)
     {
         is_null($name) && ($name = $this->_cache);
 
         if (is_array($name)) {
-            return Cola::factory('Cola_Ext_Cache', $name);
+            return Cola::factory($name['adapter'], $name['config']);
         }
 
-        $regName = "_cola_cache_{$name}";
-        if (!$cache = Cola::getReg($regName)) {
-            $config = (array)Cola::getConfig($name);
-            $cache = Cola::factory('Cola_Ext_Cache', $config);
-            Cola::setReg($regName, $cache);
+        $id = "__cache_{$name}";
+        $app = App::getInstance();
+        if (!$cache = $app->container->get($id)) {
+            $factory = $app->config->get($name);
+            $cache = SimpleCache::factory($factory['adapter'], $factory['config']);
+            $app->container->set($id, $cache);
         }
 
         return $cache;
@@ -351,20 +333,9 @@ abstract class Model
             return true;
         }
 
-        $validator = new Cola_Ext_Validator();
+        $validator = new Validation\Validator();
 
-        $result = $validator->check($data, $rules, $ignoreNotExists);
-
-        if (!$result) {
-            $this->error = array(
-                'code' => $this->_invalidErrorCode,
-                'msg'  => current($validator->errors),
-                'ref' => $validator->errors
-            );
-            return false;
-        }
-
-        return true;
+        return $validator->check($data, $rules, $ignoreNotExists);
     }
 
     /**

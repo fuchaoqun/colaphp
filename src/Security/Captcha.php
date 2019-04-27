@@ -1,6 +1,6 @@
 <?php
 
-namespace Cola;
+namespace Cola\Security;
 
 class Captcha
 {
@@ -9,7 +9,7 @@ class Captcha
      *
      * @var array
      */
-    public $config = array(
+    public $config = [
         'type'            => 'png',
         'seed'            => '3478ABCDEFGHJKLMNPQRTUVWXYacdefhjkmnpwxy',
         'fonts'           => [],
@@ -22,7 +22,7 @@ class Captcha
         'points'          => [256, 512],
         'sessionValueKey' => '__COLA_CAPTCHA_VALUE_',
         'sessionTtlKey'   => '__COLA_CAPTCHA_TTL_',
-    );
+    ];
 
     /**
      * Image
@@ -228,7 +228,7 @@ class Captcha
     public function check($value, $caseSensitive = false)
     {
         if (empty($_SESSION[$this->config['sessionTtlKey']]) || empty($_SESSION[$this->config['sessionValueKey']])) {
-            $this->error = array('code' => -1, 'msg' => 'NO_CAPTCHA_FOUND');
+            $this->error = array('code' => -1, 'message' => 'NO_CAPTCHA_FOUND');
             return false;
         }
 
@@ -240,14 +240,14 @@ class Captcha
         unset($_SESSION[$this->config['sessionValueKey']]);
 
         if (time() > $expireTime) {
-            $this->error = array('code' => -2, 'msg' => 'CAPTCHA_IS_EXPIRED');
+            $this->error = array('code' => -2, 'message' => 'CAPTCHA_IS_EXPIRED');
             return false;
         }
 
         $func = $caseSensitive ? 'strcmp' : 'strcasecmp';
 
         if (0 !== $func($value, $captchaCode)) {
-            $this->error = array('code' => -3, 'msg' => 'CAPTCHA_NOT_MATCHED');
+            $this->error = array('code' => -3, 'message' => 'CAPTCHA_NOT_MATCHED');
             return false;
         }
 

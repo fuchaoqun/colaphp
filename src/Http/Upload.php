@@ -82,23 +82,23 @@ class Upload
     private function _check($file)
     {
         if (UPLOAD_ERR_OK != $file['error']) {
-            throw new Exception($code, "{$file['name']}: {$this->config['error'][$code]}");
+            throw new \Cola\Exception("{$file['name']}: {$this->config['error'][$code]}", $code);
         }
 
         if (!is_uploaded_file($file['tmp_name'])) {
-            throw new Exception(20, "{$file['name']}: NOT_UPLOADED_FILE");
+            throw new \Cola\Exception("{$file['name']}: NOT_UPLOADED_FILE", 20);
         }
 
         $checks = [
-            '_checkType'      => ['code' => 21, 'msg' => "{$file['name']}: NOT_ALLOWED_TYPE"],
-            '_checkExt'       => ['code' => 22, 'msg' => "{$file['name']}:NOT_ALLOWED_EXT"],
-            '_checkFileSize'  => ['code' => 23, 'msg' => "{$file['name']}: NOT_ALLOWED_FILE_SIZE"],
-            '_checkImageSize' => ['code' => 24, 'msg' => "{$file['name']}: NOT_ALLOWED_IMAGE_SIZE"],
+            '_checkType'      => ['code' => 21, 'message' => "{$file['name']}: NOT_ALLOWED_TYPE"],
+            '_checkExt'       => ['code' => 22, 'message' => "{$file['name']}:NOT_ALLOWED_EXT"],
+            '_checkFileSize'  => ['code' => 23, 'message' => "{$file['name']}: NOT_ALLOWED_FILE_SIZE"],
+            '_checkImageSize' => ['code' => 24, 'message' => "{$file['name']}: NOT_ALLOWED_IMAGE_SIZE"],
         ];
 
         foreach ($checks as $func => $error) {
             if (!$this->$func($file)) {
-                throw new Exception($error['code'], $error['msg']);
+                throw new \Cola\Exception($error['message'], $error['code']);
             }
         }
 

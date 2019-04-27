@@ -4,37 +4,42 @@ namespace Cola\Validation;
 
 /**
  * usage
-$data = array(
+$data = [
     'id'     => 8,
     'sex'    => 'F',
-    'tags'   => array('foo' => 3, 'bar' => 7),
+    'tags'   => ['foo' => 3, 'bar' => 7],
     'age'    => 8,
     'email'  => 'foo@bar.com',
     'date'   => '2012-12-10',
     'body'   => 'foobarbarfoo',
-);
+];
 
-$rules = array(
-    'id'     => array('required' => true, 'type' => 'int'),
-    'sex'    => array('in' => array('F', 'M')),
-    'tags'   => array('required' => true, 'each' => array('type' => 'int')),
-    'age'    => array('type' => 'int', 'range' => array(38, 130), 'msg' => 'age must be 18~130'),
-    'email'  => array('type' => 'email'),
-    'date'   => array('type' => 'date'),
-    'body'   => array('required' => true, 'range' => array(1, 500))
-);
+$rules = [
+    'id'     => ['required' => true, 'type' => 'int'],
+    'sex'    => ['in' => ['F', 'M']],
+    'tags'   => ['required' => true, 'each' => ['type' => 'int']],
+    'age'    => ['type' => 'int', 'range' => [38, 130], 'message' => 'age must be 18~130'],
+    'email'  => ['type' => 'email'),
+    'date'   => ['type' => 'date'),
+    'body'   => ['required' => true, 'range' => [1, 500]]
+];
 
-var_dump(Cola_Ext_Validate::check($data, $rules));
+var_dump(Validator::check($data, $rules));
 **/
 
 class Validator
 {
-    /**
-     * Validate Errors
-     *
-     * @var array
-     */
-    public $errors = array();
+    public $rules;
+
+    public $ignorNotExists = false;
+
+    public $translatorId = 'translator';
+
+    public function __construct($rules, $ignorNotExists = false)
+    {
+        $this->rules = $rules;
+        $this->ignorNotExists = $ignorNotExists;
+    }
 
     /**
      * Check if is not empty
@@ -232,7 +237,7 @@ class Validator
     /**
      * Check
      *
-     * $rules = array(
+     * $rules = [
      *     'required' => true if required , false for not
      *     'type'     => var type, should be in ('email', 'url', 'ip', 'date', 'number', 'int', 'string')
      *     'regex'    => regex code to match
@@ -240,42 +245,49 @@ class Validator
      *     'max'      => max number or max length
      *     'min'      => min number or min length
      *     'range'    => range number or range length
-     *     'msg'      => error message,can be as an array
-     * )
+     *     'message'  => error message,can be as an array
+     * ]
      *
      * @param array $data
-     * @param array $rules
      * @param boolean $ignorNotExists
      * @return boolean
      */
-    public function check($data, $rules, $ignorNotExists = false)
+    public function check($data, $ignorNotExists = null)
     {
-        foreach ($rules as $key => $rule) {
-            $rule += array('required' => false, 'msg' => 'failed');
+        is_null($ignorNotExists) && $ignorNotExists = $this->ignorNotExists;
+        $errors = [];
+
+        foreach ($this->rules as $key => $rule) {
+            $rule += array('required' => false, 'message' => 'failed');
 
             // deal with not existed
             if ((!isset($data[$key])) && $rule['required'] && (!$ignorNotExists)) {
-                $this->errors[$key] = $rule['msg'];
+                $errors[$key] = $this->_getMessage($rule['message']);
                 continue;
             }
 
             if (!isset($data[$key])) continue;
 
             if (isset($rule['rules'])) {
-                $validator = new self();
-                if (!$validator->check($data[$key], $rule['rules'], $ignorNotExists)) {
-                    $this->errors[$key] = $validator->errors;
-                    continue;
+                $validator = new self($rule['rules'], $ignorNotExists);
+                try {
+                    $validator->check($data[$key]);
+                } catch (ValidationException $ve) {
+                    $errors[$key] = $ve->errors;
                 }
             }
 
             if (!$this->_check($data[$key], $rule, $ignorNotExists)) {
-                $this->errors[$key] = $rule['msg'];
+                $errors[$key] = $this->_getMessage($rule['message']);
                 continue;
             }
         }
 
-        return $this->errors ? false : true;
+        if ($errors) {
+            throw new ValidationException($errors);
+        }
+
+        return true;
     }
 
     /**
@@ -343,5 +355,15 @@ class Validator
         }
 
         return true;
+    }
+
+    protected function _getMessage($message)
+    {
+        if ('{{' !== \substr($message, 0, 2)) {
+            return $message;
+        }
+
+        $translator = \Cola\App::getInstance()->container->get($translatorId);
+        return $translator->message(\substr($message, 2, -2));
     }
 }

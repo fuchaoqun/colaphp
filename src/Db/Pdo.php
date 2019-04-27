@@ -4,30 +4,29 @@ namespace Cola\Db;
 
 class Pdo
 {
+    public $config = [
+        'user' => '',
+        'password' => '',
+        'options' => [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ]
+    ];
+
     public $pdo = null;
 
-    public $stmt = null;
+    public $query = null;
 
-    public $log = array();
+    public $log = [];
 
-    public $dsn;
-    public $user;
-    public $password;
-    public $options;
-
-    public function __construct($dsn, $user = '', $password = '', $options = array())
+    public function __construct($config)
     {
-        $options += array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
-        $this->dsn = $dsn;
-        $this->user = $user;
-        $this->password = $password;
-        $this->options = $options;
+        $this->config = array_merge_recursive($this->config, $config);
         $this->connect();
     }
 
     public function connect()
     {
-        $this->pdo = new PDO($this->dsn, $this->user, $this->password, $this->options);
+        $this->pdo = new PDO($this->config['dsn'], $this->config['user'], $this->config['password'], $this->config['options']);
         return $this->pdo;
     }
 
@@ -46,28 +45,34 @@ class Pdo
      */
     public function free()
     {
-        $this->stmt = null;
+        $this->query = null;
     }
 
     /**
      * Query sql
      *
      * @param string $sql
-     * @return Cola_Ext_Db_Mysql
+     * @return PDOStatement
      */
-    public function query($sql, $data = array())
+    public function query($sql, $data = [])
     {
-        $this->log[] = array('time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data);
-        $this->stmt = $this->pdo->prepare($sql);
-        $this->stmt->execute($data);
-        return $this->stmt;
+        $this->log[] = ['time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data];
+        if ($data) {
+            $this->query = $this->pdo->prepare($sql);
+            $this->query->execute($data);
+        } else {
+            $this->query = $this->pdo->query($sql);
+        }
+
+        return $this->query;
     }
 
-    public function sql($sql, $data = array())
+    public function sql($sql, $data = [])
     {
         $this->query($sql, $data);
         $tags = explode(' ', $sql, 2);
-        switch (strtoupper($tags[0])) {
+        $type = strtoupper($tags[0]);
+        switch ($type) {
             case 'SELECT':
                 $result = $this->fetchAll();
                 break;
@@ -80,7 +85,7 @@ class Pdo
                 $result = (0 <= $this->affectedRows());
                 break;
             default:
-                $result = $this->stmt;
+                $result = $this->query;
         }
         return $result;
     }
@@ -92,7 +97,7 @@ class Pdo
      * @param int $style
      * @return array
      */
-    public function row($sql, $data = array())
+    public function row($sql, $data = [])
     {
         $result = $this->sql($sql, $data);
         return empty($result) ? false : $result[0];
@@ -104,7 +109,7 @@ class Pdo
      * @param string $sql
      * @return string
      */
-    public function col($sql, $data = array())
+    public function col($sql, $data = [])
     {
         $result = $this->sql($sql, $data);
         return empty($result) ? false : current($result[0]);
@@ -114,15 +119,15 @@ class Pdo
      * Insert
      *
      * @param string $table
-     * @param array $data
+     * @param array $row
      * @return boolean
      */
-    public function insert($table, $data)
+    public function insert($table, $row)
     {
-        $keys = array();
-        $marks = array();
-        $values = array();
-        foreach ($data as $key => $val) {
+        $keys = [];
+        $marks = [];
+        $values = [];
+        foreach ($row as $key => $val) {
             is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
             $keys[] = "`{$key}`";
             $marks[] = '?';
@@ -142,7 +147,7 @@ class Pdo
      * @param array $rows
      * @return boolean
      */
-    public function minsert($table, $rows)
+    public function insertMultiple($table, $rows)
     {
         if (empty($rows)) {
             return true;
@@ -151,7 +156,7 @@ class Pdo
         $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
         $bind = '(' . implode('),(', $bindAll) . ')';
         $keys = array_keys(current($rows));
-        $values = array();
+        $values = [];
         foreach ($rows as $row) {
             foreach ($keys as $key) {
                 $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
@@ -168,13 +173,18 @@ class Pdo
         return $this->sql($sql, $values);
     }
 
-    public function upsert($table, $data)
+    public function minsert($table, $rows)
     {
-        $keys = array();
-        $marks = array();
-        $values = array();
+        return $this->insertMultiple($table, $rows);
+    }
+
+    public function upsert($table, $row)
+    {
+        $keys = [];
+        $marks = [];
+        $values = [];
         $dp = [];
-        foreach ($data as $key => $val) {
+        foreach ($row as $key => $val) {
             is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
             $keys[] = "`{$key}`";
             $marks[] = '?';
@@ -190,7 +200,7 @@ class Pdo
         return $this->sql($sql, $values);
     }
 
-    public function mupsert($table, $rows)
+    public function upsertMultiple($table, $rows)
     {
         if (empty($rows)) {
             return true;
@@ -199,7 +209,7 @@ class Pdo
         $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
         $bind = '(' . implode('),(', $bindAll) . ')';
         $keys = array_keys(current($rows));
-        $values = array();
+        $values = [];
         foreach ($rows as $row) {
             foreach ($keys as $key) {
                 $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
@@ -222,19 +232,24 @@ class Pdo
         return $this->sql($sql, $values);
     }
 
+    public function mupsert($table, $rows)
+    {
+        return $this->upsertMultiple($table, $rows);
+    }
+
     /**
      * Replace
      *
      * @param string $table
-     * @param array $data
+     * @param array $row
      * @return boolean
      */
-    public function replace($table, $data)
+    public function replace($table, $row)
     {
-        $keys = array();
-        $marks = array();
-        $values = array();
-        foreach ($data as $key => $val) {
+        $keys = [];
+        $marks = [];
+        $values = [];
+        foreach ($row as $key => $val) {
             is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
             $keys[] = "`{$key}`";
             $marks[] = '?';
@@ -254,7 +269,7 @@ class Pdo
      * @param array $rows
      * @return boolean
      */
-    public function mreplace($table, $rows)
+    public function replaceMultiple($table, $rows)
     {
         if (empty($rows)) {
             return true;
@@ -263,7 +278,7 @@ class Pdo
         $bindAll = array_fill(0, count($rows), implode(',', $bindOne));
         $bind = '(' . implode('),(', $bindAll) . ')';
         $keys = array_keys($rows[0]);
-        $values = array();
+        $values = [];
         foreach ($rows as $row) {
             foreach ($keys as $key) {
                 $value = is_array($row[$key]) ? json_encode($row[$key], JSON_UNESCAPED_UNICODE) : $row[$key];
@@ -280,6 +295,11 @@ class Pdo
         return $this->sql($sql, $values);
     }
 
+    public function mreplace($table, $rows)
+    {
+        return $this->replaceMultiple($table, $rows);
+    }
+
     /**
      * Update table
      *
@@ -290,8 +310,8 @@ class Pdo
      */
     public function update($table, $data, $where = '0')
     {
-        $keys = array();
-        $values = array();
+        $keys = [];
+        $values = [];
         foreach ($data as $key => $val) {
             is_array($val) && ($val = json_encode($val, JSON_UNESCAPED_UNICODE));
             $keys[] = "`{$key}`=?";
@@ -316,7 +336,7 @@ class Pdo
     public function delete($table, $where = '0')
     {
         if (is_string($where)) {
-            $where = array($where, array());
+            $where = [$where, []];
         }
         $sql = "delete from {$table} where {$where[0]}";
         return $this->sql($sql, $where[1]);
@@ -337,7 +357,7 @@ class Pdo
     public function count($table, $where)
     {
         if (is_string($where)) {
-            $where = array($where, array());
+            $where = [$where, []];
         }
 
         $sql = "select count(1) as cnt from {$table} where {$where[0]}";
@@ -352,7 +372,7 @@ class Pdo
      */
     public function fetch($style = PDO::FETCH_ASSOC)
     {
-        return $this->stmt->fetch($style);
+        return $this->query->fetch($style);
     }
 
     /**
@@ -363,7 +383,7 @@ class Pdo
      */
     public function fetchAll($style = PDO::FETCH_ASSOC)
     {
-        $result = $this->stmt->fetchAll($style);
+        $result = $this->query->fetchAll($style);
         $this->free();
         return $result;
     }
@@ -380,7 +400,7 @@ class Pdo
 
     public function rowCount()
     {
-        return $this->stmt->rowCount();
+        return $this->query->rowCount();
     }
 
     /**
@@ -394,11 +414,13 @@ class Pdo
         $last = $this->pdo->lastInsertId($name);
         if (false === $last) {
             return false;
-        } else if ('0' === $last) {
-            return true;
-        } else {
-            return intval($last);
         }
+
+        if ('0' === $last) {
+            return true;
+        }
+
+        return intval($last);
     }
 
     /**
@@ -414,14 +436,11 @@ class Pdo
                 return true;
             }
         } catch (Exception $e) {
-
-        }
-
-
-        if ($reconnect) {
-            $this->close();
-            $this->connect();
-            return $this->ping(false);
+            if ($reconnect) {
+                $this->close();
+                $this->connect();
+                return $this->ping(false);
+            }
         }
 
         return false;

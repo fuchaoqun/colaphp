@@ -1,10 +1,10 @@
 <?php
 
-namespace Pagination;
+namespace Cola\Pagination;
 
 class Paginator
 {
-    public $config = array(
+    public $config = [
         'prevNums'         => 2,
         'nextNums'         => 7,
         'showSinglePage'   => false,
@@ -16,7 +16,7 @@ class Paginator
         'current'          => '<b>%page%</b>',
         'page'             => '<a href="%link%">%page%</a>',
         'suffix'           => '</div>'
-    );
+    ];
 
     public $curPage = 1;
 
@@ -65,7 +65,7 @@ class Paginator
             '%pageSize%'    => $this->pageSize,
             '%totalItems%'  => $this->totalItems,
             '%totalPages%'  => $this->totalPages,
-            '%startPage%'     => $this->startPage,
+            '%startPage%'   => $this->startPage,
             '%endPage%'     => $this->endPage,
             '%page%'        => $page
         );

@@ -104,6 +104,30 @@ class View
         $this->$key = $value;
     }
 
+    public function js()
+    {
+        $args = func_get_args();
+        $app = App::getInstance();
+        foreach ($args as $arg) {
+            $tmp = (array) $app->config->get($arg, $arg);
+            foreach ($tmp as $row) {
+                echo "<script type=\"text/javascript\" src=\"{$row}\"></script>";
+            }
+        }
+    }
+
+    public function css()
+    {
+        $args = func_get_args();
+        $app = App::getInstance();
+        foreach ($args as $arg) {
+            $tmp = (array) $app->config->get($arg, $arg);
+            foreach ($tmp as $row) {
+                echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$row}\" />";
+            }
+        }
+    }
+
     /**
      * Dynamic get vars
      *

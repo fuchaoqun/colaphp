@@ -21,16 +21,19 @@ class Utils
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
-        $ext = substr($des, -4);
-        if ('.png' == $ext) {
+
+        $pathinfo = pathinfo($des);
+        $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
+
+        if (in_array($ext, ['png'])) {
             $cmd = self::$convert . " {$src} {$opts} -quality 100 {$des}";
-            exec($cmd);
-        } else if ('.jpg' == $ext) {
+        } else if (in_array($ext, ['jpg', 'jpeg'])) {
             $cmd = self::$convert . " {$src} {$opts} -strip -compress JPEG2000 $des";
-            exec($cmd);
         } else {
-            copy($src, $des);
+            $cmd = self::$convert . " {$src} {$opts} $des";
         }
+
+        exec($cmd);
 
         return file_exists($des);
     }

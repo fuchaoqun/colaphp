@@ -1,8 +1,8 @@
 <?php
 
-namespace Cola\Cache;
+namespace Cola\Cache\Adapter;
 
-class Fake extends SimpleCache
+class FakeAdapter extends AbstractAdapter
 {
     /**
      * Set cache
@@ -17,6 +17,11 @@ class Fake extends SimpleCache
         return true;
     }
 
+    public function setMultiple($values, $ttl = null)
+    {
+        return true;
+    }
+
     /**
      * Get Cache
      *
@@ -25,7 +30,17 @@ class Fake extends SimpleCache
      */
     public function get($key)
     {
-        return false;
+        return null;
+    }
+
+    public function getMultiple($keys, $default = null)
+    {
+        $rps = [];
+        foreach ($keys as $key) {
+            $rps[$key] = $default;
+        }
+
+        return $rps;
     }
 
     /**
@@ -33,7 +48,12 @@ class Fake extends SimpleCache
      * @param string $id
      * @return boolean
      */
-    public function del($key)
+    public function delete($key)
+    {
+        return true;
+    }
+
+    public function deleteMultiple($keys)
     {
         return true;
     }
@@ -44,5 +64,10 @@ class Fake extends SimpleCache
     public function clear()
     {
         return true;
+    }
+
+    public function has($key)
+    {
+        return false;
     }
 }
