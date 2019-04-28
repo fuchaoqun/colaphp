@@ -2,7 +2,7 @@
 
 namespace Cola\Validation;
 
-class ValidationException extends \Cola\Exception
+class ValidationException extends \Cola\Exception\VisibleException
 {
     public $error;
 

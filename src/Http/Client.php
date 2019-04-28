@@ -62,7 +62,7 @@ class Client
     public function sendRequest()
     {
         if (!function_exists('curl_init')) {
-            throw new Cola\Exception('Can not find curl extension');
+            throw new \Exception('Can not find curl extension');
         }
 
         $this->request['opts'][CURLOPT_URL] = self::genUrl($this->request['url'], $this->request['params']);
@@ -84,7 +84,7 @@ class Client
         $this->info = curl_getinfo($curl);
 
         if (0 !== $errno) {
-            throw new Cola_Exception($this->error['error'], $this->error['errno']);
+            throw new \Exception($this->error['error'], $this->error['errno']);
         }
 
         curl_close ($curl);

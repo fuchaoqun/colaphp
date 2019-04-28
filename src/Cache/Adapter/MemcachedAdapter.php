@@ -1,6 +1,6 @@
 <?php
 
-namespace Cola\Cache;
+namespace Cola\Cache\Adapter;
 
 class MemcachedAdapter extends AbstractAdapter
 {
@@ -9,9 +9,9 @@ class MemcachedAdapter extends AbstractAdapter
         parent::__construct($config);
 
         if (isset($this->config['persistent'])) {
-            $this->conn = new Memcached($this->config['persistent']);
+            $this->conn = new \Memcached($this->config['persistent']);
         } else {
-            $this->conn = new Memcached();
+            $this->conn = new \Memcached();
         }
 
         $this->conn->addServers($this->config['servers']);

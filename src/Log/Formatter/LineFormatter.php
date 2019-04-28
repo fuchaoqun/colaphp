@@ -9,7 +9,7 @@ class LineFormatter
         $keys = [];
         $vals = [];
         foreach ($context as $key => $val) {
-            $keys[] = "%{$key}%";
+            $keys[] = "{{{$key}}}";
             $vals[] = $val;
         }
 

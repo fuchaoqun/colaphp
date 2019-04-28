@@ -20,8 +20,8 @@ class Captcha
         'bgColor'         => '#f8f8f8',
         'ttl'             => 120,
         'points'          => [256, 512],
-        'sessionValueKey' => '__COLA_CAPTCHA_VALUE_',
-        'sessionTtlKey'   => '__COLA_CAPTCHA_TTL_',
+        'sessionValueKey' => '_COLA_CAPTCHA_VALUE',
+        'sessionTtlKey'   => '_COLA_CAPTCHA_TTL',
     ];
 
     /**

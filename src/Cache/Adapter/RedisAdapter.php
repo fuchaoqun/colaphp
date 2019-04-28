@@ -1,6 +1,6 @@
 <?php
 
-namespace Cola\Cache;
+namespace Cola\Cache\Adapter;
 
 class RedisAdapter extends AbstractAdapter
 {
@@ -24,7 +24,7 @@ class RedisAdapter extends AbstractAdapter
 
     protected function _initSingle($config)
     {
-        $this->conn = new Redis();
+        $this->conn = new \Redis();
 
         $func = empty($config['persistent']) ? 'connect' : 'pconnect';
 
@@ -57,7 +57,7 @@ class RedisAdapter extends AbstractAdapter
             $args[] = $config['password'];
         }
 
-        $this->conn = new RedisCluster(...$args);
+        $this->conn = new \RedisCluster(...$args);
 
         foreach ($config['options'] as $key => $val) {
             $this->conn->setOption($key, $val);
@@ -93,7 +93,7 @@ class RedisAdapter extends AbstractAdapter
 
         $multi = $this->conn->multi();
         foreach ($values as $key => $value) {
-            $multi = $multi->setex($key, $ttl, value);
+            $multi = $multi->setex($key, $ttl, $value);
         }
 
         return $multi->exec();
@@ -102,12 +102,12 @@ class RedisAdapter extends AbstractAdapter
     /**
      * Get Cache Value
      *
-     * @param mixed $id
+     * @param mixed $key
      * @return mixed
      */
     public function get($key, $default = null)
     {
-        $rps = $this->conn->get($id);
+        $rps = $this->conn->get($key);
         return false === $rps ? $default : $rps;
     }
 

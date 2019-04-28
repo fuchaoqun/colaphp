@@ -103,7 +103,6 @@ class Request
      *
      * @param string $header HTTP header name
      * @return string|false HTTP header value, or false if not found
-     * @throws Exception
      */
     public static function header($header)
     {

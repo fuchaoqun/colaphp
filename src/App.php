@@ -65,7 +65,7 @@ class App
                 'Cola\Model'                      => COLA_DIR . '/Model.php',
                 'Cola\View'                       => COLA_DIR . '/View.php',
                 'Cola\Router'                     => COLA_DIR . '/Router.php',
-                'Cola\Exception'                  => COLA_DIR . '/Exception.php',
+                'Cola\Exception\VisibleException' => COLA_DIR . '/Exception/VisibleException.php',
                 'Cola\Http\Request'               => COLA_DIR . '/Http/Request.php',
                 'Cola\Http\Response'              => COLA_DIR . '/Http/Response.php',
                 'Cola\Db\Pdo'                     => COLA_DIR . '/Db/Pdo.php',
@@ -93,7 +93,7 @@ class App
         }
 
         if (!is_array($config)) {
-            throw new Exception('Boot config must be an array or a php config file with variable $config');
+            throw new \Exception('Boot config must be an array or a php config file with variable $config');
         }
 
         $this->config->merge($config);

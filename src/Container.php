@@ -19,7 +19,7 @@ class Container implements \ArrayAccess
     public function get($id)
     {
         if (!$this->has($id)) {
-            throw new Exception("No entry was found for {$id} in Container");
+            throw new \Exception("No entry was found for {$id} in Container");
         }
 
         return $this->_data[$id];

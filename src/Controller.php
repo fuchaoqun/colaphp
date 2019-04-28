@@ -13,7 +13,7 @@ abstract class Controller
     public function __call($method, $args)
     {
         $cls = get_class($this);
-        throw new Exception("Call to undefined method: {$cls}->{$method}()");
+        throw new \Exception("Call to undefined method: {$cls}->{$method}()");
     }
 
     /**
@@ -162,7 +162,7 @@ abstract class Controller
                 return $this->config;
 
             default:
-                throw new Cola_Exception('Undefined property: ' . get_class($this) . '::' . $key);
+                throw new \Exception('Undefined property: ' . get_class($this) . '::' . $key);
         }
     }
 }

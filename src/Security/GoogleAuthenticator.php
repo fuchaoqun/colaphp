@@ -100,7 +100,7 @@ class GoogleAuthenticator
         $str = strtoupper($str);
 
         if (!preg_match('/^[A-Z2-7]+$/', $str)) {
-            throw new Exception('Invalid characters in the base32 string.');
+            throw new \Exception('Invalid characters in the base32 string.');
         }
 
         $l = strlen($str);

@@ -2,13 +2,13 @@
 
 namespace Cola\Db;
 
-class Pdo
+class Mysql
 {
     public $config = [
         'user' => '',
         'password' => '',
         'options' => [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
         ]
     ];
 
@@ -20,13 +20,17 @@ class Pdo
 
     public function __construct($config)
     {
-        $this->config = array_merge_recursive($this->config, $config);
+        if (!empty($config['options'])) {
+            $config['options'] += $this->config['options'];
+        }
+
+        $this->config = $config + $this->config;
         $this->connect();
     }
 
     public function connect()
     {
-        $this->pdo = new PDO($this->config['dsn'], $this->config['user'], $this->config['password'], $this->config['options']);
+        $this->pdo = new \PDO($this->config['dsn'], $this->config['user'], $this->config['password'], $this->config['options']);
         return $this->pdo;
     }
 
@@ -370,7 +374,7 @@ class Pdo
      * @param string $style
      * @return mixd
      */
-    public function fetch($style = PDO::FETCH_ASSOC)
+    public function fetch($style = \PDO::FETCH_ASSOC)
     {
         return $this->query->fetch($style);
     }
@@ -381,7 +385,7 @@ class Pdo
      * @param string $style
      * @return array
      */
-    public function fetchAll($style = PDO::FETCH_ASSOC)
+    public function fetchAll($style = \PDO::FETCH_ASSOC)
     {
         $result = $this->query->fetchAll($style);
         $this->free();
@@ -435,7 +439,7 @@ class Pdo
             if ($this->pdo && $this->pdo->query('select 1')) {
                 return true;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if ($reconnect) {
                 $this->close();
                 $this->connect();

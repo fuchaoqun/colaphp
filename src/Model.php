@@ -2,10 +2,10 @@
 
 namespace Cola;
 
+use Cola\Cache\SimpleCache;
+
 abstract class Model
 {
-    protected $_invalidErrorCode = -400;
-
     /**
      * Db name
      *
@@ -243,25 +243,25 @@ abstract class Model
      *
      * @param array $config
      * @param string
-     * @return Db\Pdo
+     * @return Db\Mysql
      */
     public function db($name = null)
     {
         is_null($name) && ($name = $this->_db);
 
         if (is_array($name)) {
-            return new Db\Pdo($name);
+            return new Db\Mysql($name);
         }
 
         $id = "__db_{$name}";
         $app = App::getInstance();
-        if (!$db = $app->container->get($id)) {
-            $pdoConfig = $app->config->get($name);
-            $db = new Db\Pdo($pdoConfig);
+        if (!$app->container->has($id)) {
+            $config = $app->config->get($name);
+            $db = new Db\Mysql($config);
             $app->container->set($id, $db);
         }
 
-        return $db;
+        return $app->container->get($id);
     }
 
     /**
@@ -280,13 +280,13 @@ abstract class Model
 
         $id = "__cache_{$name}";
         $app = App::getInstance();
-        if (!$cache = $app->container->get($id)) {
+        if (!$app->container->has($id)) {
             $factory = $app->config->get($name);
             $cache = SimpleCache::factory($factory['adapter'], $factory['config']);
             $app->container->set($id, $cache);
         }
 
-        return $cache;
+        return $app->container->get($id);
     }
 
     /**
@@ -370,7 +370,7 @@ abstract class Model
                 return $this->config;
 
             default:
-                throw new Cola_Exception('Undefined property: ' . get_class($this). '::' . $key);
+                throw new \Exception('Undefined property: ' . get_class($this). '::' . $key);
         }
     }
 }

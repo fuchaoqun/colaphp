@@ -112,7 +112,7 @@ class Config implements \ArrayAccess
      *
      * @param  string $name
      * @param  mixed  $value
-     * @throws Cola_Exception
+     * @throws \Exception
      * @return void
      */
     public function __set($name, $value)
@@ -135,7 +135,7 @@ class Config implements \ArrayAccess
      * Support unset() overloading on PHP 5.1
      *
      * @param  string $name
-     * @throws Cola_Exception
+     * @throws \Exception
      * @return void
      */
     public function __unset($name)

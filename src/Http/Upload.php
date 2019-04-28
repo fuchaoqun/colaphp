@@ -82,11 +82,11 @@ class Upload
     private function _check($file)
     {
         if (UPLOAD_ERR_OK != $file['error']) {
-            throw new \Cola\Exception("{$file['name']}: {$this->config['error'][$code]}", $code);
+            throw new \Exception("{$file['name']}: {$this->config['error'][$code]}", $code);
         }
 
         if (!is_uploaded_file($file['tmp_name'])) {
-            throw new \Cola\Exception("{$file['name']}: NOT_UPLOADED_FILE", 20);
+            throw new \Exception("{$file['name']}: NOT_UPLOADED_FILE", 20);
         }
 
         $checks = [
@@ -98,7 +98,7 @@ class Upload
 
         foreach ($checks as $func => $error) {
             if (!$this->$func($file)) {
-                throw new \Cola\Exception($error['message'], $error['code']);
+                throw new \Exception($error['message'], $error['code']);
             }
         }
 
@@ -182,7 +182,7 @@ class Upload
     public function move($file, $dest)
     {
         if (file_exists($dest) && (!$this->config['override'])) {
-            throw new Exception(25, "{$dest}: FILE_EXISTED");
+            throw new \Exception(25, "{$dest}: FILE_EXISTED");
         }
 
         $dir = dirname($dest);
@@ -194,6 +194,6 @@ class Upload
             return true;
         }
 
-        throw new Exception(26, "{$file['tmp_name']}: MOVE_FAILED");
+        throw new \Exception(26, "{$file['tmp_name']}: MOVE_FAILED");
     }
 }

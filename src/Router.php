@@ -15,6 +15,19 @@ class Router
         ]
     ];
 
+    protected $_rules = [
+        '*' => [],
+        'GET' => [],
+        'HEAD' => [],
+        'POST' => [],
+        'PUT' => [],
+        'DELETE' => [],
+        'CONNECT' => [],
+        'OPTIONS' => [],
+        'TRACE' => [],
+        'PATCH' => []
+    ];
+
     /**
      * Constructor
      * @param array $config
@@ -26,6 +39,28 @@ class Router
         };
 
         $this->config = $config + $this->config;
+
+        foreach ($this->config['rules'] as $rule) {
+            $rule += [
+                'namespace' => $this->config['namespace'],
+                'methods' => ['*'],
+                'maps' => [],
+                'args' => []
+            ];
+            $rule['methods'] = array_map('strtoupper', $rule['methods']);
+            foreach ($rule['methods'] as $method) {
+                if (!isset($this->_rules[$method])) {
+                    $this->_rules[$method] = [];
+                }
+                $this->_rules[$method][$rule['regex']] = $rule;
+            }
+        }
+
+        foreach ($this->_rules['GET'] as $key => $value) {
+            if (!isset($this->_rules['HEAD'])) {
+                $this->_rules['HEAD'][$key] = $value;
+            }
+        }
     }
 
     /**
@@ -63,40 +98,29 @@ class Router
     public function match($pathInfo = null)
     {
         $pathInfo = trim($pathInfo, '/');
-        $method = $_SERVER['REQUEST_METHOD'];
+        $methods = [$_SERVER['REQUEST_METHOD'], '*'];
 
-        foreach ($this->config['rules'] as $rule) {
-            $rule += [
-                'namespace' => $this->config['namespace'],
-                'methods' => ['*'],
-                'maps' => [],
-                'args' => []
-            ];
-
-            $rule['methods'] = array_map('strtoupper', $rule['methods']);
-
-            if ((!in_array('*', $rule['methods'])) && (!in_array($method, $rule['methods']))) {
-                continue;
-            }
-
-            if (!preg_match($rule['regex'], $pathInfo, $matches)) {
-                continue;
-            }
-
-            if ($rule['maps']) {
-                foreach ($rule['maps'] as $pos => $key) {
-                    $rule['args'][$key] = urldecode($matches[$pos]);
+        foreach ($methods as $method) {
+            foreach ($this->_rules[$method] as $regex => $rule) {
+                if (!preg_match($regex, $pathInfo, $matches)) {
+                    continue;
                 }
+
+                if ($rule['maps']) {
+                    foreach ($rule['maps'] as $pos => $key) {
+                        $rule['args'][$key] = urldecode($matches[$pos]);
+                    }
+                }
+
+                $controller = ('\\' == $rule['controller'][0]) ? $rule['controller'][0]
+                    : implode('\\', [$rule['namespace'], $rule['controller']]);
+
+                return [
+                    'controller' => $controller,
+                    'action'     => $rule['action'],
+                    'args'       => $rule['args']
+                ];
             }
-
-            $controller = ('\\' == $rule['controller'][0]) ? $rule['controller'][0]
-                : implode('\\', [$rule['namespace'], $rule['controller']]);
-
-            return [
-                'controller' => $controller,
-                'action'     => $rule['action'],
-                'args'       => $rule['args']
-            ];
         }
 
         return $this->dynamic($pathInfo);

@@ -29,7 +29,7 @@ class Logger
     public function __construct($config = [])
     {
         $this->config = $config + [
-            'channel' => '__Cola__',
+            'channel' => '_Cola',
             'handlers' => [],
             'timezone' => new \DateTimeZone(date_default_timezone_get() ?: 'UTC'),
             'dateTimeFormat' => 'Y-m-d H:i:s'
