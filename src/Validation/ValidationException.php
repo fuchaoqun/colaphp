@@ -2,13 +2,15 @@
 
 namespace Cola\Validation;
 
-class ValidationException extends \Cola\Exception\VisibleException
-{
-    public $error;
+use Cola\Exception\VisibleException;
 
-    public function __construct($error, $code = 400)
+class ValidationException extends VisibleException
+{
+    public $errors;
+
+    public function __construct($errors, $code = 400)
     {
-        $this->error = $error;
-        parent::__construct(json_encode($error, JSON_UNESCAPED_UNICODE), $code);
+        $this->errors = $errors;
+        parent::__construct(json_encode($errors, JSON_UNESCAPED_UNICODE), $code);
     }
 }

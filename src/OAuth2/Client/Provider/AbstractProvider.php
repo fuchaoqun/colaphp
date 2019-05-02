@@ -4,14 +4,6 @@ namespace Cola\OAuth2\Client\Provider;
 
 abstract class AbstractProvider
 {
-    public $clientId;
-    public $clientSecret;
-
-    public $redirectUri;
-    public $authorizeUrl;
-    public $accessTokenUrl;
-    public $scope;
-
     public $config = [];
 
     public function __construct($config)
@@ -44,7 +36,7 @@ abstract class AbstractProvider
 
         $data = $default + $data;
 
-        $rps = \Cola\Http\Client::post($this->accessTokenUrl, $data);
+        $rps = \Cola\Http\Client::post($this->config['accessTokenUrl'], $data);
         parse_str($rps, $ret);
         return $ret;
     }

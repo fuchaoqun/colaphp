@@ -2,13 +2,17 @@
 
 namespace Cola;
 
+use \Cola\Http\Request;
+use \Cola\Http\Response;
+
 abstract class Controller
 {
     /**
      * Magic method
      *
-     * @param string $methodName
+     * @param string $method
      * @param array $args
+     * @throws \Exception
      */
     public function __call($method, $args)
     {
@@ -17,22 +21,24 @@ abstract class Controller
     }
 
     /**
-    * Get var
-    *
-    * @param string $key
-    * @param mixed $default
-    */
+     * Get var
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     protected function get($key = null, $default = null)
     {
         return Request::get($key, $default);
     }
 
     /**
-    * Post var
-    *
-    * @param string $key
-    * @param mixed $default
-    */
+     * Post var
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     protected function post($key = null, $default = null)
     {
         return Request::post($key, $default);
@@ -42,7 +48,8 @@ abstract class Controller
      * View
      *
      * @param array $file
-     * @return Cola_View
+     * @return View
+     * @throws \ReflectionException
      */
     protected function view($file = null)
     {
@@ -53,7 +60,8 @@ abstract class Controller
     /**
      * Display the view
      *
-     * @param string $tpl
+     * @param string $file
+     * @throws \ReflectionException
      */
     protected function display($file = null)
     {
@@ -66,6 +74,7 @@ abstract class Controller
      * Get default template file path
      *
      * @return string
+     * @throws \ReflectionException
      */
     protected function defaultTemplate()
     {
@@ -101,10 +110,10 @@ abstract class Controller
         is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
         if ($callback && (preg_match('/^[a-zA-Z\d_]+$/', $callback))) {
-            Cola_Response::charset($encode, 'application/javascript');
+            Response::charset($encode, 'application/javascript');
             echo "{$callback}({$data})";
         } else {
-            Cola_Response::charset($encode, 'application/json');
+            Response::charset($encode, 'application/json');
             echo $data;
         }
 
@@ -136,6 +145,8 @@ abstract class Controller
      * Dynamic get vars
      *
      * @param string $key
+     * @return Request|Response|View
+     * @throws \ReflectionException
      */
     public function __get($key)
     {
@@ -150,11 +161,11 @@ abstract class Controller
                 return $this->view();
 
             case 'request':
-                $this->request = new Cola_Request();
+                $this->request = new Request();
                 return $this->request;
 
             case 'response':
-                $this->response = new Cola_Response();
+                $this->response = new Response();
                 return $this->response;
 
             case 'config':

@@ -10,8 +10,6 @@ class Client
 
     public $info;
 
-    public $error;
-
     public $defaultOpts = [
         CURLOPT_TIMEOUT => 15,
         CURLOPT_RETURNTRANSFER => true,
@@ -28,6 +26,11 @@ class Client
             ],
             $request
         );
+    }
+
+    public function setHeaders($headers)
+    {
+        $this->request['opts'][CURLOPT_HTTPHEADER] = $headers;
     }
 
     public static function genUrl($url, $params = [])
@@ -55,9 +58,8 @@ class Client
     /**
      * HTTP request
      *
-     * @param string $uri
-     * @param array $opts
      * @return string or throw Exception
+     * @throws \Exception
      */
     public function sendRequest()
     {
@@ -80,11 +82,12 @@ class Client
         curl_setopt_array($curl, $this->request['opts']);
         $this->response = curl_exec($curl);
 
-        $this->error = ['errno' => curl_errno($curl), 'error' => curl_error($curl)];
         $this->info = curl_getinfo($curl);
 
+        $errno = curl_errno($curl);
         if (0 !== $errno) {
-            throw new \Exception($this->error['error'], $this->error['errno']);
+            var_dump($errno);
+            throw new \Exception(curl_error($curl), $errno);
         }
 
         curl_close ($curl);

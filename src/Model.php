@@ -333,9 +333,9 @@ abstract class Model
             return true;
         }
 
-        $validator = new Validation\Validator();
+        $validator = new Validation\Validator($rules, $ignoreNotExists);
 
-        return $validator->check($data, $rules, $ignoreNotExists);
+        return $validator->check($data, $ignoreNotExists);
     }
 
     /**

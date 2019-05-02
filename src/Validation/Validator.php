@@ -2,29 +2,31 @@
 
 namespace Cola\Validation;
 
+use Cola\I18n\Translator;
+
 /**
  * usage
-$data = [
-    'id'     => 8,
-    'sex'    => 'F',
-    'tags'   => ['foo' => 3, 'bar' => 7],
-    'age'    => 8,
-    'email'  => 'foo@bar.com',
-    'date'   => '2012-12-10',
-    'body'   => 'foobarbarfoo',
-];
-
-$rules = [
-    'id'     => ['required' => true, 'type' => 'int'],
-    'sex'    => ['in' => ['F', 'M']],
-    'tags'   => ['required' => true, 'each' => ['type' => 'int']],
-    'age'    => ['type' => 'int', 'range' => [38, 130], 'message' => 'age must be 18~130'],
-    'email'  => ['type' => 'email'),
-    'date'   => ['type' => 'date'),
-    'body'   => ['required' => true, 'range' => [1, 500]]
-];
-
-var_dump(Validator::check($data, $rules));
+ * $data = [
+ * 'id'     => 8,
+    * 'sex'    => 'F',
+    * 'tags'   => ['foo' => 3, 'bar' => 7],
+    * 'age'    => 8,
+    * 'email'  => 'foo@bar.com',
+    * 'date'   => '2012-12-10',
+    * 'body'   => 'foobarbarfoo',
+* ];
+ *
+* $rules = [
+    * 'id'     => ['required' => true, 'type' => 'int'],
+    * 'sex'    => ['in' => ['F', 'M']],
+    * 'tags'   => ['required' => true, 'each' => ['type' => 'int']],
+    * 'age'    => ['type' => 'int', 'range' => [38, 130], 'message' => 'age must be 18~130'],
+    * 'email'  => ['type' => 'email'),
+    * 'date'   => ['type' => 'date'),
+    * 'body'   => ['required' => true, 'range' => [1, 500]]
+* ];
+ *
+* var_dump(Validator::check($data, $rules));
 **/
 
 class Validator
@@ -45,6 +47,7 @@ class Validator
      * Check if is not empty
      *
      * @param string $str
+     * @param bool $trim
      * @return boolean
      */
     public static function notEmpty($str, $trim = true)
@@ -100,7 +103,7 @@ class Validator
      * Range
      *
      * @param mixed $value numbernic|string
-     * @param array $max
+     * @param $range
      * @return boolean
      */
     public static function range($value, $range)
@@ -249,19 +252,20 @@ class Validator
      * ]
      *
      * @param array $data
-     * @param boolean $ignorNotExists
+     * @param boolean $ignoreNotExists
      * @return boolean
+     * @throws ValidationException
      */
-    public function check($data, $ignorNotExists = null)
+    public function check($data, $ignoreNotExists = null)
     {
-        is_null($ignorNotExists) && $ignorNotExists = $this->ignorNotExists;
+        is_null($ignoreNotExists) && $ignoreNotExists = $this->ignorNotExists;
         $errors = [];
 
         foreach ($this->rules as $key => $rule) {
             $rule += array('required' => false, 'message' => 'failed');
 
             // deal with not existed
-            if ((!isset($data[$key])) && $rule['required'] && (!$ignorNotExists)) {
+            if ((!isset($data[$key])) && $rule['required'] && (!$ignoreNotExists)) {
                 $errors[$key] = $this->_getMessage($rule['message']);
                 continue;
             }
@@ -269,7 +273,7 @@ class Validator
             if (!isset($data[$key])) continue;
 
             if (isset($rule['rules'])) {
-                $validator = new self($rule['rules'], $ignorNotExists);
+                $validator = new self($rule['rules'], $ignoreNotExists);
                 try {
                     $validator->check($data[$key]);
                 } catch (ValidationException $ve) {
@@ -277,7 +281,7 @@ class Validator
                 }
             }
 
-            if (!$this->_check($data[$key], $rule, $ignorNotExists)) {
+            if (!$this->_check($data[$key], $rule, $ignoreNotExists)) {
                 $errors[$key] = $this->_getMessage($rule['message']);
                 continue;
             }
@@ -293,11 +297,12 @@ class Validator
     /**
      * Check value
      *
-     * @param mixed $value
+     * @param $data
      * @param array $rule
+     * @param bool $ignoreNotExists
      * @return mixed string as error, true for OK
      */
-    protected function _check($data, $rule, $ignorNotExists = false)
+    protected function _check($data, $rule, $ignoreNotExists = false)
     {
         foreach ($rule as $key => $val) {
             switch ($key) {
@@ -337,7 +342,7 @@ class Validator
 
                 case 'each':
                     foreach ($data as $item) {
-                        if (!$this->_check($item, $val, $ignorNotExists)) {
+                        if (!$this->_check($item, $val, $ignoreNotExists)) {
                             return false;
                         }
                     }
@@ -363,7 +368,7 @@ class Validator
             return $message;
         }
 
-        $translator = \Cola\App::getInstance()->container->get($translatorId);
+        $translator = Translator::getFromContainer();
         return $translator->message(\substr($message, 2, -2));
     }
 }
