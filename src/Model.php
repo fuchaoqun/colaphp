@@ -3,6 +3,7 @@
 namespace Cola;
 
 use Cola\Cache\SimpleCache;
+use Cola\Validation\ValidationException;
 
 abstract class Model
 {
@@ -48,12 +49,7 @@ abstract class Model
      */
     protected $_rules = [];
 
-    /**
-     * Error infomation
-     *
-     * @var array
-     */
-    public $error = [];
+    protected $_uniqueColumns = [];
 
     public function __construct() {}
 
@@ -108,7 +104,6 @@ abstract class Model
      * Count result
      *
      * @param string $where
-     * @param string $table
      * @return int
      */
     public function count($where)
@@ -132,7 +127,6 @@ abstract class Model
      * Insert
      *
      * @param array $data
-     * @param string $table
      * @return boolean
      */
     public function insert($data)
@@ -170,7 +164,6 @@ abstract class Model
      * Replace
      *
      * @param array $data
-     * @param string $table
      * @return boolean
      */
     public function replace($data)
@@ -221,8 +214,8 @@ abstract class Model
     /**
      * Delete
      *
-     * @param string $where
-     * @param string $table
+     * @param $id
+     * @param null $col
      * @return boolean
      */
     public function delete($id, $col = null)
@@ -241,9 +234,9 @@ abstract class Model
     /**
      * Connect db from config
      *
-     * @param array $config
      * @param string
      * @return Db\Mysql
+     * @throws \Exception
      */
     public function db($name = null)
     {
@@ -269,6 +262,7 @@ abstract class Model
      *
      * @param mixed $name
      * @return Cache\SimpleCache
+     * @throws \Exception
      */
     public function cache($name = null)
     {
@@ -334,8 +328,24 @@ abstract class Model
         }
 
         $validator = new Validation\Validator($rules, $ignoreNotExists);
+        $validator->check($data, $ignoreNotExists);
 
-        return $validator->check($data, $ignoreNotExists);
+        foreach ($this->_uniqueColumns as $key => $msg)
+        {
+            if ((!isset($data[$key])) || is_null($data[$key])) continue;
+            if (!$this->isUnique($key, $data[$key])) {
+                throw new ValidationException([$key => $msg]);
+            }
+        }
+
+        return true;
+    }
+
+    public function isUnique($column, $val)
+    {
+        $sql = "select count(1) as cnt from {$this->_table} where {$column} = ?";
+        $cnt = $this->db->col($sql, [$val]);
+        return 0 === intval($cnt);
     }
 
     /**
@@ -353,6 +363,8 @@ abstract class Model
      * Dynamic get vars
      *
      * @param string $key
+     * @return SimpleCache|Db\Mysql
+     * @throws \Exception
      */
     public function __get($key)
     {

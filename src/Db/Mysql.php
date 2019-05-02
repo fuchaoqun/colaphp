@@ -113,10 +113,15 @@ class Mysql
      * @param string $sql
      * @return string
      */
-    public function col($sql, $data = [])
+    public function column($sql, $data = [])
     {
         $result = $this->sql($sql, $data);
         return empty($result) ? false : current($result[0]);
+    }
+
+    public function col($sql, $data = [])
+    {
+        return $this->column($sql, $data);
     }
 
     /**
