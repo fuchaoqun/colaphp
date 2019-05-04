@@ -4,6 +4,7 @@ namespace Cola;
 
 use Cola\Cache\SimpleCache;
 use Cola\Validation\ValidationException;
+use Cola\Validation\Validator;
 
 abstract class Model
 {
@@ -334,7 +335,7 @@ abstract class Model
         {
             if ((!isset($data[$key])) || is_null($data[$key])) continue;
             if (!$this->isUnique($key, $data[$key])) {
-                throw new ValidationException([$key => $msg]);
+                throw new ValidationException([$key => Validator::getMessage($msg)]);
             }
         }
 

@@ -266,7 +266,7 @@ class Validator
 
             // deal with not existed
             if ((!isset($data[$key])) && $rule['required'] && (!$ignoreNotExists)) {
-                $errors[$key] = $this->_getMessage($rule['message']);
+                $errors[$key] = $this->getMessage($rule['message']);
                 continue;
             }
 
@@ -282,7 +282,7 @@ class Validator
             }
 
             if (!$this->_check($data[$key], $rule, $ignoreNotExists)) {
-                $errors[$key] = $this->_getMessage($rule['message']);
+                $errors[$key] = $this->getMessage($rule['message']);
                 continue;
             }
         }
@@ -362,7 +362,7 @@ class Validator
         return true;
     }
 
-    protected function _getMessage($message)
+    public static function getMessage($message)
     {
         if ('{{' !== \substr($message, 0, 2)) {
             return $message;
