@@ -2,6 +2,8 @@
 
 namespace Cola\OAuth2\Client\Provider;
 
+use Cola\Http\Client;
+
 abstract class AbstractProvider
 {
     public $config = [];
@@ -19,9 +21,9 @@ abstract class AbstractProvider
             'scope' => $this->config['scope']
         ];
 
-        $params = $default + $params;
+        $params += $default;
 
-        $url = \Cola\Http\Client::genUrl($this->config['authorizeUrl'], $params);
+        $url = Client::genUrl($this->config['authorizeUrl'], $params);
         return $url;
     }
 
@@ -36,7 +38,7 @@ abstract class AbstractProvider
 
         $data = $default + $data;
 
-        $rps = \Cola\Http\Client::post($this->config['accessTokenUrl'], $data);
+        $rps = Client::post($this->config['accessTokenUrl'], $data);
         parse_str($rps, $ret);
         return $ret;
     }
