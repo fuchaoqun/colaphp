@@ -5,9 +5,9 @@ namespace Cola;
 class Router
 {
     public $config = [
-        'namespace' => 'App',
         'rules' => [],
         'defaults' => [
+            'namespace'  => 'App',
             'module'     => 'Home',
             'controller' => 'IndexController',
             'action'     => 'indexAction',
@@ -42,7 +42,6 @@ class Router
 
         foreach ($this->config['rules'] as $rule) {
             $rule += [
-                'namespace' => $this->config['namespace'],
                 'methods' => ['*'],
                 'maps' => [],
                 'args' => []
@@ -71,6 +70,7 @@ class Router
      */
     public function dynamic($pathInfo)
     {
+        $pathInfo = trim($pathInfo);
         $es = $this->config['defaults'];
 
         if (preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
@@ -80,7 +80,7 @@ class Router
             isset($tmp[2]) && $es['action'] = "{$tmp[2]}Action";
         }
 
-        $controller = implode('\\', [$this->config['namespace'], $es['module'], $es['controller']]);
+        $controller = implode('\\', [$es['namespace'], $es['module'], $es['controller']]);
 
         return [
             'controller' => $controller,
@@ -97,9 +97,7 @@ class Router
      */
     public function match($pathInfo = null)
     {
-        $pathInfo = trim($pathInfo, '/');
         $methods = [$_SERVER['REQUEST_METHOD'], '*'];
-
         foreach ($methods as $method) {
             foreach ($this->_rules[$method] as $regex => $rule) {
                 if (!preg_match($regex, $pathInfo, $matches)) {
@@ -112,11 +110,8 @@ class Router
                     }
                 }
 
-                $controller = ('\\' == $rule['controller'][0]) ? $rule['controller'][0]
-                    : implode('\\', [$rule['namespace'], $rule['controller']]);
-
                 return [
-                    'controller' => $controller,
+                    'controller' => $rule['controller'],
                     'action'     => $rule['action'],
                     'args'       => $rule['args']
                 ];
