@@ -70,7 +70,7 @@ class Router
      */
     public function dynamic($pathInfo)
     {
-        $pathInfo = trim($pathInfo);
+        $pathInfo = trim($pathInfo, '/');
         $es = $this->config['defaults'];
 
         if (preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
