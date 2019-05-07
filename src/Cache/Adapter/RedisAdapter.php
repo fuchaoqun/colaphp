@@ -154,7 +154,9 @@ class RedisAdapter extends AbstractAdapter
     /**
      * Get from queue
      *
+     * @param $name
      * @param int $timeout >=0 for block, negative for non-blocking
+     * @return mixed
      */
     public function qget($name, $timeout = 0)
     {
