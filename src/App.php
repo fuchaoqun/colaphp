@@ -84,7 +84,7 @@ class App
      *
      * @param mixed $config string as a file and array as config
      * @return App
-     * @throws Exception
+     * @throws \Exception
      */
     public function boot($config = [])
     {

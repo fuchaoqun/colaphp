@@ -4,6 +4,7 @@ namespace Cola;
 
 use \Cola\Http\Request;
 use \Cola\Http\Response;
+use Cola\I18n\Translator;
 
 abstract class Controller
 {
@@ -128,6 +129,12 @@ abstract class Controller
         if (!is_null($ref)) $data['ref'] = $ref;
 
         $this->abort($data);
+    }
+
+    protected function message($key, $locales = null)
+    {
+        $translator = Translator::getFromContainer();
+        return $translator->message($key, $locales);
     }
 
     /**
