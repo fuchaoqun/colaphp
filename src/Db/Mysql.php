@@ -56,19 +56,32 @@ class Mysql
      * Query sql
      *
      * @param string $sql
+     * @param array $data
      * @return PDOStatement
      */
     public function query($sql, $data = [])
     {
         $this->log[] = ['time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data];
-        if ($data) {
-            $this->query = $this->pdo->prepare($sql);
-            $this->query->execute($data);
-        } else {
-            $this->query = $this->pdo->query($sql);
-        }
 
-        return $this->query;
+        for ($i = 0; $i < 2; $i ++) {
+            try {
+                if ($data) {
+                    $this->query = $this->pdo->prepare($sql);
+                    $this->query->execute($data);
+                } else {
+                    $this->query = $this->pdo->query($sql);
+                }
+                return $this->query;
+            } catch (\PDOException $e) {
+                $me = new MysqlException($e);
+                if (2006 == $me->getCode()) {
+                    $this->close();
+                    $this->connect();
+                } else {
+                    throw $e;
+                }
+            }
+        }
     }
 
     public function sql($sql, $data = [])

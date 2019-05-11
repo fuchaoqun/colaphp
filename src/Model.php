@@ -58,6 +58,7 @@ abstract class Model
      * Load data
      *
      * @param int $id
+     * @param null $col
      * @return array
      */
     public function load($id, $col = null)
