@@ -176,7 +176,7 @@ abstract class Controller
                 return $this->response;
 
             case 'config':
-                $this->config = Cola::getInstance()->config;
+                $this->config = App::getInstance()->config;
                 return $this->config;
 
             default:

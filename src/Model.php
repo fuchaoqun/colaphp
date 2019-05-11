@@ -379,7 +379,7 @@ abstract class Model
                 return $this->cache;
 
             case 'config':
-                $this->config = Cola::getInstance()->config;
+                $this->config = App::getInstance()->config;
                 return $this->config;
 
             default:
