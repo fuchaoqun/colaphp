@@ -448,23 +448,16 @@ class Mysql
     /**
      * Ping server
      *
-     * @param boolean $reconnect
      * @return boolean
      */
-    public function ping($reconnect = true)
+    public function ping()
     {
         try {
             if ($this->pdo && $this->pdo->query('select 1')) {
                 return true;
             }
         } catch (\Exception $e) {
-            if ($reconnect) {
-                $this->close();
-                $this->connect();
-                return $this->ping(false);
-            }
+            return false;
         }
-
-        return false;
     }
 }
