@@ -54,11 +54,12 @@ abstract class AbstractAdapter
         return $this->delete($key);
     }
 
-     /**
+    /**
      * Magic method
      *
      * @param string $method
      * @param array $args
+     * @return mixed
      */
     public function __call($method, $args)
     {
