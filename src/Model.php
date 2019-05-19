@@ -154,7 +154,7 @@ abstract class Model
 
     public function upsertMultiple($rows)
     {
-        return $this->db->upsertMultiple($rows);
+        return $this->db->upsertMultiple($this->_table, $rows);
     }
 
     public function mupsert($rows)
