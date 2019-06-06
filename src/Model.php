@@ -6,6 +6,9 @@ use Cola\Cache\SimpleCache;
 use Cola\Validation\ValidationException;
 use Cola\Validation\Validator;
 
+/**
+ * @property Db\Mysql db
+ */
 abstract class Model
 {
     /**
@@ -71,13 +74,23 @@ abstract class Model
         return empty($result) ? null : $result[0];
     }
 
+    public function loadForUpdate($id, $col = null)
+    {
+        is_null($col) && $col = $this->_pk;
+
+        $sql = "select * from {$this->_table} where {$col} = ? limit 1 for update";
+
+        $result = $this->db->sql($sql, array($id));
+        return empty($result) ? null : $result[0];
+    }
+
     /**
      * Multi load data
      *
      * @param int $ids
      * @return array
      */
-    public function loadMultiple($ids, $col = null)
+    public function loadMultiple($ids, $col = null, $associate = true)
     {
         is_null($col) && $col = $this->_pk;
         if (empty($ids)) {
@@ -91,15 +104,22 @@ abstract class Model
         }
 
         $result = [];
-        foreach ($raw as $row) {
-            $result[$row[$col]] = $row;
+        if ($associate) {
+            foreach ($raw as $row) {
+                $result[$row[$col]] = $row;
+            }
+        } else {
+            foreach ($raw as $row) {
+                $result[] = $row;
+            }
         }
+
         return $result;
     }
 
-    public function mload($ids, $col = null)
+    public function mload($ids, $col = null, $associate = true)
     {
-        return $this->loadMultiple($ids, $col);
+        return $this->loadMultiple($ids, $col, $associate);
     }
 
     /**
@@ -123,6 +143,11 @@ abstract class Model
     public function sql($sql, $data = [])
     {
         return $this->db->sql($sql, $data);
+    }
+
+    public function query($sql, $data)
+    {
+        return $this->db->query($sql, $data);
     }
 
     /**
@@ -192,7 +217,7 @@ abstract class Model
      */
     public function update($id, $data)
     {
-        $where = ["{$this->_pk}=?", array($id)];
+        $where = ["{$this->_pk}=?", [$id]];
 
         return $this->db->update($this->_table, $data, $where);
     }
@@ -257,6 +282,11 @@ abstract class Model
         }
 
         return $app->container->get($id);
+    }
+
+    public function row($sql, $data = [])
+    {
+        return $this->db->row($sql, $data);
     }
 
     /**
@@ -348,6 +378,21 @@ abstract class Model
         $sql = "select count(1) as cnt from {$this->_table} where {$column} = ?";
         $cnt = $this->db->col($sql, [$val]);
         return 0 === intval($cnt);
+    }
+
+    public function beginTransaction()
+    {
+        return $this->db->beginTransaction();
+    }
+
+    public function commit()
+    {
+        return $this->db->commit();
+    }
+
+    public function rollBack()
+    {
+        return $this->db->rollBack();
     }
 
     /**

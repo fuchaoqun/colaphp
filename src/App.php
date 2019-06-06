@@ -114,11 +114,6 @@ class App
         return self::$_instance;
     }
 
-    public function __invoke()
-    {
-        return App::getInstance();
-    }
-
     /**
      * Load class
      *

@@ -6,6 +6,12 @@ use \Cola\Http\Request;
 use \Cola\Http\Response;
 use Cola\I18n\Translator;
 
+/**
+ * @property View view
+ * @property Request request
+ * @property Response response
+ * @property Config config
+ */
 abstract class Controller
 {
     /**

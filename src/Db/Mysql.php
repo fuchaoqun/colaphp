@@ -111,7 +111,7 @@ class Mysql
      * Get a result row
      *
      * @param string $sql
-     * @param int $style
+     * @param array $data
      * @return array
      */
     public function row($sql, $data = [])
@@ -459,5 +459,20 @@ class Mysql
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    public function beginTransaction()
+    {
+        return $this->pdo->beginTransaction();
+    }
+
+    public function commit()
+    {
+        return $this->pdo->commit();
+    }
+
+    public function rollBack()
+    {
+        return $this->pdo->rollBack();
     }
 }

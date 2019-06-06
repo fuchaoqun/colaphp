@@ -2,6 +2,9 @@
 
 namespace Cola;
 
+/**
+ * @property Config config
+ */
 class View
 {
     /**
@@ -23,8 +26,6 @@ class View
     /**
      * Fetch
      *
-     * @param string $tpl
-     * @param string $dir
      * @return string
      */
     public function fetch()
@@ -38,8 +39,6 @@ class View
     /**
      * Display
      *
-     * @param string $tpl
-     * @param string $dir
      */
     public function display()
     {
@@ -81,7 +80,6 @@ class View
      * @param int $limit
      * @param string $encoding
      * @param string $suffix
-     * @param string $regex
      * @return string
      */
     public static function truncate($str, $limit, $encoding = 'UTF-8', $suffix = '...')
@@ -132,6 +130,7 @@ class View
      * Dynamic get vars
      *
      * @param string $key
+     * @return Config|null
      */
     public function __get($key)
     {
