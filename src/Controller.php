@@ -137,6 +137,12 @@ abstract class Controller
         $this->abort($data);
     }
 
+    protected function errorWithI18nMessage($code, $key, $locales = null)
+    {
+        $message = $this->message($key, $locales);
+        $this->error($code, $message);
+    }
+
     protected function message($key, $locales = null)
     {
         $translator = Translator::getFromContainer();
