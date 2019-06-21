@@ -40,18 +40,16 @@ class App
     public $router;
 
     /**
+     * @var Dispatcher
+     */
+    public $dispatcher;
+
+    /**
      * Path info
      *
      * @var string
      */
     public $pathInfo;
-
-    /**
-     * Dispatch info
-     *
-     * @var array
-     */
-    public $dispatchInfo;
 
     /**
      * Constructor
@@ -201,7 +199,7 @@ class App
      * @param string $func
      * @return App
      */
-    public function registerAutoload($func, $enable = true)
+    public function registerAutoload($func)
     {
         spl_autoload_register($func);
         return $this;
@@ -219,22 +217,17 @@ class App
         return $this;
     }
 
-    public function initDispatchInfo()
+    public function go($dispatchInfo = null)
     {
-        $this->router || ($this->router = new Router($this->config->get('_router', [])));
-        $this->pathInfo || ($this->pathInfo = $_SERVER['PATH_INFO']);
+        if (is_null($dispatchInfo)) {
+            $this->router || ($this->router = new Router($this->config->get('_router', [])));
+            $this->pathInfo || ($this->pathInfo = $_SERVER['PATH_INFO']);
+            $dispatchInfo = $this->router->match($this->pathInfo);
+        }
 
-        $this->dispatchInfo = $this->router->match($this->pathInfo);
+        $this->dispatcher || ($this->dispatcher = new Dispatcher($dispatchInfo));
 
-        return $this;
+        $this->dispatcher->dispatch();
     }
 
-    public function dispatch()
-    {
-        empty($this->dispatchInfo) && $this->initDispatchInfo();
-
-        $controller = new $this->dispatchInfo['controller'];
-
-        call_user_func_array([$controller, $this->dispatchInfo['action']], $this->dispatchInfo['args']);
-    }
 }

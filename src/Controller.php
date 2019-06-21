@@ -85,10 +85,10 @@ abstract class Controller
      */
     protected function defaultTemplate()
     {
-        $di = App::getInstance()->dispatchInfo;
-        $parts = explode('\\', $di['controller']);
+        $dispatcher = App::getInstance()->dispatcher;
+        $parts = explode('\\', $dispatcher->getController());
         $controller = strtolower(substr(end($parts), 0, -10));
-        $action = strtolower(substr($di['action'], 0, -6));
+        $action = strtolower(substr($dispatcher->getAction(), 0, -6));
 
         $reflector = new \ReflectionClass(\get_class($this));
         $dir = dirname($reflector->getFileName());
@@ -110,7 +110,7 @@ abstract class Controller
      *
      * @param mixed $data
      * @param string $callback callback function name
-     *
+     * @param string $encode
      */
     protected function abort($data, $callback = null, $encode = 'utf-8')
     {
@@ -125,22 +125,6 @@ abstract class Controller
         }
 
         exit();
-    }
-
-    protected function error($code, $message = null, $ref = null)
-    {
-        $data = ['code' => $code];
-
-        if (!is_null($message)) $data['message'] = $message;
-        if (!is_null($ref)) $data['ref'] = $ref;
-
-        $this->abort($data);
-    }
-
-    protected function errorWithI18nMessage($code, $key, $locales = null)
-    {
-        $message = $this->message($key, $locales);
-        $this->error($code, $message);
     }
 
     protected function message($key, $locales = null)
