@@ -116,13 +116,7 @@ abstract class Controller
     {
         is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-        if ($callback && (preg_match('/^[a-zA-Z\d_]+$/', $callback))) {
-            Response::charset($encode, 'application/javascript');
-            echo "{$callback}({$data})";
-        } else {
-            Response::charset($encode, 'application/json');
-            echo $data;
-        }
+
 
         exit();
     }

@@ -15,11 +15,11 @@ class Dispatcher
 
     public function dispatch()
     {
-        $controller = new $this->info['controller'];
-        $action = $this->info['action'];
-        $args = $this->info['args'];
+        $class = $this->getController();
+        $action = $this->getAction();
+        $args = $this->getArgs();
 
-        $rps = call_user_func_array([$controller, $action], $args);
+        $rps = call_user_func_array([new $class, $action], $args);
         $type = gettype($rps);
 
         switch ($type) {
