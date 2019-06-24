@@ -105,22 +105,6 @@ abstract class Controller
         $this->response->redirect($url, $code);
     }
 
-    /**
-     * Abort
-     *
-     * @param mixed $data
-     * @param string $callback callback function name
-     * @param string $encode
-     */
-    protected function abort($data, $callback = null, $encode = 'utf-8')
-    {
-        is_string($data) || $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-
-
-
-        exit();
-    }
-
     protected function message($key, $locales = null)
     {
         $translator = Translator::getFromContainer();
