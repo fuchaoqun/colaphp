@@ -2,36 +2,40 @@
 
 namespace Cola\Db;
 
+use Exception;
+use PDO;
+use PDOException;
+
 class Mysql
 {
-    public $config = [
+    protected $_config = [
         'user' => '',
         'password' => '',
         'options' => [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]
     ];
 
-    public $pdo = null;
+    protected $_connection = null;
 
-    public $query = null;
+    protected $_query = null;
 
-    public $log = [];
+    protected $_log = [];
 
     public function __construct($config)
     {
         if (!empty($config['options'])) {
-            $config['options'] += $this->config['options'];
+            $config['options'] += $this->_config['options'];
         }
 
-        $this->config = $config + $this->config;
+        $this->_config = $config + $this->_config;
         $this->connect();
     }
 
     public function connect()
     {
-        $this->pdo = new \PDO($this->config['dsn'], $this->config['user'], $this->config['password'], $this->config['options']);
-        return $this->pdo;
+        $this->_connection = new PDO($this->_config['dsn'], $this->_config['user'], $this->_config['password'], $this->_config['options']);
+        return $this->_connection;
     }
 
     /**
@@ -40,7 +44,7 @@ class Mysql
      */
     public function close()
     {
-        $this->pdo = null;
+        $this->_connection = null;
     }
 
     /**
@@ -49,7 +53,7 @@ class Mysql
      */
     public function free()
     {
-        $this->query = null;
+        $this->_query = null;
     }
 
     /**
@@ -61,18 +65,18 @@ class Mysql
      */
     public function query($sql, $data = [])
     {
-        $this->log[] = ['time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data];
+        $this->_log[] = ['time' => date('Y-m-d H:i:s'), 'sql' => $sql, 'data' => $data];
 
         for ($i = 0; $i < 2; $i ++) {
             try {
                 if ($data) {
-                    $this->query = $this->pdo->prepare($sql);
-                    $this->query->execute($data);
+                    $this->_query = $this->_connection->prepare($sql);
+                    $this->_query->execute($data);
                 } else {
-                    $this->query = $this->pdo->query($sql);
+                    $this->_query = $this->_connection->query($sql);
                 }
-                return $this->query;
-            } catch (\PDOException $e) {
+                return $this->_query;
+            } catch (PDOException $e) {
                 $me = new MysqlException($e);
                 if (2006 == $me->getCode()) {
                     $this->close();
@@ -102,7 +106,7 @@ class Mysql
                 $result = (0 <= $this->affectedRows());
                 break;
             default:
-                $result = $this->query;
+                $result = $this->_query;
         }
         return $result;
     }
@@ -124,6 +128,7 @@ class Mysql
      * Get first column of result
      *
      * @param string $sql
+     * @param array $data
      * @return string
      */
     public function column($sql, $data = [])
@@ -389,23 +394,23 @@ class Mysql
     /**
      * Fetch one row result
      *
-     * @param string $style
+     * @param int $style
      * @return mixd
      */
-    public function fetch($style = \PDO::FETCH_ASSOC)
+    public function fetch($style = PDO::FETCH_ASSOC)
     {
-        return $this->query->fetch($style);
+        return $this->_query->fetch($style);
     }
 
     /**
      * Fetch All result
      *
-     * @param string $style
+     * @param int $style
      * @return array
      */
-    public function fetchAll($style = \PDO::FETCH_ASSOC)
+    public function fetchAll($style = PDO::FETCH_ASSOC)
     {
-        $result = $this->query->fetchAll($style);
+        $result = $this->_query->fetchAll($style);
         $this->free();
         return $result;
     }
@@ -422,7 +427,7 @@ class Mysql
 
     public function rowCount()
     {
-        return $this->query->rowCount();
+        return $this->_query->rowCount();
     }
 
     /**
@@ -433,7 +438,7 @@ class Mysql
      */
     public function lastInsertId($name = null)
     {
-        $last = $this->pdo->lastInsertId($name);
+        $last = $this->_connection->lastInsertId($name);
         if (false === $last) {
             return false;
         }
@@ -453,26 +458,58 @@ class Mysql
     public function ping()
     {
         try {
-            if ($this->pdo && $this->pdo->query('select 1')) {
+            if ($this->_connection && $this->_connection->query('select 1')) {
                 return true;
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
 
     public function beginTransaction()
     {
-        return $this->pdo->beginTransaction();
+        return $this->_connection->beginTransaction();
     }
 
     public function commit()
     {
-        return $this->pdo->commit();
+        return $this->_connection->commit();
     }
 
     public function rollBack()
     {
-        return $this->pdo->rollBack();
+        return $this->_connection->rollBack();
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @return null
+     */
+    public function getConnection()
+    {
+        return $this->_connection;
+    }
+
+    /**
+     * @return null
+     */
+    public function getQuery()
+    {
+        return $this->_query;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLog()
+    {
+        return $this->_log;
     }
 }

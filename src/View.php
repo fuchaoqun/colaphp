@@ -2,6 +2,8 @@
 
 namespace Cola;
 
+use Cola\I18n\Translator;
+
 /**
  * @property Config config
  */
@@ -12,15 +14,15 @@ class View
      *
      * @var string
      */
-    public $file;
+    protected $_file;
 
     /**
      * Constructor
-     *
+     * @param $file
      */
     public function __construct($file)
     {
-        $this->file = $file;
+        $this->_file = $file;
     }
 
     /**
@@ -42,7 +44,7 @@ class View
      */
     public function display()
     {
-        include $this->file;
+        include $this->_file;
     }
 
     /**
@@ -105,9 +107,8 @@ class View
     public function js()
     {
         $args = func_get_args();
-        $app = App::getInstance();
         foreach ($args as $arg) {
-            $tmp = (array) $app->config->get($arg, $arg);
+            $tmp = (array) $this->config->get($arg, $arg);
             foreach ($tmp as $row) {
                 echo "<script type=\"text/javascript\" src=\"{$row}\"></script>";
             }
@@ -117,30 +118,51 @@ class View
     public function css()
     {
         $args = func_get_args();
-        $app = App::getInstance();
         foreach ($args as $arg) {
-            $tmp = (array) $app->config->get($arg, $arg);
+            $tmp = (array) $this->config->get($arg, $arg);
             foreach ($tmp as $row) {
                 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$row}\" />";
             }
         }
     }
 
+    public function message($key, $locales = null)
+    {
+        $translator = Translator::getFromContainer();
+        return $translator->message($key, $locales);
+    }
+
     /**
      * Dynamic get vars
      *
      * @param string $key
-     * @return Config|null
+     * @return mixed
      */
     public function __get($key)
     {
         switch ($key) {
             case 'config':
-                $this->config = App::getInstance()->config;
+                $this->config = App::getInstance()->getConfig();
                 return $this->config;
 
             default:
                 return null;
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getFile()
+    {
+        return $this->_file;
+    }
+
+    /**
+     * @param string $file
+     */
+    public function setFile($file)
+    {
+        $this->_file = $file;
     }
 }

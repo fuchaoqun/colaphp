@@ -2,9 +2,12 @@
 
 namespace Cola\Cache\Adapter;
 
+use Redis;
+use RedisCluster;
+
 class RedisAdapter extends AbstractAdapter
 {
-    public $config = [
+    public $_config = [
         'persistent'       => true,
         'host'             => '127.0.0.1',
         'port'             => 6379,
@@ -18,28 +21,28 @@ class RedisAdapter extends AbstractAdapter
     {
         parent::__construct($config);
 
-        $func = empty($this->config['servers']) ? '_initSingle' :'_initCluster';
-        $this->$func($this->config);
+        $func = empty($this->_config['servers']) ? '_initSingle' :'_initCluster';
+        $this->$func($this->_config);
     }
 
     protected function _initSingle($config)
     {
-        $this->conn = new \Redis();
+        $this->_connection = new Redis();
 
         $func = empty($config['persistent']) ? 'connect' : 'pconnect';
 
         if (empty($config['unixDomainSocket'])) {
-            $this->conn->$func($config['host'], $config['port'], $config['timeout']);
+            $this->_connection->$func($config['host'], $config['port'], $config['timeout']);
         } else {
-            $this->conn->$func($config['unixDomainSocket']);
+            $this->_connection->$func($config['unixDomainSocket']);
         }
 
         if (isset($config['password'])) {
-            $this->conn->auth($config['password']);
+            $this->_connection->auth($config['password']);
         }
 
         foreach ($config['options'] as $key => $val) {
-            $this->conn->setOption($key, $val);
+            $this->_connection->setOption($key, $val);
         }
     }
 
@@ -57,10 +60,10 @@ class RedisAdapter extends AbstractAdapter
             $args[] = $config['password'];
         }
 
-        $this->conn = new \RedisCluster(...$args);
+        $this->_connection = new RedisCluster(...$args);
 
         foreach ($config['options'] as $key => $val) {
-            $this->conn->setOption($key, $val);
+            $this->_connection->setOption($key, $val);
         }
     }
 
@@ -75,23 +78,23 @@ class RedisAdapter extends AbstractAdapter
     public function set($key, $value, $ttl = null)
     {
         if (null === $ttl) {
-            $ttl = $this->config['ttl'];
+            $ttl = $this->_config['ttl'];
         }
 
-        return (empty($ttl)) ? $this->conn->set($key, $value) : $this->conn->setex($key, $ttl, $value);
+        return (empty($ttl)) ? $this->_connection->set($key, $value) : $this->_connection->setex($key, $ttl, $value);
     }
 
     public function setMultiple($values, $ttl = null)
     {
         if (null === $ttl) {
-            $ttl = $this->config['ttl'];
+            $ttl = $this->_config['ttl'];
         }
 
         if (null == $ttl) {
-            return $this->conn->mSet($values);
+            return $this->_connection->mSet($values);
         }
 
-        $multi = $this->conn->multi();
+        $multi = $this->_connection->multi();
         foreach ($values as $key => $value) {
             $multi = $multi->setex($key, $ttl, $value);
         }
@@ -103,17 +106,18 @@ class RedisAdapter extends AbstractAdapter
      * Get Cache Value
      *
      * @param mixed $key
+     * @param null $default
      * @return mixed
      */
     public function get($key, $default = null)
     {
-        $rps = $this->conn->get($key);
+        $rps = $this->_connection->get($key);
         return false === $rps ? $default : $rps;
     }
 
     public function getMultiple($keys, $default = null)
     {
-        $rps = $this->conn->mGet($keys);
+        $rps = $this->_connection->mGet($keys);
         $ret = [];
         foreach ($keys as $idx => $key) {
             $ret[$key] = (false === $rps[$idx]) ? $default : $rps[$idx];
@@ -124,31 +128,33 @@ class RedisAdapter extends AbstractAdapter
 
     public function delete($key)
     {
-        return $this->conn->delete($key);
+        return $this->_connection->delete($key);
     }
 
     public function deleteMultiple($keys)
     {
-        return $this->conn->delete($keys);
+        return $this->_connection->delete($keys);
     }
 
     public function has($key)
     {
-        return $this->conn->exists($key);
+        return $this->_connection->exists($key);
     }
 
     public function clear()
     {
-        return $this->conn->flushAll();
+        return $this->_connection->flushAll();
     }
 
     /**
      * Put into Queue
-     *
+     * @param $name
+     * @param $value
+     * @return boolean
      */
     public function qput($name, $value)
     {
-        return $this->conn->lPush($name, $value);
+        return $this->_connection->lPush($name, $value);
     }
 
     /**
@@ -161,9 +167,9 @@ class RedisAdapter extends AbstractAdapter
     public function qget($name, $timeout = 0)
     {
         if (0 > $timeout) {
-            return $this->conn->rPop($name);
+            return $this->_connection->rPop($name);
         } else {
-            $data = $this->conn->brPop((array)$name, $timeout);
+            $data = $this->_connection->brPop((array)$name, $timeout);
             return isset($data[1]) ? $data[1] : null;
         }
     }

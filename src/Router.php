@@ -4,7 +4,7 @@ namespace Cola;
 
 class Router
 {
-    public $config = [
+    protected $_config = [
         'rules' => [],
         'defaults' => [
             'namespace'  => 'App',
@@ -35,12 +35,12 @@ class Router
     public function __construct($config = [])
     {
         if (!empty($config['defaults'])) {
-            $config['defaults'] = $config['defaults'] + $this->config['defaults'];
+            $config['defaults'] = $config['defaults'] + $this->_config['defaults'];
         };
 
-        $this->config = $config + $this->config;
+        $this->_config = $config + $this->_config;
 
-        foreach ($this->config['rules'] as $rule) {
+        foreach ($this->_config['rules'] as $rule) {
             $rule += [
                 'methods' => ['*'],
                 'maps' => [],
@@ -71,7 +71,7 @@ class Router
     public function dynamic($pathInfo)
     {
         $pathInfo = trim($pathInfo, '/');
-        $es = $this->config['defaults'];
+        $es = $this->_config['defaults'];
 
         if (preg_match('/^[a-zA-Z\d\/_]+$/', $pathInfo)) {
             $tmp = explode('/', $pathInfo);
@@ -119,5 +119,21 @@ class Router
         }
 
         return $this->dynamic($pathInfo);
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->_config = $config;
     }
 }

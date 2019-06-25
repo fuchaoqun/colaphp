@@ -2,15 +2,20 @@
 
 namespace Cola;
 
-use \Cola\Http\Request;
-use \Cola\Http\Response;
+use Cola\Http\Request;
+use Cola\Http\Response;
 use Cola\I18n\Translator;
+use Exception;
+use function get_class;
+use ReflectionClass;
+use ReflectionException;
 
 /**
  * @property View view
  * @property Request request
  * @property Response response
  * @property Config config
+ * @property Container container
  */
 abstract class Controller
 {
@@ -19,12 +24,12 @@ abstract class Controller
      *
      * @param string $method
      * @param array $args
-     * @throws \Exception
+     * @throws Exception
      */
     public function __call($method, $args)
     {
         $cls = get_class($this);
-        throw new \Exception("Call to undefined method: {$cls}->{$method}()");
+        throw new Exception("Call to undefined method: {$cls}->{$method}()");
     }
 
     /**
@@ -56,24 +61,24 @@ abstract class Controller
      *
      * @param array $file
      * @return View
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     protected function view($file = null)
     {
         empty($file) && $file = $this->defaultTemplate();
-        return $this->view = new \Cola\View($file);
+        return $this->view = new View($file);
     }
 
     /**
      * Display the view
      *
      * @param string $file
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     protected function display($file = null)
     {
         empty($file) && $file = $this->defaultTemplate();
-        $this->view->file = $file;
+        $this->view->_file = $file;
         $this->view->display();
     }
 
@@ -81,16 +86,16 @@ abstract class Controller
      * Get default template file path
      *
      * @return string
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     protected function defaultTemplate()
     {
-        $dispatcher = App::getInstance()->dispatcher;
+        $dispatcher = App::getInstance()->getDispatcher();
         $parts = explode('\\', $dispatcher->getController());
         $controller = strtolower(substr(end($parts), 0, -10));
         $action = strtolower(substr($dispatcher->getAction(), 0, -6));
 
-        $reflector = new \ReflectionClass(\get_class($this));
+        $reflector = new ReflectionClass(get_class($this));
         $dir = dirname($reflector->getFileName());
         return "{$dir}/views/{$controller}.{$action}.php";
     }
@@ -99,16 +104,24 @@ abstract class Controller
      * Redirect to other url
      *
      * @param string $url
+     * @param int $code
      */
     protected function redirect($url, $code = 302)
     {
         $this->response->redirect($url, $code);
     }
 
-    protected function message($key, $locales = null)
+    /**
+     * @param $key
+     * @param array $vars
+     * @param array $locales
+     * @return mixed
+     * @throws Exception
+     */
+    protected function message($key, $vars = [], $locales = null)
     {
         $translator = Translator::getFromContainer();
-        return $translator->message($key, $locales);
+        return $translator->message($key, $vars, $locales);
     }
 
     /**
@@ -126,8 +139,8 @@ abstract class Controller
      * Dynamic get vars
      *
      * @param string $key
-     * @return Request|Response|View
-     * @throws \ReflectionException
+     * @return mixed
+     * @throws ReflectionException
      */
     public function __get($key)
     {
@@ -150,11 +163,15 @@ abstract class Controller
                 return $this->response;
 
             case 'config':
-                $this->config = App::getInstance()->config;
+                $this->config = App::getInstance()->getConfig();
                 return $this->config;
 
+            case 'container':
+                $this->container = App::getInstance()->getContainer();
+                return $this->container;
+
             default:
-                throw new \Exception('Undefined property: ' . get_class($this) . '::' . $key);
+                throw new ReflectionException('Undefined property: ' . get_class($this) . '::' . $key);
         }
     }
 }

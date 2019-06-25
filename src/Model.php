@@ -5,9 +5,13 @@ namespace Cola;
 use Cola\Cache\SimpleCache;
 use Cola\Validation\ValidationException;
 use Cola\Validation\Validator;
+use Exception;
 
 /**
  * @property Db\Mysql db
+ * @property Config config
+ * @property SimpleCache cache
+ * @property Container container
  */
 abstract class Model
 {
@@ -70,7 +74,7 @@ abstract class Model
 
         $sql = "select * from {$this->_table} where {$col} = ? limit 1";
 
-        $result = $this->db->sql($sql, array($id));
+        $result = $this->db->sql($sql, [$id]);
         return empty($result) ? null : $result[0];
     }
 
@@ -80,7 +84,7 @@ abstract class Model
 
         $sql = "select * from {$this->_table} where {$col} = ? limit 1 for update";
 
-        $result = $this->db->sql($sql, array($id));
+        $result = $this->db->sql($sql, [$id]);
         return empty($result) ? null : $result[0];
     }
 
@@ -88,6 +92,8 @@ abstract class Model
      * Multi load data
      *
      * @param int $ids
+     * @param null $col
+     * @param bool $associate
      * @return array
      */
     public function loadMultiple($ids, $col = null, $associate = true)
@@ -263,7 +269,7 @@ abstract class Model
      *
      * @param string
      * @return Db\Mysql
-     * @throws \Exception
+     * @throws Exception
      */
     public function db($name = null)
     {
@@ -274,14 +280,13 @@ abstract class Model
         }
 
         $id = "__db_{$name}";
-        $app = App::getInstance();
-        if (!$app->container->has($id)) {
-            $config = $app->config->get($name);
+        if (!$this->container->has($id)) {
+            $config = $this->config->get($name);
             $db = new Db\Mysql($config);
-            $app->container->set($id, $db);
+            $this->container->set($id, $db);
         }
 
-        return $app->container->get($id);
+        return $this->container->get($id);
     }
 
     public function row($sql, $data = [])
@@ -294,7 +299,7 @@ abstract class Model
      *
      * @param mixed $name
      * @return Cache\SimpleCache
-     * @throws \Exception
+     * @throws Exception
      */
     public function cache($name = null)
     {
@@ -305,14 +310,14 @@ abstract class Model
         }
 
         $id = "__cache_{$name}";
-        $app = App::getInstance();
-        if (!$app->container->has($id)) {
-            $factory = $app->config->get($name);
+        $container = App::getInstance()->getContainer();
+        if (!$container->has($id)) {
+            $factory = App::config($name);
             $cache = SimpleCache::factory($factory['adapter'], $factory['config']);
-            $app->container->set($id, $cache);
+            $container->set($id, $cache);
         }
 
-        return $app->container->get($id);
+        return $container->get($id);
     }
 
     /**
@@ -411,7 +416,7 @@ abstract class Model
      *
      * @param string $key
      * @return SimpleCache|Db\Mysql
-     * @throws \Exception
+     * @throws Exception
      */
     public function __get($key)
     {
@@ -425,11 +430,71 @@ abstract class Model
                 return $this->cache;
 
             case 'config':
-                $this->config = App::getInstance()->config;
+                $this->config = App::getInstance()->getConfig();
                 return $this->config;
 
+            case 'container':
+                $this->container = App::getInstance()->getContainer();
+                return $this->container;
+
             default:
-                throw new \Exception('Undefined property: ' . get_class($this). '::' . $key);
+                throw new Exception('Undefined property: ' . get_class($this). '::' . $key);
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getDb()
+    {
+        return $this->_db;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTable()
+    {
+        return $this->_table;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPk()
+    {
+        return $this->_pk;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCache()
+    {
+        return $this->_cache;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTtl()
+    {
+        return $this->_ttl;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRules()
+    {
+        return $this->_rules;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUniqueColumns()
+    {
+        return $this->_uniqueColumns;
     }
 }

@@ -2,7 +2,10 @@
 
 namespace Cola;
 
-class Config implements \ArrayAccess
+use ArrayAccess;
+use Exception;
+
+class Config implements ArrayAccess
 {
     /**
      * Contains array of configuration data
@@ -11,7 +14,7 @@ class Config implements \ArrayAccess
      */
     protected $_data = [];
 
-    public $delimiter = '.';
+    protected $_delimiter = '.';
 
     /**
      * Cola\Config provides a property based interface to
@@ -29,16 +32,18 @@ class Config implements \ArrayAccess
         $this->_data = $data;
     }
 
-/**
- * Retrieve a value and return $default if there is no element set.
- *
- * @param string $name
- * @param mixed $default
- * @param string $delimiter
- * @return mixed
- */
-    public function get($name = null, $default = null, $delimiter = '.')
+    /**
+     * Retrieve a value and return $default if there is no element set.
+     *
+     * @param string $name
+     * @param mixed $default
+     * @param string $delimiter
+     * @return mixed
+     */
+    public function get($name = null, $default = null, $delimiter = null)
     {
+        is_null($delimiter) && $delimiter = $this->_delimiter;
+
         if (null === $name) {
             return $this->_data;
         }
@@ -69,8 +74,10 @@ class Config implements \ArrayAccess
         return $this->get($name);
     }
 
-    public function set($name, $value, $delimiter = '.')
+    public function set($name, $value, $delimiter = null)
     {
+        is_null($delimiter) && $delimiter = $this->_delimiter;
+
         $pos = & $this->_data;
         if (!is_string($delimiter) || false === strpos($name, $delimiter)) {
             $key = $name;
@@ -97,8 +104,10 @@ class Config implements \ArrayAccess
      * @param string $delimiter
      * @return Config
      */
-    public function setnx($name, $value, $delimiter = '.')
+    public function setnx($name, $value, $delimiter = null)
     {
+        is_null($delimiter) && $delimiter = $this->_delimiter;
+
         if (is_null($this->get($name, null, $delimiter))) {
             return $this->set($name, $value, $delimiter);
         }
@@ -112,7 +121,7 @@ class Config implements \ArrayAccess
      *
      * @param  string $name
      * @param  mixed  $value
-     * @throws \Exception
+     * @throws Exception
      * @return void
      */
     public function __set($name, $value)
@@ -135,13 +144,13 @@ class Config implements \ArrayAccess
      * Support unset() overloading on PHP 5.1
      *
      * @param  string $name
-     * @throws \Exception
+     * @throws Exception
      * @return void
      */
     public function __unset($name)
     {
         $pos = & $this->_data;
-        $name = explode($this->delimiter, $name);
+        $name = explode($this->_delimiter, $name);
         $cnt = count($name);
         for ($i = 0; $i < $cnt - 1; $i ++) {
             if (!isset($pos[$name[$i]])) return;
@@ -197,7 +206,7 @@ class Config implements \ArrayAccess
      *
      * @param string $offset
      * @param mixed $value
-     * @return Cola_Config
+     * @return Config
      */
     public function offsetSet($offset, $value)
     {
@@ -235,5 +244,21 @@ class Config implements \ArrayAccess
     public function offsetUnset($offset)
     {
         return $this->set($offset, null);
+    }
+
+    /**
+     * @return string
+     */
+    public function getDelimiter()
+    {
+        return $this->_delimiter;
+    }
+
+    /**
+     * @param string $delimiter
+     */
+    public function setDelimiter($delimiter)
+    {
+        $this->_delimiter = $delimiter;
     }
 }

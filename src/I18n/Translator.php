@@ -4,13 +4,15 @@ namespace Cola\I18n;
 
 use Cola\App;
 use Cola\Config;
+use Exception;
+use function file_exists;
 
 class Translator
 {
-    public $config = [
+    protected $_config = [
         'addonLocales' => ["en_US"],
-        'paramKey'     => '_lang',
-        'cookieKey'    => '_lang'
+        'queryName'    => '_lang',
+        'cookieName'   => '_lang'
     ];
 
     public function __construct($config = [])
@@ -18,39 +20,39 @@ class Translator
         if (is_string($config)) {
             $config = ['messages' => $config];
         }
-        if (is_string($config['messages']) && \file_exists($config['messages'])) {
+        if (is_string($config['messages']) && file_exists($config['messages'])) {
             $config['messages'] = include($config['messages']);
         }
         if (is_array($config['messages'])) {
             $config['messages'] = new Config($config['messages']);
         }
 
-        $this->config = $config + $this->config + ['locales' => $this->getLocalesFromHttp()];
+        $this->_config = $config + $this->_config + ['locales' => $this->getLocalesFromRequest()];
     }
 
     public static function getFromContainer($name = '_translator')
     {
-        $container = App::getInstance()->container;
+        $container = App::getInstance()->getContainer();
         if ($container->has($name)) {
             return $container->get($name);
         }
 
-        $config = App::getInstance()->config->get($name);
+        $config = App::config($name);
         $translator = new self($config);
-        App::getInstance()->container->set($name, $translator);
+        $container->set($name, $translator);
         return $translator;
     }
 
-    public function getLocalesFromHttp()
+    public function getLocalesFromRequest()
     {
-        $paramKey = $this->config['paramKey'];
-        if (!empty($_GET[$paramKey])) {
-            return explode(',', $_GET[$paramKey]);
+        $queryName = $this->_config['queryName'];
+        if (!empty($_GET[$queryName])) {
+            return explode(',', $_GET[$queryName]);
         }
 
-        $cookieKey = $this->config['cookieKey'];
-        if (!empty($_COOKIE[$cookieKey])) {
-            return explode(',', $_COOKIE[$cookieKey]);
+        $cookieName = $this->_config['cookieName'];
+        if (!empty($_COOKIE[$cookieName])) {
+            return explode(',', $_COOKIE[$cookieName]);
         }
 
         if (empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
@@ -66,24 +68,24 @@ class Translator
         return $matches[0];
     }
 
-    public function message($key, $locales = null)
+    public function message($key, $vars = [], $locales = null)
     {
         if (null == $locales) {
-            $locales = $this->config['locales'];
+            $locales = $this->_config['locales'];
         }
 
-        foreach ($this->config['addonLocales'] as $locale) {
+        foreach ($this->_config['addonLocales'] as $locale) {
             $locales[] = $locale;
         }
 
-        $messages = $this->config['messages'];
+        $messages = $this->_config['messages'];
         foreach ($locales as $locale) {
             $fullKey = "{$key}.{$locale}";
             if ($message = $messages->get($fullKey)) {
-                return $message;
+                return $vars ? str_replace(array_keys($vars), array_values($vars), $message) : $message;
             }
         }
 
-        throw new \Exception("NO_MESSAGE_FOUND_FOR_{$key}", 404);
+        throw new Exception("NO_MESSAGE_FOUND_FOR_{$key}", 404);
     }
 }

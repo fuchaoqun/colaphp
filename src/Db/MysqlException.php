@@ -4,9 +4,11 @@
 namespace Cola\Db;
 
 
-class MysqlException extends \PDOException
+use PDOException;
+
+class MysqlException extends PDOException
 {
-    public function __construct(\PDOException $e)
+    public function __construct(PDOException $e)
     {
         preg_match('/: (\d+) (.+)/', $e->getMessage(), $matches);
 

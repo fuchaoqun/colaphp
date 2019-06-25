@@ -12,6 +12,7 @@ class Utils
      *
      * @param string $src
      * @param string $des
+     * @param string $opts
      * @return boolean
      */
     public static function minimize($src, $des = null, $opts = '')
@@ -22,8 +23,8 @@ class Utils
             mkdir($dir, 0755, true);
         }
 
-        $pathinfo = pathinfo($des);
-        $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
+        $pathInfo = pathinfo($des);
+        $ext = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
 
         if (in_array($ext, ['png'])) {
             $cmd = self::$convert . " {$src} {$opts} -quality 100 {$des}";

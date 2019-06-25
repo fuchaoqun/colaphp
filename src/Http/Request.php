@@ -222,6 +222,7 @@ class Request
     /**
      * Check if search engine spider
      *
+     * @param null $ua
      * @return boolean
      */
     public static function isSpider($ua = null)
@@ -297,9 +298,9 @@ class Request
         foreach ($_FILES as $field => $data) {
             if (empty($data['name'])) continue;
             if (is_string($data['name'])) {
-                $pathinfo = pathinfo($data['name']);
-                $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
-                $files[] = $data + ['field' => $field, 'ext' => $ext];
+                $pathInfo = pathinfo($data['name']);
+                $ext = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+                $files[] = $data + ['field' => $field, 'extension' => $ext];
                 continue;
             }
 
@@ -308,9 +309,9 @@ class Request
 
             for ($i = 0; $i < $cnt; $i++) {
                 if (empty($data['name'][$i])) continue;
-                $pathinfo = pathinfo($data['name']);
-                $ext = isset($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
-                $row = ['field' => $field, 'ext' => $ext];
+                $pathInfo = pathinfo($data['name'][$i]);
+                $ext = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+                $row = ['field' => $field, 'extension' => $ext];
                 foreach ($keys as $key) {
                     isset($data[$key][$i]) && ($row[$key] = $data[$key][$i]);
                 }

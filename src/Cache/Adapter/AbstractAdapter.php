@@ -4,9 +4,9 @@ namespace Cola\Cache\Adapter;
 
 abstract class AbstractAdapter
 {
-    public $conn;
+    protected $_connection;
 
-    public $config = [
+    protected $_config = [
         'ttl' => 86400
     ];
 
@@ -17,7 +17,12 @@ abstract class AbstractAdapter
      */
     public function __construct($config = [])
     {
-        $this->config = $config + $this->config;
+        $this->_config = $config + $this->_config;
+    }
+
+    public function getConnection()
+    {
+        return $this->_connection;
     }
 
     /**
@@ -63,7 +68,7 @@ abstract class AbstractAdapter
      */
     public function __call($method, $args)
     {
-        return call_user_func_array(array($this->conn, $method), $args);
+        return call_user_func_array(array($this->_connection, $method), $args);
     }
 
     public function clear()

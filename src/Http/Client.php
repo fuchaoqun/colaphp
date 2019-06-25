@@ -2,27 +2,25 @@
 
 namespace Cola\Http;
 
+use Exception;
+
 class Client
 {
-    public $request;
+    protected $_request;
 
-    public $response;
-
-    public $info;
-
-    public $defaultOpts = [
-        CURLOPT_TIMEOUT => 15,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-    ];
+    protected $_info;
 
     public function __construct($request)
     {
-        $this->request = array_merge_recursive(
+        $this->_request = array_merge_recursive(
             [
                 'params' => [],
                 'data' => [],
-                'opts' => $this->defaultOpts,
+                'opts' => [
+                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                ],
             ],
             $request
         );
@@ -30,7 +28,7 @@ class Client
 
     public function setHeaders($headers)
     {
-        $this->request['opts'][CURLOPT_HTTPHEADER] = $headers;
+        $this->_request['opts'][CURLOPT_HTTPHEADER] = $headers;
     }
 
     public static function genUrl($url, $params = [])
@@ -43,12 +41,26 @@ class Client
         return $url;
     }
 
+    /**
+     * @param $url
+     * @param array $params
+     * @param array $opts
+     * @return string
+     * @throws Exception
+     */
     public static function get($url, $params = [], $opts = [])
     {
         $http = new self(['url' => $url, 'params' => $params, 'opts' => $opts]);
         return $http->sendRequest();
     }
 
+    /**
+     * @param $url
+     * @param array $data
+     * @param array $opts
+     * @return string
+     * @throws Exception
+     */
     public static function post($url, $data = [], $opts = [])
     {
         $http = new self(['url' => $url, 'data' => $data, 'opts' => $opts]);
@@ -59,38 +71,53 @@ class Client
      * HTTP request
      *
      * @return string or throw Exception
-     * @throws \Exception
+     * @throws Exception
      */
     public function sendRequest()
     {
         if (!function_exists('curl_init')) {
-            throw new \Exception('Can not find curl extension');
+            throw new Exception('Can not find curl extension');
         }
 
-        $this->request['opts'][CURLOPT_URL] = self::genUrl($this->request['url'], $this->request['params']);
+        $this->_request['opts'][CURLOPT_URL] = self::genUrl($this->_request['url'], $this->_request['params']);
 
-        if ($this->request['data']) {
-            $this->request['opts'][CURLOPT_POST] = true;
-            if (is_array($this->request['data'])) {
-                $this->request['opts'][CURLOPT_POSTFIELDS] = http_build_query($this->request['data']);
+        if ($this->_request['data']) {
+            $this->_request['opts'][CURLOPT_POST] = true;
+            if (is_array($this->_request['data'])) {
+                $this->_request['opts'][CURLOPT_POSTFIELDS] = http_build_query($this->_request['data']);
             } else {
-                $this->request['opts'][CURLOPT_POSTFIELDS] = $this->request['data'];
+                $this->_request['opts'][CURLOPT_POSTFIELDS] = $this->_request['data'];
             }
         }
 
         $curl = curl_init();
-        curl_setopt_array($curl, $this->request['opts']);
-        $this->response = curl_exec($curl);
+        curl_setopt_array($curl, $this->_request['opts']);
+        $response = curl_exec($curl);
 
-        $this->info = curl_getinfo($curl);
+        $this->_info = curl_getinfo($curl);
 
         $errno = curl_errno($curl);
         if (0 !== $errno) {
-            var_dump($errno);
-            throw new \Exception(curl_error($curl), $errno);
+            throw new Exception(curl_error($curl), $errno);
         }
 
         curl_close ($curl);
-        return $this->response;
+        return $response;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequest()
+    {
+        return $this->_request;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getInfo()
+    {
+        return $this->_info;
     }
 }

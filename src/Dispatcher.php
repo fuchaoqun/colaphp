@@ -19,7 +19,8 @@ class Dispatcher
         $action = $this->getAction();
         $args = $this->getArgs();
 
-        $rps = call_user_func_array([new $class, $action], $args);
+        $controller = new $class;
+        $rps = call_user_func_array([$controller, $action], $args);
         $type = gettype($rps);
 
         switch ($type) {

@@ -26,9 +26,10 @@ class FakeAdapter extends AbstractAdapter
      * Get Cache
      *
      * @param string $key
+     * @param null $default
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
         return null;
     }
@@ -45,7 +46,7 @@ class FakeAdapter extends AbstractAdapter
 
     /**
      * Delete cache
-     * @param string $id
+     * @param $key
      * @return boolean
      */
     public function delete($key)

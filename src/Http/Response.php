@@ -63,16 +63,15 @@ class Response
     ];
 
     /**
-    * Sets response status code.
-    *
-    * @param string $code  HTTP status code
-    * @param string $name  HTTP status text
-    *
-    */
+     * Sets response status code.
+     *
+     * @param string $code HTTP status code
+     * @param null $text
+     */
     public static function status($code, $text = null)
     {
         $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
-        $text = (null === $text) ? self::$statusTexts[$code] : $text;
+        $text = (null === $text) ? self::$status[$code] : $text;
         $status = "$protocol $code $text";
         header($status);
     }
@@ -85,7 +84,7 @@ class Response
      * @param int $expire
      * @param string $path
      * @param string $domain
-     * @param string $secure
+     * @param bool $secure
      * @param boolean $httpOnly
      * @return boolean
      */
@@ -97,7 +96,7 @@ class Response
     /**
      * Set response charset
      *
-     * @param string $enc
+     * @param string $encode
      * @param string $type
      */
     public static function charset($encode = 'UTF-8', $type = 'text/html')
@@ -109,6 +108,7 @@ class Response
      * Redirect to other url
      *
      * @param string $url
+     * @param int $code
      */
     public static function redirect($url, $code = 302)
     {
@@ -159,7 +159,7 @@ class Response
     public static function etag($etag, $notModifiedExit = true)
     {
         if ($notModifiedExit && isset($_SERVER['HTTP_IF_NONE_MATCH']) && $etag == $_SERVER['HTTP_IF_NONE_MATCH']) {
-            self::statusCode('304');
+            self::status('304');
             exit();
         }
         header("Etag: $etag");
@@ -175,7 +175,7 @@ class Response
     {
         $modifiedTime = date('D, d M Y H:i:s \G\M\T', $modifiedTime);
         if ($notModifiedExit && isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && $modifiedTime == $_SERVER['HTTP_IF_MODIFIED_SINCE']) {
-            self::statusCode('304');
+            self::status('304');
             exit();
         }
         header("Last-Modified: $modifiedTime");
@@ -195,8 +195,8 @@ class Response
     public static function sendfile($path, $mime = null, $attachment = null)
     {
         if (is_null($mime)) {
-            $pathinfo = pathinfo($path);
-            $ext = $pathinfo['extension'];
+            $pathInfo = pathinfo($path);
+            $ext = $pathInfo['extension'];
             if (isset(self::$mime[$ext])) {
                 $mime =  self::$mime[$ext];
             } else {
@@ -211,7 +211,7 @@ class Response
             $encode = rawurldecode($attachment);
             if (false !== strpos($ua, 'MSIE')) {
                 header("Content-Disposition: attachment; filename=\"{$encode}\"");
-            } else if (false !== strpos($ua, Firefox)) {
+            } else if (false !== strpos($ua, 'Firefox')) {
                 header("Content-Disposition: attachment; filename*=\"utf8''{$attachment}");
             } else {
                 header("Content-Disposition: attachment; filename=\"{$attachment}\"");

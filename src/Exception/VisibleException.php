@@ -2,7 +2,9 @@
 
 namespace Cola\Exception;
 
-class VisibleException extends \RuntimeException
+use RuntimeException;
+
+class VisibleException extends RuntimeException
 {
 
 }

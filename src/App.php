@@ -23,33 +23,33 @@ class App
      *
      * @var Config
      */
-    public $config;
+    protected $_config;
 
     /**
      * Object container
      *
      * @var Container
      */
-    public $container;
+    protected $_container;
 
     /**
      * Router
      *
      * @var Router
      */
-    public $router;
+    protected $_router = null;
 
     /**
      * @var Dispatcher
      */
-    public $dispatcher;
+    protected $_dispatcher = null;
 
     /**
      * Path info
      *
      * @var string
      */
-    public $pathInfo;
+    protected $_pathInfo = null;
 
     /**
      * Constructor
@@ -57,7 +57,7 @@ class App
      */
     protected function __construct()
     {
-        $this->config = new Config([
+        $this->_config = new Config([
             '_class' => [
                 'Cola\Controller'                 => COLA_DIR . '/Controller.php',
                 'Cola\Model'                      => COLA_DIR . '/Model.php',
@@ -72,7 +72,7 @@ class App
                 'Cola\Validation\Validator'       => COLA_DIR . '/Validation/Validator.php',
             ],
         ]);
-        $this->container = new Container();
+        $this->_container = new Container();
 
         $this->registerAutoload([$this, 'loadClass']);
     }
@@ -82,7 +82,6 @@ class App
      *
      * @param mixed $config string as a file and array as config
      * @return App
-     * @throws \Exception
      */
     public function boot($config = [])
     {
@@ -90,11 +89,7 @@ class App
             include $config;
         }
 
-        if (!is_array($config)) {
-            throw new \Exception('Boot config must be an array or a php config file with variable $config');
-        }
-
-        $this->config->merge($config);
+        $this->_config->merge($config);
         return $this;
     }
 
@@ -112,6 +107,80 @@ class App
         return self::$_instance;
     }
 
+    public static function config($name = null, $default = null, $delimiter = '.')
+    {
+        return self::getInstance()->getConfig()->get($name, $default, $delimiter);
+    }
+
+    public static function container($name, $default = null)
+    {
+        return self::getInstance()->getContainer()->get($name, $default);
+    }
+
+    /**
+     * @return Router
+     */
+    public function getRouter()
+    {
+        return $this->_router;
+    }
+
+    /**
+     * @param Router $router
+     */
+    public function setRouter($router)
+    {
+        $this->_router = $router;
+    }
+
+    /**
+     * @return Dispatcher
+     */
+    public function getDispatcher()
+    {
+        return $this->_dispatcher;
+    }
+
+    /**
+     * @param Dispatcher $dispatcher
+     */
+    public function setDispatcher($dispatcher)
+    {
+        $this->_dispatcher = $dispatcher;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPathInfo()
+    {
+        return $this->_pathInfo;
+    }
+
+    /**
+     * @param string $pathInfo
+     */
+    public function setPathInfo($pathInfo)
+    {
+        $this->_pathInfo = $pathInfo;
+    }
+
+    /**
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @return Container
+     */
+    public function getContainer()
+    {
+        return $this->_container;
+    }
+
     /**
      * Load class
      *
@@ -126,7 +195,7 @@ class App
         }
 
         if (!$file) {
-            $file = $this->config->get("_class.{$class}");
+            $file = $this->_config->get("_class.{$class}");
         }
 
         if (file_exists($file)) {
@@ -136,22 +205,18 @@ class App
         return (class_exists($class, false) || interface_exists($class, false)) || $this->psr4($class);
     }
 
-    /**
-     * User define class file
-     *
-     * @param array $class
-     * @param string $file
-     * @return App
-     */
-    public function setClassFile($class, $file = '')
+    public function regClasses($classes)
     {
-        if (!is_array($class)) {
-            $class = array($class => $file);
-        }
-
-        $this->config->merge(array('_class' => $class));
+        $this->_config->merge(['_class' => $classes]);
 
         return $this;
+    }
+
+    public function regClass($class, $file)
+    {
+        $classes = [$class => $file];
+
+        return $this->regClasses($classes);
     }
 
     /**
@@ -162,7 +227,7 @@ class App
     public function psr4($class)
     {
         $prefix = $class;
-        $psr4 = $this->config->get('_psr4');
+        $psr4 = $this->_config->get('_psr4');
         while (false !== ($pos = strrpos($prefix, '\\'))) {
             $prefix = substr($class, 0, $pos);
             $rest = substr($class, $pos + 1);
@@ -189,14 +254,14 @@ class App
         $prefix = trim($prefix, '\\') . '\\';
         $base = rtrim($base, DIRECTORY_SEPARATOR);
         $key = "_psr4.{$prefix}";
-        $this->config->set($key, $base);
+        $this->_config->set($key, $base);
         return $this;
     }
 
     /**
      * Register autoload function
      *
-     * @param string $func
+     * @param mixed $func
      * @return App
      */
     public function registerAutoload($func)
@@ -220,14 +285,13 @@ class App
     public function go($dispatchInfo = null)
     {
         if (is_null($dispatchInfo)) {
-            $this->router || ($this->router = new Router($this->config->get('_router', [])));
-            $this->pathInfo || ($this->pathInfo = $_SERVER['PATH_INFO']);
-            $dispatchInfo = $this->router->match($this->pathInfo);
+            $this->_router || ($this->_router = new Router($this->_config->get('_router', [])));
+            $this->_pathInfo || ($this->_pathInfo = $_SERVER['PATH_INFO']);
+            $dispatchInfo = $this->_router->match($this->_pathInfo);
         }
 
-        $this->dispatcher || ($this->dispatcher = new Dispatcher($dispatchInfo));
+        $this->_dispatcher || ($this->_dispatcher = new Dispatcher($dispatchInfo));
 
-        $this->dispatcher->dispatch();
+        $this->_dispatcher->dispatch();
     }
-
 }

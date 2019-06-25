@@ -2,7 +2,9 @@
 
 namespace Cola;
 
-class Container implements \ArrayAccess
+use ArrayAccess;
+
+class Container implements ArrayAccess
 {
     protected $_data = [];
 
@@ -16,10 +18,10 @@ class Container implements \ArrayAccess
         $this->set($id, $val);
     }
 
-    public function get($id)
+    public function get($id, $default = null)
     {
         if (!$this->has($id)) {
-            throw new \Exception("No entry was found for {$id} in Container");
+            return $default;
         }
 
         return $this->_data[$id];
