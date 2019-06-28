@@ -2,6 +2,8 @@
 
 namespace Cola;
 
+use Cola\Dto\RestData;
+use Cola\Dto\RestError;
 use Cola\Http\Request;
 use Cola\Http\Response;
 use Cola\I18n\Translator;
@@ -78,7 +80,7 @@ abstract class Controller
     protected function display($file = null)
     {
         empty($file) && $file = $this->defaultTemplate();
-        $this->view->_file = $file;
+        $this->view->setFile($file);
         $this->view->display();
     }
 
@@ -122,6 +124,16 @@ abstract class Controller
     {
         $translator = Translator::getFromContainer();
         return $translator->message($key, $vars, $locales);
+    }
+
+    protected function data($data = null, $message = null)
+    {
+        return new RestData($data, $message);
+    }
+
+    protected function error($code, $message = null)
+    {
+        return new RestError($code, $message);
     }
 
     /**

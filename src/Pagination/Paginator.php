@@ -4,7 +4,7 @@ namespace Cola\Pagination;
 
 class Paginator
 {
-    public $config = [
+    protected $_config = [
         'prevNums'         => 2,
         'nextNums'         => 7,
         'showSinglePage'   => false,
@@ -18,19 +18,19 @@ class Paginator
         'suffix'           => '</div>'
     ];
 
-    public $curPage = 1;
+    protected $_curPage = 1;
 
-    public $pageSize = 20;
+    protected $_pageSize = 20;
 
-    public $totalItems;
+    protected $_totalItems;
 
-    public $url;
+    protected $_url;
 
-    public $totalPages;
+    protected $_totalPages;
 
-    public $startPage;
+    protected $_startPage;
 
-    public $endPage;
+    protected $_endPage;
 
     /**
      * Constructor
@@ -42,10 +42,10 @@ class Paginator
      */
     public function __construct($curPage = 1, $pageSize = 20, $totalItems, $url = '')
     {
-        $this->curPage      = intval($curPage);
-        $this->pageSize     = intval($pageSize);
-        $this->totalItems   = intval($totalItems);
-        $this->url          = $url;
+        $this->_curPage      = intval($curPage);
+        $this->_pageSize     = intval($pageSize);
+        $this->_totalItems   = intval($totalItems);
+        $this->_url          = $url;
     }
 
     /**
@@ -57,20 +57,20 @@ class Paginator
      */
     public function page($page, $format = null)
     {
-        if (is_null($format)) $format = $this->config['page'];
+        if (is_null($format)) $format = $this->_config['page'];
 
-        $p = array(
-            '%link%'        => $this->url,
-            '%curPage%'     => $this->curPage,
-            '%pageSize%'    => $this->pageSize,
-            '%totalItems%'  => $this->totalItems,
-            '%totalPages%'  => $this->totalPages,
-            '%startPage%'   => $this->startPage,
-            '%endPage%'     => $this->endPage,
+        $p = [
+            '%link%'        => $this->_url,
+            '%curPage%'     => $this->_curPage,
+            '%pageSize%'    => $this->_pageSize,
+            '%totalItems%'  => $this->_totalItems,
+            '%totalPages%'  => $this->_totalPages,
+            '%startPage%'   => $this->_startPage,
+            '%endPage%'     => $this->_endPage,
             '%page%'        => $page
-        );
+        ];
 
-        return str_replace(array_keys($p), $p, $format);
+        return str_replace(array_keys($p), array_values($p), $format);
     }
 
     /**
@@ -82,25 +82,25 @@ class Paginator
     {
         $this->_init();
 
-        if ((1 >= $this->totalPages) && (!$this->config['showSinglePage'])) {
+        if ((1 >= $this->_totalPages) && (!$this->_config['showSinglePage'])) {
             return '';
         }
 
-        $html = $this->page(null, $this->config['prefix']) . $this->prev();
+        $html = $this->page(null, $this->_config['prefix']) . $this->prev();
 
-        if (1 == $this->startPage - 1) {
+        if (1 == $this->_startPage - 1) {
             $html .= $this->page(1);
-        } elseif (1 < $this->startPage - 1) {
+        } elseif (1 < $this->_startPage - 1) {
             $html .= $this->first();
         }
 
-        for ($i = $this->startPage; $i <= $this->endPage; $i++) {
-            $html .= ($i == $this->curPage ? $this->current() : $this->page($i));
+        for ($i = $this->_startPage; $i <= $this->_endPage; $i++) {
+            $html .= ($i == $this->_curPage ? $this->current() : $this->page($i));
         }
 
-        if (1 == $this->totalPages - $this->endPage ) {
-            $html .= $this->page($this->totalPages);
-        } elseif (1 < $this->totalPages - $this->endPage ) {
+        if (1 == $this->_totalPages - $this->_endPage ) {
+            $html .= $this->page($this->_totalPages);
+        } elseif (1 < $this->_totalPages - $this->_endPage ) {
             $html .= $this->last();
         }
 
@@ -116,22 +116,22 @@ class Paginator
 
     public function _init()
     {
-        (1 > $this->pageSize) && ($this->pageSize = 20);
-        $this->totalPages = ceil($this->totalItems / $this->pageSize);
-        (1 > $this->curPage || $this->curPage > $this->totalPages) && ($this->curPage = 1);
+        (1 > $this->_pageSize) && ($this->_pageSize = 20);
+        $this->_totalPages = ceil($this->_totalItems / $this->_pageSize);
+        (1 > $this->_curPage || $this->_curPage > $this->_totalPages) && ($this->_curPage = 1);
 
-        $this->startPage = $this->curPage - $this->config['prevNums'];
-        (1 > $this->startPage) && ($this->startPage = 1);
+        $this->_startPage = $this->_curPage - $this->_config['prevNums'];
+        (1 > $this->_startPage) && ($this->_startPage = 1);
 
-        $this->endPage = $this->curPage + $this->config['nextNums'];
+        $this->_endPage = $this->_curPage + $this->_config['nextNums'];
 
-        $less = ($this->config['prevNums'] + $this->config['nextNums']) - ($this->endPage - $this->startPage);
-        (0 < $less) && ($this->endPage += $less);
-        ($this->endPage > $this->totalPages) && ($this->endPage = $this->totalPages);
+        $less = ($this->_config['prevNums'] + $this->_config['nextNums']) - ($this->_endPage - $this->_startPage);
+        (0 < $less) && ($this->_endPage += $less);
+        ($this->_endPage > $this->_totalPages) && ($this->_endPage = $this->_totalPages);
 
-        $less = ($this->config['prevNums'] + $this->config['nextNums']) - ($this->endPage - $this->startPage);
-        (0 < $less) && ($this->startPage -= $less);
-        (1 > $this->startPage) && ($this->startPage = 1);
+        $less = ($this->_config['prevNums'] + $this->_config['nextNums']) - ($this->_endPage - $this->_startPage);
+        (0 < $less) && ($this->_startPage -= $less);
+        (1 > $this->_startPage) && ($this->_startPage = 1);
     }
 
     /**
@@ -142,7 +142,7 @@ class Paginator
      */
     public function prefix($format = null)
     {
-        if (is_null($format)) $format = $this->config['prefix'];
+        if (is_null($format)) $format = $this->_config['prefix'];
 
         return $this->page(null, $format);
     }
@@ -155,7 +155,7 @@ class Paginator
      */
     public function suffix($format = null)
     {
-        if (is_null($format)) $format = $this->config['suffix'];
+        if (is_null($format)) $format = $this->_config['suffix'];
 
         return $this->page(null, $format);
     }
@@ -168,7 +168,7 @@ class Paginator
      */
     public function first($format = null)
     {
-        if (is_null($format)) $format = $this->config['first'];
+        if (is_null($format)) $format = $this->_config['first'];
 
         return $this->page(1, $format);
     }
@@ -181,8 +181,8 @@ class Paginator
      */
     public function last($format = null)
     {
-        if (is_null($format)) $format = $this->config['last'];
-        return $this->page($this->totalPages, $format);
+        if (is_null($format)) $format = $this->_config['last'];
+        return $this->page($this->_totalPages, $format);
     }
 
     /**
@@ -193,11 +193,11 @@ class Paginator
      */
     public function prev($format = null)
     {
-        if (1 == $this->curPage) return '';
+        if (1 == $this->_curPage) return '';
 
-        if (is_null($format)) $format = $this->config['prev'];
+        if (is_null($format)) $format = $this->_config['prev'];
 
-        $page = $this->curPage - 1;
+        $page = $this->_curPage - 1;
 
         return $this->page($page, $format);
     }
@@ -210,11 +210,11 @@ class Paginator
      */
     public function next($format = null)
     {
-        if ($this->curPage == $this->totalPages) return '';
+        if ($this->_curPage == $this->_totalPages) return '';
 
-        if (is_null($format)) $format = $this->config['next'];
+        if (is_null($format)) $format = $this->_config['next'];
 
-        $page = $this->curPage + 1;
+        $page = $this->_curPage + 1;
 
         return $this->page($page, $format);
     }
@@ -228,10 +228,137 @@ class Paginator
     public function current($format = null)
     {
         if (is_null($format)) {
-            $format = $this->config['current'];
+            $format = $this->_config['current'];
         }
 
-        return $this->page($this->curPage, $format);
+        return $this->page($this->_curPage, $format);
+    }
 
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->_config = $config;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurPage()
+    {
+        return $this->_curPage;
+    }
+
+    /**
+     * @param int $curPage
+     */
+    public function setCurPage($curPage)
+    {
+        $this->_curPage = $curPage;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPageSize()
+    {
+        return $this->_pageSize;
+    }
+
+    /**
+     * @param int $pageSize
+     */
+    public function setPageSize($pageSize)
+    {
+        $this->_pageSize = $pageSize;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalItems()
+    {
+        return $this->_totalItems;
+    }
+
+    /**
+     * @param int $totalItems
+     */
+    public function setTotalItems($totalItems)
+    {
+        $this->_totalItems = $totalItems;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->_url;
+    }
+
+    /**
+     * @param string $url
+     */
+    public function setUrl($url)
+    {
+        $this->_url = $url;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTotalPages()
+    {
+        return $this->_totalPages;
+    }
+
+    /**
+     * @param mixed $totalPages
+     */
+    public function setTotalPages($totalPages)
+    {
+        $this->_totalPages = $totalPages;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getStartPage()
+    {
+        return $this->_startPage;
+    }
+
+    /**
+     * @param mixed $startPage
+     */
+    public function setStartPage($startPage)
+    {
+        $this->_startPage = $startPage;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEndPage()
+    {
+        return $this->_endPage;
+    }
+
+    /**
+     * @param mixed $endPage
+     */
+    public function setEndPage($endPage)
+    {
+        $this->_endPage = $endPage;
     }
 }

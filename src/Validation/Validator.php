@@ -3,44 +3,21 @@
 namespace Cola\Validation;
 
 use Cola\I18n\Translator;
+use Exception;
 
-/**
- * usage
- * $data = [
- * 'id'     => 8,
-    * 'sex'    => 'F',
-    * 'tags'   => ['foo' => 3, 'bar' => 7],
-    * 'age'    => 8,
-    * 'email'  => 'foo@bar.com',
-    * 'date'   => '2012-12-10',
-    * 'body'   => 'foobarbarfoo',
-* ];
- *
-* $rules = [
-    * 'id'     => ['required' => true, 'type' => 'int'],
-    * 'sex'    => ['in' => ['F', 'M']],
-    * 'tags'   => ['required' => true, 'each' => ['type' => 'int']],
-    * 'age'    => ['type' => 'int', 'range' => [38, 130], 'message' => 'age must be 18~130'],
-    * 'email'  => ['type' => 'email'),
-    * 'date'   => ['type' => 'date'),
-    * 'body'   => ['required' => true, 'range' => [1, 500]]
-* ];
- *
-* var_dump(Validator::check($data, $rules));
-**/
 
 class Validator
 {
-    public $rules;
+    protected $_rules;
 
-    public $ignorNotExists = false;
+    protected $_errors;
 
-    public $translatorId = 'translator';
+    public $_ignoreNotExists = false;
 
-    public function __construct($rules, $ignorNotExists = false)
+    public function __construct($rules, $ignoreNotExists = false)
     {
-        $this->rules = $rules;
-        $this->ignorNotExists = $ignorNotExists;
+        $this->_rules = $rules;
+        $this->_ignoreNotExists = $ignoreNotExists;
     }
 
     /**
@@ -74,7 +51,7 @@ class Validator
     /**
      * Max
      *
-     * @param mixed $value numbernic|string
+     * @param mixed $value
      * @param number $max
      * @return boolean
      */
@@ -88,7 +65,7 @@ class Validator
     /**
      * Min
      *
-     * @param mixed $value numbernic|string
+     * @param mixed $value
      * @param number $min
      * @return boolean
      */
@@ -102,7 +79,7 @@ class Validator
     /**
      * Range
      *
-     * @param mixed $value numbernic|string
+     * @param mixed $value
      * @param $range
      * @return boolean
      */
@@ -173,6 +150,7 @@ class Validator
      * Check if is datetime
      *
      * @param string $datetime
+     * @param string $format
      * @return boolean
      */
     public static function datetime($datetime, $format = 'Y-m-d H:i:s')
@@ -220,6 +198,8 @@ class Validator
 
     /**
      * Check if is int or float
+     * @param $value
+     * @return bool
      */
     public static function number($value)
     {
@@ -254,19 +234,19 @@ class Validator
      * @param array $data
      * @param boolean $ignoreNotExists
      * @return boolean
-     * @throws ValidationException
+     * @throws Exception
      */
     public function check($data, $ignoreNotExists = null)
     {
-        is_null($ignoreNotExists) && $ignoreNotExists = $this->ignorNotExists;
+        is_null($ignoreNotExists) && $ignoreNotExists = $this->_ignoreNotExists;
         $errors = [];
 
-        foreach ($this->rules as $key => $rule) {
-            $rule += array('required' => false, 'message' => 'failed');
+        foreach ($this->_rules as $key => $rule) {
+            $rule += ['required' => false, 'message' => 'failed'];
 
             // deal with not existed
             if ((!isset($data[$key])) && $rule['required'] && (!$ignoreNotExists)) {
-                $errors[$key] = $this->getMessage($rule['message']);
+                $errors[$key] = $this->getMessage($rule);
                 continue;
             }
 
@@ -277,12 +257,12 @@ class Validator
                 try {
                     $validator->check($data[$key]);
                 } catch (ValidationException $ve) {
-                    $errors[$key] = $ve->errors;
+                    $errors[$key] = $ve->getErrors();
                 }
             }
 
             if (!$this->_check($data[$key], $rule, $ignoreNotExists)) {
-                $errors[$key] = $this->getMessage($rule['message']);
+                $errors[$key] = $this->getMessage($rule);
                 continue;
             }
         }
@@ -292,6 +272,16 @@ class Validator
         }
 
         return true;
+    }
+
+    /**
+     * @param $rule
+     * @return mixed
+     * @throws Exception
+     */
+    public function getMessage($rule)
+    {
+        return empty($rule['i18n']) ? $rule['message'] : Translator::getFromContainer()->message($rule['message']);
     }
 
     /**
@@ -333,7 +323,6 @@ class Validator
                 case 'in':
                 case 'max':
                 case 'min':
-                case 'max':
                 case 'range':
                     if (!self::$key($data, $val)) {
                         return false;
@@ -362,13 +351,44 @@ class Validator
         return true;
     }
 
-    public static function getMessage($message)
+    /**
+     * @return mixed
+     */
+    public function getRules()
     {
-        if ('{{' !== \substr($message, 0, 2)) {
-            return $message;
-        }
-
-        $translator = Translator::getFromContainer();
-        return $translator->message(\substr($message, 2, -2));
+        return $this->_rules;
     }
+
+    /**
+     * @param mixed $rules
+     */
+    public function setRules($rules)
+    {
+        $this->_rules = $rules;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getErrors()
+    {
+        return $this->_errors;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIgnoreNotExists()
+    {
+        return $this->_ignoreNotExists;
+    }
+
+    /**
+     * @param bool $ignoreNotExists
+     */
+    public function setIgnoreNotExists($ignoreNotExists)
+    {
+        $this->_ignoreNotExists = $ignoreNotExists;
+    }
+
 }

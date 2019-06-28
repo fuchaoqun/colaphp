@@ -2,35 +2,43 @@
 
 namespace Cola\Log\Handler;
 
+use Exception;
+use function fopen;
+
 class StreamHandler extends AbstractHandler
 {
     protected $_dirCreated = false;
 
+    /**
+     * StreamHandler constructor.
+     * @param array $config
+     * @throws Exception
+     */
     public function __construct($config = [])
     {
         $config += ['stream' => null, 'mode' => 0755, 'lock' => false];
         parent::__construct($config);
-        if ((!is_resource($this->config['stream']))&& (is_string($this->config['file']))) {
+        if ((!is_resource($this->_config['stream']))&& (is_string($this->_config['file']))) {
             $this->_createDir();
-            $this->config['stream'] = \fopen($this->config['file'], 'a');
+            $this->_config['stream'] = fopen($this->_config['file'], 'a');
         }
     }
 
     public function _handle($text)
     {
-        if ($this->config['lock']) {
-            flock($this->config['stream'], LOCK_EX);
+        if ($this->_config['lock']) {
+            flock($this->_config['stream'], LOCK_EX);
         }
-        fwrite($this->config['stream'], $text);
-        if ($this->config['lock']) {
-            flock($this->config['stream'], LOCK_UN);
+        fwrite($this->_config['stream'], $text);
+        if ($this->_config['lock']) {
+            flock($this->_config['stream'], LOCK_UN);
         }
         return true;
     }
 
     protected function _getDir()
     {
-        $file = $this->config['file'];
+        $file = $this->_config['file'];
         $pos = strpos($file, '://');
         if ($pos === false) {
             return dirname($file);
@@ -41,6 +49,10 @@ class StreamHandler extends AbstractHandler
         return null;
     }
 
+    /**
+     * @return bool
+     * @throws Exception
+     */
     protected function _createDir()
     {
         if ($this->_dirCreated) {
@@ -57,14 +69,14 @@ class StreamHandler extends AbstractHandler
             return true;
         }
 
-        @mkdir($dir, $this->config['mode'], true);
+        @mkdir($dir, $this->_config['mode'], true);
 
         if (file_exists($dir)) {
             $this->_dirCreated = true;
             return true;
         }
 
-        throw new \Exception("CAN_NOT_CREATE_DIR_FOR_{$this->config['file']}");
+        throw new Exception("CAN_NOT_CREATE_DIR_FOR_{$this->_config['file']}");
 
     }
 }

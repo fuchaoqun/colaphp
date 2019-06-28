@@ -7,12 +7,12 @@ class LineFormatter
     public function format($log, $context)
     {
         $keys = [];
-        $vals = [];
+        $values = [];
         foreach ($context as $key => $val) {
-            $keys[] = "{{{$key}}}";
-            $vals[] = $val;
+            $keys[] = "%{$key}%";
+            $values[] = $val;
         }
 
-        return str_replace($keys, $vals, $log);
+        return str_replace($keys, $values, $log);
     }
 }

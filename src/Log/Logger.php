@@ -2,6 +2,11 @@
 
 namespace Cola\Log;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use Exception;
+use LogicException;
+
 class Logger
 {
     const EMERGENCY = 600;  // Emergency: system is unusable
@@ -13,7 +18,7 @@ class Logger
     const INFO      = 200;  // Informational: informational messages
     const DEBUG     = 100;  // Debug: debug messages
 
-    public static $levels = [
+    protected $_levels = [
         self::DEBUG     => 'DEBUG',
         self::INFO      => 'INFO',
         self::NOTICE    => 'NOTICE',
@@ -24,46 +29,52 @@ class Logger
         self::EMERGENCY => 'EMERGENCY',
     ];
 
-    public $config = [];
+    protected $_config = [];
 
     public function __construct($config = [])
     {
-        $this->config = $config + [
-            'channel' => '_Cola',
+        $this->_config = $config + [
+            'channel' => '_Cola_log',
             'handlers' => [],
-            'timezone' => new \DateTimeZone(date_default_timezone_get() ?: 'UTC'),
+            'timezone' => new DateTimeZone(date_default_timezone_get() ?: 'UTC'),
             'dateTimeFormat' => 'Y-m-d H:i:s'
         ];
     }
 
     public function pushHandler($handler)
     {
-        array_unshift($this->config['handlers'], $handler);
+        array_unshift($this->_config['handlers'], $handler);
         return $this;
     }
 
     public function popHandler()
     {
-        if (!$this->config['handlers']) {
-            throw new \LogicException('You tried to pop from an empty handler stack.');
+        if (!$this->_config['handlers']) {
+            throw new LogicException('You tried to pop from an empty handler stack.');
         }
-        return array_shift($this->config['handlers']);
+        return array_shift($this->_config['handlers']);
     }
 
 
+    /**
+     * @param $level
+     * @param $log
+     * @param array $context
+     * @throws Exception
+     */
     public function log($level, $log, $context = [])
     {
-        $dateTime = new \DateTimeImmutable('now', $this->config['timezone']);
+        $dateTime = new DateTimeImmutable('now', $this->_config['timezone']);
         $context += [
-            'channel' => $this->config['channel'],
+            'channel' => $this->_config['channel'],
             'level' => $level,
-            'levelName' => static::$levels[$level],
+            'levelName' => $this->_levels[$level],
             'microTime' => $dateTime->format('U.v'),
             'time' => $dateTime->format('U'),
-            'dateTime' => $dateTime->format($this->config['dateTimeFormat'])
+            'dateTime' => $dateTime->format($this->_config['dateTimeFormat'])
         ];
 
-        foreach ($this->config['handlers'] as $handler) {
+        foreach ($this->_config['handlers'] as $handler) {
             if (!$handler->shouldHandle($level)) continue;
             $handler->handle($log, $context);
             if ($handler->isBubble()) break;
@@ -108,5 +119,37 @@ class Logger
     public function debug($log, $context = [])
     {
         return $this->log(static::DEBUG, $log, $context);
+    }
+
+    /**
+     * @return array
+     */
+    public function getLevels()
+    {
+        return $this->_levels;
+    }
+
+    /**
+     * @param array $levels
+     */
+    public function setLevels($levels)
+    {
+        $this->_levels = $levels;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->_config = $config;
     }
 }

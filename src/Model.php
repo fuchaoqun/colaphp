@@ -306,7 +306,7 @@ abstract class Model
         is_null($name) && ($name = $this->_cache);
 
         if (is_array($name)) {
-            return Cola::factory($name['adapter'], $name['config']);
+            return SimpleCache::factory($name['adapter'], $name['config']);
         }
 
         $id = "__cache_{$name}";

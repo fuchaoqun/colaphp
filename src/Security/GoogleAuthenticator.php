@@ -2,11 +2,13 @@
 
 namespace Cola\Security;
 
+use Exception;
+
 class GoogleAuthenticator
 {
-    public $secret;
-    public $ttl   = 30;
-    public $limit = 6;
+    protected $_secret;
+    protected $_ttl   = 30;
+    protected $_limit = 6;
 
     // Lookup needed for Base32 encoding
     private $_map = [
@@ -22,16 +24,20 @@ class GoogleAuthenticator
 
     private $_decodedSecret;
 
+    /**
+     * GoogleAuthenticator constructor.
+     * @param $secret
+     * @throws Exception
+     */
     public function __construct($secret)
     {
-        $this->secret = $secret;
+        $this->_secret = $secret;
         $this->_decodedSecret = $this->_base32Decode($secret);
     }
 
     /**
      * Get Google Authenticator code
      *
-     * @param string $secret
      * @param int $time
      * @return string
      */
@@ -40,18 +46,18 @@ class GoogleAuthenticator
         if (!$time) $time = floor(time()/30);
 
         $bin  = pack('N*', 0) . pack('N*', $time);        // Counter must be 64-bit int
-        $hash = hash_hmac('sha1', $bin, $this->__decodedSecret, true);
+        $hash = hash_hmac('sha1', $bin, $this->_decodedSecret, true);
 
-        return str_pad($this->_truncate($hash, $this->$limit), $this->$limit, '0', STR_PAD_LEFT);
+        return str_pad($this->_truncate($hash, $this->_limit), $this->_limit, '0', STR_PAD_LEFT);
     }
 
     /**
      * Check Google Authenticator code
      *
-     * @param string $secret
      * @param string $code
-     * @package int $window
+     * @param int $window
      * @return boolean
+     * @package int $window
      */
     public function checkCode($code, $window = 2)
     {
@@ -69,13 +75,13 @@ class GoogleAuthenticator
      * Get Google Authenticator QR image url
      *
      * @param string $user
-     * @param string $secret
      * @param string $hostname
+     * @param string $prefix
      * @return string
      */
     public function getQrCode($user, $hostname, $prefix = 'https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=')
     {
-        return $prefix . urlencode("otpauth://totp/{$user}@{$hostname}?secret={$this->secret}");
+        return $prefix . urlencode("otpauth://totp/{$user}@{$hostname}?secret={$this->_secret}");
     }
 
     /**
@@ -93,20 +99,21 @@ class GoogleAuthenticator
      * Base32 decode
      *
      * @param string $str
-     * @return binary
+     * @return string
+     * @throws Exception
      */
     private function _base32Decode($str)
     {
         $str = strtoupper($str);
 
         if (!preg_match('/^[A-Z2-7]+$/', $str)) {
-            throw new \Exception('Invalid characters in the base32 string.');
+            throw new Exception('Invalid characters in the base32 string.');
         }
 
         $l = strlen($str);
         $n = 0;
         $j = 0;
-        $binary = "";
+        $binary = '';
 
         for ($i = 0; $i < $l; $i++) {
             $n = $n << 5;                 // Move buffer left by 5 to make room
@@ -123,9 +130,10 @@ class GoogleAuthenticator
 
     /**
      * Extracts the OTP from the SHA1 hash.
-     * @param binary $hash
+     * @param string $hash
+     * @param $limit
      * @return integer
-     **/
+     */
     private function _truncate($hash, $limit)
     {
         $offset = ord($hash[19]) & 0xf;

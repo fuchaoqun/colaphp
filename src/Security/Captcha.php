@@ -2,14 +2,16 @@
 
 namespace Cola\Security;
 
+use Cola\Http\Response;
+
 class Captcha
 {
     /**
-     * Captch config
+     * Captcha config
      *
      * @var array
      */
-    public $config = [
+    protected $_config = [
         'type'            => 'png',
         'seed'            => '3478ABCDEFGHJKLMNPQRTUVWXYacdefhjkmnpwxy',
         'fonts'           => [],
@@ -36,7 +38,7 @@ class Captcha
      *
      * @var string
      */
-    public $error = null;
+    protected $_error = null;
 
     /**
      * Captcha chars count
@@ -54,36 +56,31 @@ class Captcha
     {
         isset($_SESSION) || session_start();
 
-        $this->config = $config + $this->config;
+        $this->_config = $config + $this->_config;
 
-        if (!is_array($this->config['size'])) {
-            $size = intval($this->config['size']);
-            $this->config['size'] = [$size, $size];
+        if (!is_array($this->_config['size'])) {
+            $size = intval($this->_config['size']);
+            $this->_config['size'] = [$size, $size];
         }
 
-        if (is_array($this->config['count'])) {
-            $this->_count = mt_rand($this->config['count'][0], $this->config['count'][1]);
+        if (is_array($this->_config['count'])) {
+            $this->_count = mt_rand($this->_config['count'][0], $this->_config['count'][1]);
         } else {
-            $this->_count = intval($this->config['count']);
+            $this->_count = intval($this->_config['count']);
         }
     }
 
     /**
      * Display captcha
      *
-     * @param string $type | png/gif/jpeg
      */
     public function display()
     {
         $this->_image();
-        $type = strtolower($this->config['type']);
+        $type = strtolower($this->_config['type']);
         $func = "image{$type}";
 
-        header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-        header("Cache-Control: no-store, no-cache, must-revalidate");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
+        Response::disableBrowserCache();
         header("Content-type: image/$type");
 
         $func($this->_image);
@@ -96,27 +93,27 @@ class Captcha
      */
     protected function _image()
     {
-        $this->_image = imagecreate($this->config['width'], $this->config['height']);
+        $this->_image = imagecreate($this->_config['width'], $this->_config['height']);
 
-        $color = $this->_color($this->config['bgColor']);
+        $color = $this->_color($this->_config['bgColor']);
         imageFilledRectangle(
-            $this->_image, 0, 0, $this->config['width'],
-            $this->config['height'], $color
+            $this->_image, 0, 0, $this->_config['width'],
+            $this->_config['height'], $color
         );
 
         $seed  = $this->_seed();
         $fonts = $this->_fonts();
 
-        $_SESSION[$this->config['sessionValueKey']] = $seed;
-        $_SESSION[$this->config['sessionTtlKey']]   = time() + $this->config['ttl'];
+        $_SESSION[$this->_config['sessionValueKey']] = $seed;
+        $_SESSION[$this->_config['sessionTtlKey']]   = time() + $this->_config['ttl'];
 
-        $avgWidth = $this->config['width'] / $this->_count;
+        $avgWidth = $this->_config['width'] / $this->_count;
 
         for ($i = 0; $i < $this->_count; $i++) {
             $char = substr($seed, $i, 1);
             $font = $fonts[$i];
             $angle = mt_rand(-18, 18);
-            $size = mt_rand($this->config['size'][0], $this->config['size'][1]);
+            $size = mt_rand($this->_config['size'][0], $this->_config['size'][1]);
 
             $box = imagettfbbox($size, 0, $font, $char);
             $charWidth = abs(max($box[2], $box[4]) - min($box[0], $box[6]));
@@ -124,14 +121,14 @@ class Captcha
 
             $offset = abs($avgWidth - $charWidth);
             $x = $avgWidth * $i + mt_rand($offset / 4,  $offset / 2);
-            $offset = abs($this->config['height'] - $charHeight);
+            $offset = abs($this->_config['height'] - $charHeight);
             $y = mt_rand($charHeight + $offset / 4, $charHeight + $offset / 2);
 
             $charColor = imageColorAllocate($this->_image, mt_rand(50, 155), mt_rand(50, 155), mt_rand(50, 155));
             imagettftext($this->_image, $size, $angle, $x, $y, $charColor, $font, $char);
         }
 
-        // $this->_noise();
+        $this->_noise();
     }
 
     /**
@@ -141,7 +138,7 @@ class Captcha
      */
     protected function _seed()
     {
-        $str = str_shuffle(str_repeat($this->config['seed'], $this->_count));
+        $str = str_shuffle(str_repeat($this->_config['seed'], $this->_count));
         return substr($str, 0, $this->_count);
     }
 
@@ -152,9 +149,9 @@ class Captcha
      */
     protected function _fonts()
     {
-        $fonts = $this->config['fonts'];
+        $fonts = $this->_config['fonts'];
         for ($i = 0; $i < $this->_count; $i ++) {
-            $fonts = array_merge($fonts, $this->config['fonts']);
+            $fonts = array_merge($fonts, $this->_config['fonts']);
         }
         shuffle($fonts);
         return array_slice($fonts, 0, $this->_count);
@@ -185,11 +182,11 @@ class Captcha
     protected function _noise()
     {
 
-        for($i = 0; $i < $this->config['height']; $i++) {
-			for($j = 0; $j < $this->config['width']; $j++) {
+        for($i = 0; $i < $this->_config['height']; $i++) {
+			for($j = 0; $j < $this->_config['width']; $j++) {
 				$rgb[$j] = imagecolorat($this->_image, $j , $i);
 			}
-			for($j = 0; $j < $this->config['width']; $j++) {
+			for($j = 0; $j < $this->_config['width']; $j++) {
 				$r = mt_rand(-1, 1);
 				// $r = sin($i / $this->config['height'] * 2 * M_PI - M_PI * 0.5) * (-10);
 				// $r = 0;
@@ -227,30 +224,94 @@ class Captcha
      */
     public function check($value, $caseSensitive = false)
     {
-        if (empty($_SESSION[$this->config['sessionTtlKey']]) || empty($_SESSION[$this->config['sessionValueKey']])) {
-            $this->error = array('code' => -1, 'message' => 'NO_CAPTCHA_FOUND');
+        if (empty($_SESSION[$this->_config['sessionTtlKey']]) || empty($_SESSION[$this->_config['sessionValueKey']])) {
+            $this->_error = array('code' => -1, 'message' => 'NO_CAPTCHA_FOUND');
             return false;
         }
 
-        $expireTime  = $_SESSION[$this->config['sessionTtlKey']];
-        $captchaCode = $_SESSION[$this->config['sessionValueKey']];
+        $expireTime  = $_SESSION[$this->_config['sessionTtlKey']];
+        $captchaCode = $_SESSION[$this->_config['sessionValueKey']];
 
         // clear
-        unset($_SESSION[$this->config['sessionTtlKey']]);
-        unset($_SESSION[$this->config['sessionValueKey']]);
+        unset($_SESSION[$this->_config['sessionTtlKey']]);
+        unset($_SESSION[$this->_config['sessionValueKey']]);
 
         if (time() > $expireTime) {
-            $this->error = array('code' => -2, 'message' => 'CAPTCHA_IS_EXPIRED');
+            $this->_error = array('code' => -2, 'message' => 'CAPTCHA_IS_EXPIRED');
             return false;
         }
 
         $func = $caseSensitive ? 'strcmp' : 'strcasecmp';
 
         if (0 !== $func($value, $captchaCode)) {
-            $this->error = array('code' => -3, 'message' => 'CAPTCHA_NOT_MATCHED');
+            $this->_error = array('code' => -3, 'message' => 'CAPTCHA_NOT_MATCHED');
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->_config;
+    }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config)
+    {
+        $this->_config = $config;
+    }
+
+    /**
+     * @return resource
+     */
+    public function getImage()
+    {
+        return $this->_image;
+    }
+
+    /**
+     * @param resource $image
+     */
+    public function setImage($image)
+    {
+        $this->_image = $image;
+    }
+
+    /**
+     * @return string
+     */
+    public function getError()
+    {
+        return $this->_error;
+    }
+
+    /**
+     * @param string $error
+     */
+    public function setError($error)
+    {
+        $this->_error = $error;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCount()
+    {
+        return $this->_count;
+    }
+
+    /**
+     * @param int $count
+     */
+    public function setCount($count)
+    {
+        $this->_count = $count;
     }
 }

@@ -2,26 +2,22 @@
 
 namespace Cola\Log\Handler;
 
+use Cola\Cache\SimpleCache;
+
 class Cola_Ext_Log_Redis extends Cola_Ext_Log_Abstract
 {
-    public $config = array(
-        'persistent' => true,
-        'host'       => '127.0.0.1',
-        'port'       => 6379,
-        'timeout'    => 3,
-        'options'    => array(),
-        'queue'      => '_cola_redis_queue'
-    );
+    protected $_config = [
+        'queue' => '_cola_log_queue'
+    ];
 
     protected $_redis = null;
 
     public function write($text)
     {
         if (is_null($this->_redis)) {
-            $factory = $this->config + ['adapter' => 'RedisAdapter'];
-            $this->_redis = \Cola\Cache\SimpleCache::factory($factory);
+            $this->_redis = SimpleCache::factory('RedisAdapter', $this->_config);
         }
 
-        return $redis->qput($this->config['queue'], $text);
+        return $this->_redis->qput($this->_config['queue'], $text);
     }
 }
