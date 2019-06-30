@@ -3,6 +3,7 @@
 namespace Cola;
 
 use Cola\Cache\SimpleCache;
+use Cola\I18n\Translator;
 use Cola\Validation\ValidationException;
 use Cola\Validation\Validator;
 use Exception;
@@ -356,6 +357,7 @@ abstract class Model
      * @param boolean $ignoreNotExists
      * @param array $rules
      * @return boolean
+     * @throws Exception
      */
     public function validate($data, $ignoreNotExists = false, $rules = null)
     {
@@ -398,6 +400,12 @@ abstract class Model
     public function rollBack()
     {
         return $this->db->rollBack();
+    }
+
+    protected function message($key, $vars = [], $locales = null)
+    {
+        $translator = Translator::getFromContainer();
+        return $translator->message($key, $vars, $locales);
     }
 
     /**
