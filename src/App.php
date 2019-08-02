@@ -143,10 +143,12 @@ class App
 
     /**
      * @param Dispatcher $dispatcher
+     * @return App
      */
     public function setDispatcher($dispatcher)
     {
         $this->_dispatcher = $dispatcher;
+        return $this;
     }
 
     /**
@@ -159,10 +161,12 @@ class App
 
     /**
      * @param string $pathInfo
+     * @return App
      */
     public function setPathInfo($pathInfo)
     {
         $this->_pathInfo = $pathInfo;
+        return $this;
     }
 
     /**
@@ -290,8 +294,8 @@ class App
             $dispatchInfo = $this->_router->match($this->_pathInfo);
         }
 
-        $this->_dispatcher || ($this->_dispatcher = new Dispatcher($dispatchInfo));
+        $this->_dispatcher || ($this->_dispatcher = new Dispatcher());
 
-        $this->_dispatcher->dispatch();
+        $this->_dispatcher->dispatch($dispatchInfo);
     }
 }

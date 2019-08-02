@@ -29,10 +29,10 @@ abstract class RestResponse
         }
     }
 
-    public function i18n($vars = [], $locales = null)
+    public function i18n($replacements = [], $locales = null)
     {
         if (!is_null($this->_message)) {
-            $this->_message = Translator::getFromContainer()->message($this->_message, $vars, $locales);
+            $this->_message = Translator::getFromContainer()->message($this->_message, $replacements, $locales);
         }
         return $this;
     }

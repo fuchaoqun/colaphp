@@ -6,15 +6,12 @@ namespace Cola;
 
 class Dispatcher
 {
-    public $info;
+    protected $_info;
 
-    public function __construct($info)
+    public function dispatch($info)
     {
-        $this->info = $info;
-    }
+        $this->_info = $info;
 
-    public function dispatch()
-    {
         $class = $this->getController();
         $action = $this->getAction();
         $args = $this->getArgs();
@@ -42,16 +39,16 @@ class Dispatcher
 
     public function getController()
     {
-        return $this->info['controller'];
+        return $this->_info['controller'];
     }
 
     public function getAction()
     {
-        return $this->info['action'];
+        return $this->_info['action'];
     }
 
     public function getArgs()
     {
-        return $this->info['args'];
+        return $this->_info['args'];
     }
 }

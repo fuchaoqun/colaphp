@@ -146,6 +146,11 @@ class RedisAdapter extends AbstractAdapter
         return $this->_connection->flushAll();
     }
 
+    public function multi()
+    {
+        return $this->_connection->multi();
+    }
+
     /**
      * Put into Queue
      * @param $name
