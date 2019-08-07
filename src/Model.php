@@ -369,11 +369,11 @@ abstract class Model
         $validator = new Validation\Validator($rules, $ignoreNotExists);
         $validator->check($data, $ignoreNotExists);
 
-        foreach ($this->_uniqueColumns as $key => $msg)
+        foreach ($this->_uniqueColumns as $key => $rule)
         {
             if ((!isset($data[$key])) || is_null($data[$key])) continue;
             if (!$this->isUnique($key, $data[$key])) {
-                throw new ValidationException([$key => Validator::getMessage($msg)]);
+                throw new ValidationException([$key => $validator->getMessage($rule)]);
             }
         }
 
