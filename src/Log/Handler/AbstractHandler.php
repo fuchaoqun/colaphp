@@ -14,15 +14,16 @@ abstract class AbstractHandler
         $this->_config = $config + $this->_config + [
             'level' => Logger::DEBUG,
             'bubble' => true,
-            'formatter' => new LineFormatter(),
         ];
+
+        if (is_array($this->_config['formatter'])) {
+            $adapter = $this->_config['formatter']['adapter'];
+            $formatterConfig =  $this->_config['formatter']['config'];
+            $this->_config['formatter'] = new $adapter($formatterConfig);
+        }
     }
 
-    public function handle($log, $context = [])
-    {
-        $text = $this->_config['formatter']->format($log, $context);
-        $this->_handle($text);
-    }
+    abstract public function handle($log, $context = []);
 
     public function shouldHandle($level)
     {
@@ -49,6 +50,4 @@ abstract class AbstractHandler
     {
         $this->_config = $config;
     }
-
-    abstract function _handle($text);
 }

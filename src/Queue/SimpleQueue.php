@@ -1,11 +1,10 @@
 <?php
 
-namespace Cola\Cache;
 
-/**
- * PSR-16 SimpleCache
- */
-class SimpleCache
+namespace Cola\Queue;
+
+
+class SimpleQueue
 {
     public static function factory($adapter, $config = [])
     {

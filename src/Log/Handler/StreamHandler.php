@@ -24,8 +24,10 @@ class StreamHandler extends AbstractHandler
         }
     }
 
-    public function _handle($text)
+    public function handle($log, $context = [])
     {
+        $text = $this->_config['formatter']->format($log, $context);
+
         if ($this->_config['lock']) {
             flock($this->_config['stream'], LOCK_EX);
         }

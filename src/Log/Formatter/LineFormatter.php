@@ -2,10 +2,18 @@
 
 namespace Cola\Log\Formatter;
 
-class LineFormatter
+
+class LineFormatter extends AbstractFormatter
 {
-    public function format($log, $context)
+    protected $_config = [
+        'format' => '%dateTime%|%levelName%|%message%',
+        'dateTimeFormat' => 'Y-m-d H:i:s'
+    ];
+
+    public function format($message, $context = [])
     {
+        $this->_updateContext($context, $message);
+
         $keys = [];
         $values = [];
         foreach ($context as $key => $val) {
@@ -13,6 +21,6 @@ class LineFormatter
             $values[] = $val;
         }
 
-        return str_replace($keys, $values, $log);
+        return str_replace($keys, $values, $this->_config['format']);
     }
 }

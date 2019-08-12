@@ -4,20 +4,21 @@ namespace Cola\Log\Handler;
 
 use Cola\Cache\SimpleCache;
 
-class Cola_Ext_Log_Redis extends Cola_Ext_Log_Abstract
+class RedisPubSubHandler extends AbstractHandler
 {
-    protected $_config = [
-        'queue' => '_cola_log_queue'
-    ];
+    protected $_adapter = '\Cola\Cache\Adapter\RedisAdapter';
+    protected $_redis;
 
-    protected $_redis = null;
-
-    public function write($text)
+    public function __construct($config = [])
     {
-        if (is_null($this->_redis)) {
-            $this->_redis = SimpleCache::factory('RedisAdapter', $this->_config);
-        }
+        parent::__construct($config);
+        $simpleCache = SimpleCache::factory($this->_adapter, $this->_config['redis']);
+        $this->_redis = $simpleCache->getConnection();
+    }
 
-        return $this->_redis->qput($this->_config['queue'], $text);
+    public function handle($log, $context = [])
+    {
+        $text = $this->_config['formatter']->format($log, $context);
+        return $this->_redis->publish($context['channel'], $text);
     }
 }

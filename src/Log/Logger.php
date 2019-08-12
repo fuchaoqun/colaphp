@@ -31,14 +31,19 @@ class Logger
 
     protected $_config = [];
 
+    protected $_handlers = [];
+
     public function __construct($config = [])
     {
         $this->_config = $config + [
             'channel' => '_Cola_log',
             'handlers' => [],
-            'timezone' => new DateTimeZone(date_default_timezone_get() ?: 'UTC'),
-            'dateTimeFormat' => 'Y-m-d H:i:s'
         ];
+
+        foreach ($this->_config['handlers'] as $row) {
+            $adapter = $row['adapter'];
+            $this->_handlers[] = new $adapter($row['config']);
+        }
     }
 
     public function pushHandler($handler)
@@ -64,17 +69,16 @@ class Logger
      */
     public function log($level, $log, $context = [])
     {
-        $dateTime = new DateTimeImmutable('now', $this->_config['timezone']);
+        $microTime = microtime(true);
         $context += [
             'channel' => $this->_config['channel'],
             'level' => $level,
             'levelName' => $this->_levels[$level],
-            'microTime' => $dateTime->format('U.v'),
-            'time' => $dateTime->format('U'),
-            'dateTime' => $dateTime->format($this->_config['dateTimeFormat'])
+            'microTime' => $microTime,
+            'time' => intval($microTime),
         ];
 
-        foreach ($this->_config['handlers'] as $handler) {
+        foreach ($this->_handlers as $handler) {
             if (!$handler->shouldHandle($level)) continue;
             $handler->handle($log, $context);
             if ($handler->isBubble()) break;

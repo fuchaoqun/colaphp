@@ -4,7 +4,7 @@ namespace Cola\Log\Handler;
 
 class FakeHandler extends AbstractHandler
 {
-    public function _handle($text)
+    public function handle($log, $context = [])
     {
         return true;
     }

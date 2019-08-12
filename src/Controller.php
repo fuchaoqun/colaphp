@@ -156,6 +156,15 @@ abstract class Controller
      */
     public function __get($key)
     {
+        $val = $this->_getByMagic($key);
+        if (is_null($val)) {
+            throw new ReflectionException('Undefined property: ' . get_class($this) . '::' . $key);
+        }
+        return $val;
+    }
+
+    protected function _getByMagic($key)
+    {
         switch ($key) {
             case 'get':
                 return $_GET;
@@ -183,7 +192,7 @@ abstract class Controller
                 return $this->container;
 
             default:
-                throw new ReflectionException('Undefined property: ' . get_class($this) . '::' . $key);
+                return null;
         }
     }
 }

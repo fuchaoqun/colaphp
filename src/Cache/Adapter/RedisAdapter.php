@@ -150,32 +150,4 @@ class RedisAdapter extends AbstractAdapter
     {
         return $this->_connection->multi();
     }
-
-    /**
-     * Put into Queue
-     * @param $name
-     * @param $value
-     * @return boolean
-     */
-    public function qput($name, $value)
-    {
-        return $this->_connection->lPush($name, $value);
-    }
-
-    /**
-     * Get from queue
-     *
-     * @param $name
-     * @param int $timeout >=0 for block, negative for non-blocking
-     * @return mixed
-     */
-    public function qget($name, $timeout = 0)
-    {
-        if (0 > $timeout) {
-            return $this->_connection->rPop($name);
-        } else {
-            $data = $this->_connection->brPop((array)$name, $timeout);
-            return isset($data[1]) ? $data[1] : null;
-        }
-    }
 }
