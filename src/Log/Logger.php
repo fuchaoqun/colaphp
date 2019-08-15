@@ -126,6 +126,19 @@ class Logger
     }
 
     /**
+     * @param Exception $e
+     * @param array $context
+     * @param null $level
+     * @throws Exception
+     */
+    public function exception($e, $context = [], $level = null)
+    {
+        is_null($level) && $level = self::WARNING;
+        $log = sprintf('%s;%s;%d', $e->getMessage(), $e->getFile(), $e->getLine());
+        return $this->log($level, $level, $context);
+    }
+
+    /**
      * @return array
      */
     public function getLevels()
