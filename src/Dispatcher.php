@@ -51,4 +51,9 @@ class Dispatcher
     {
         return $this->_info['args'];
     }
+
+    public function getDispatchInfo()
+    {
+        return $this->_info;
+    }
 }
