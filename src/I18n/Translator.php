@@ -27,7 +27,9 @@ class Translator
             $config['messages'] = new Config($config['messages']);
         }
 
-        $this->_config = $config + $this->_config + ['locales' => $this->getLocalesFromRequest()];
+        $this->_config = $config + $this->_config + [
+            'locales' => $this->getLocalesFromRequest($this->_config['queryName'], $this->_config['cookieName'])
+        ];
     }
 
     public static function getFromContainer($name = '_translator')
@@ -43,14 +45,12 @@ class Translator
         return $translator;
     }
 
-    public function getLocalesFromRequest()
+    public static function getLocalesFromRequest($queryName = '_lang', $cookieName = '_lang')
     {
-        $queryName = $this->_config['queryName'];
         if (!empty($_GET[$queryName])) {
             return explode(',', $_GET[$queryName]);
         }
 
-        $cookieName = $this->_config['cookieName'];
         if (!empty($_COOKIE[$cookieName])) {
             return explode(',', $_COOKIE[$cookieName]);
         }
