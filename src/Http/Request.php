@@ -2,6 +2,7 @@
 
 namespace Cola\Http;
 
+
 class Request
 {
     public static function getWithDefault($data, $key, $default)
@@ -320,5 +321,20 @@ class Request
         }
 
         return $files;
+    }
+
+    public static function isSafeUrl($url, $safeDomains)
+    {
+        $info = parse_url($url);
+        if (empty($info['host'])) {
+            return false;
+        }
+        $tmp = explode('.', $info['host']);
+        $cnt = count($tmp);
+        if (2 > $cnt) {
+            return false;
+        }
+        $domain = "{$tmp[$cnt - 2]}.{$tmp[$cnt - 1]}";
+        return in_array($domain, $safeDomains);
     }
 }

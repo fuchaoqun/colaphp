@@ -220,4 +220,16 @@ class Response
 
         header("X-Accel-Redirect: {$path}");
     }
+
+    public static function autoCors($safeDomains = [])
+    {
+        if (empty($_SERVER['HTTP_ORIGIN'])) {
+            return false;
+        }
+
+        if (in_array('*', $safeDomains) || Request::isSafeUrl($_SERVER['HTTP_ORIGIN'], $safeDomains)) {
+            header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+            header('Access-Control-Allow-Credentials: true');
+        }
+    }
 }
