@@ -93,6 +93,37 @@ class View
         return $tmp . $suffix;
     }
 
+    public static function desensitizeEmail($email)
+    {
+        $max = 3;
+
+        $info = explode('@', $email, 2);
+        if ($max < strlen($info[0])) {
+            $prefix = substr($info[0], 0, $max);
+        } else {
+            $prefix = substr($info[0], 0, 1) ;
+        }
+
+        return $prefix . '***@' . $info[1];
+    }
+
+    public static function desensitizeName($name, $encoding = 'UTF-8', $suffix = '**')
+    {
+        $limit = 2;
+        return mb_strimwidth($name, 0, $limit, '', $encoding) . $suffix;
+    }
+
+    public static function desensitizePhoneNumber($phoneNumber)
+    {
+        $l = strlen($phoneNumber);
+        if ($l >= 8) {
+            return substr_replace($phoneNumber, '****', $l - 8, 4);
+        } else {
+            $m = intval(ceil($l/2));
+            return str_repeat('*', $m) . substr($phoneNumber, $m);
+        }
+    }
+
     /**
      * Dynamic set vars
      *
