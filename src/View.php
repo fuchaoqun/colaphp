@@ -93,10 +93,8 @@ class View
         return $tmp . $suffix;
     }
 
-    public static function desensitizeEmail($email)
+    public static function desensitizeEmail($email, $max = 3)
     {
-        $max = 3;
-
         $info = explode('@', $email, 2);
         if ($max < strlen($info[0])) {
             $prefix = substr($info[0], 0, $max);

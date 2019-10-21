@@ -146,8 +146,13 @@ class RedisAdapter extends AbstractAdapter
         return $this->_connection->flushAll();
     }
 
-    public function multi()
+    public function pipeline()
     {
-        return $this->_connection->multi();
+        return $this->_connection->multi(Redis::PIPELINE);
+    }
+
+    public function transaction()
+    {
+        return $this->_connection->multi(Redis::MULTI);
     }
 }

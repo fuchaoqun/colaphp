@@ -63,31 +63,40 @@ abstract class Model
 
     public function __construct() {}
 
+    public function loadFromDb($id, $forUpdate = false)
+    {
+        return $this->loadByColumnFromDb($id, $this->_pk, $forUpdate);
+    }
+
+    public function loadFromUpdate($id)
+    {
+        return $this->loadByColumnFromDb($id, $this->_pk, true);
+    }
+
     /**
      * Load data
      *
      * @param int $id
      * @param null $col
+     * @param bool $forUpdate
      * @return array
      */
-    public function load($id, $col = null)
+    public function loadByColumnFromDb($id, $col = null, $forUpdate = false)
     {
         is_null($col) && $col = $this->_pk;
 
         $sql = "select * from {$this->_table} where {$col} = ? limit 1";
+        if ($forUpdate) {
+            $sql .= ' for update';
+        }
 
         $result = $this->db->sql($sql, [$id]);
         return empty($result) ? null : $result[0];
     }
 
-    public function loadForUpdate($id, $col = null)
+    public function loadByColumnForUpdate($id, $col = null)
     {
-        is_null($col) && $col = $this->_pk;
-
-        $sql = "select * from {$this->_table} where {$col} = ? limit 1 for update";
-
-        $result = $this->db->sql($sql, [$id]);
-        return empty($result) ? null : $result[0];
+        return $this->loadByColumnFromDb($id, $col, true);
     }
 
     /**
@@ -95,10 +104,11 @@ abstract class Model
      *
      * @param int $ids
      * @param null $col
+     * @param bool $forUpdate
      * @param bool $associate
      * @return array
      */
-    public function loadMultiple($ids, $col = null, $associate = true)
+    public function loadMultipleByColumn($ids, $col = null, $forUpdate = false, $associate = true)
     {
         is_null($col) && $col = $this->_pk;
         if (empty($ids)) {
@@ -106,6 +116,9 @@ abstract class Model
         }
         $bind = implode(',', array_fill(0, count($ids), '?'));
         $sql = "select * from {$this->_table} where {$col} in ({$bind})";
+        if ($forUpdate) {
+            $sql .= ' for update';
+        }
 
         if (!$raw = $this->db->sql($sql, $ids)) {
             return [];
@@ -123,11 +136,6 @@ abstract class Model
         }
 
         return $result;
-    }
-
-    public function mload($ids, $col = null, $associate = true)
-    {
-        return $this->loadMultiple($ids, $col, $associate);
     }
 
     /**
@@ -174,11 +182,6 @@ abstract class Model
         return $this->db->insertMultiple($this->_table, $rows);
     }
 
-    public function minsert($rows)
-    {
-        return $this->insertMultiple($rows);
-    }
-
     public function upsert($data)
     {
 
@@ -188,11 +191,6 @@ abstract class Model
     public function upsertMultiple($rows)
     {
         return $this->db->upsertMultiple($this->_table, $rows);
-    }
-
-    public function mupsert($rows)
-    {
-        return $this->upsertMultiple($rows);
     }
 
     /**
@@ -209,11 +207,6 @@ abstract class Model
     public function replaceMultiple($rows)
     {
         return $this->db->replaceMultiple($this->_table, $rows);
-    }
-
-    public function mreplace($rows)
-    {
-        return $this->replaceMultiple($rows);
     }
 
     /**
@@ -239,11 +232,6 @@ abstract class Model
         }
 
         return true;
-    }
-
-    public function mupdate($rows)
-    {
-        return $this->updateMultiple($rows);
     }
 
     /**
