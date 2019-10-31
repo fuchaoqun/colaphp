@@ -108,7 +108,7 @@ abstract class Model
      * @param bool $associate
      * @return array
      */
-    public function loadMultipleByColumn($ids, $col = null, $forUpdate = false, $associate = true)
+    public function loadMultipleByColumnFromDb($ids, $col = null, $forUpdate = false, $associate = true)
     {
         is_null($col) && $col = $this->_pk;
         if (empty($ids)) {
@@ -358,8 +358,7 @@ abstract class Model
         $validator = new Validation\Validator($rules, $ignoreNotExists);
         $validator->check($data, $ignoreNotExists);
 
-        foreach ($this->_uniqueColumns as $key => $rule)
-        {
+        foreach ($this->_uniqueColumns as $key => $rule) {
             if ((!isset($data[$key])) || is_null($data[$key])) continue;
             if (!$this->isUnique($key, $data[$key])) {
                 throw new ValidationException([$key => $validator->getMessage($rule)]);

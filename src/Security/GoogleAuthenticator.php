@@ -92,7 +92,7 @@ class GoogleAuthenticator
      */
     public static function genSecret($limit = 16)
     {
-        return substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'), 0, $limit);
+        return substr(str_shuffle('ABCDEFGHJKLMNOPQRSTUVWXYZ234567'), 0, $limit);
     }
 
     /**
