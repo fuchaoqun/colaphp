@@ -2,6 +2,7 @@
 
 namespace Cola\Validation;
 
+use Cola\Dto\RestError;
 use Cola\Exception\VisibleException;
 
 class ValidationException extends VisibleException
@@ -20,5 +21,11 @@ class ValidationException extends VisibleException
     public function getErrors()
     {
         return $this->_errors;
+    }
+
+    public function display()
+    {
+        $re = new RestError($this->getCode(), $this->getErrors());
+        $re->display();
     }
 }
