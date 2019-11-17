@@ -11,8 +11,8 @@ class Translator
 {
     protected $_config = [
         'addonLocales' => ["en_US"],
-        'queryName'    => '_lang',
-        'cookieName'   => '_lang'
+        'queryName'    => 'lang',
+        'cookieName'   => 'lang'
     ];
 
     public function __construct($config = [])
