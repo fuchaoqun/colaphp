@@ -10,6 +10,7 @@ use function file_exists;
 class Translator
 {
     protected $_config = [
+        'availableLocales' => null,
         'addonLocales' => ["en_US"],
         'queryName'    => 'lang',
         'cookieName'   => 'lang'
@@ -27,8 +28,27 @@ class Translator
             $config['messages'] = new Config($config['messages']);
         }
 
+        $this->_config = $config + $this->_config;
+
+        $locales = $this->getLocalesFromRequest($this->_config['queryName'], $this->_config['cookieName']);
+        foreach ($this->_config['addonLocales'] as $addonLocale) {
+            if (!in_array($addonLocale, $locales)) {
+                $locales[] = $addonLocale;
+            }
+        }
+
+        if (!empty($this->_config['availableLocales'])) {
+            $niceLocales = [];
+            foreach ($locales as $locale) {
+                if (in_array($locale, $this->_config['availableLocales'])) {
+                    $niceLocales[] = $locale;
+                }
+            }
+            $locales = $niceLocales;
+        }
+
         $this->_config = $config + $this->_config + [
-            'locales' => $this->getLocalesFromRequest($this->_config['queryName'], $this->_config['cookieName'])
+            'locales' => $locales
         ];
     }
 
@@ -45,7 +65,7 @@ class Translator
         return $translator;
     }
 
-    public static function getLocalesFromRequest($queryName = '_lang', $cookieName = '_lang')
+    public static function getLocalesFromRequest($queryName = 'lang', $cookieName = 'lang')
     {
         if (!empty($_GET[$queryName])) {
             return explode(',', $_GET[$queryName]);
@@ -68,14 +88,15 @@ class Translator
         return $matches[0];
     }
 
+    public function getLocales()
+    {
+        return $this->_config['locales'];
+    }
+
     public function message($key, $vars = [], $locales = null)
     {
         if (null == $locales) {
             $locales = $this->_config['locales'];
-        }
-
-        foreach ($this->_config['addonLocales'] as $locale) {
-            $locales[] = $locale;
         }
 
         $messages = $this->_config['messages'];

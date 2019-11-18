@@ -275,14 +275,16 @@ class Request
      */
     public static function getCurrentUrl()
     {
-        $url = 'http';
+        $schema = ('on' == self::server('HTTPS')) ? 'https' : 'http';
 
-        if ('on' == self::server('HTTPS')) $url .= 's';
-
-        $url .= "://" . self::server('HTTP_HOST');
+        $url = "{$schema}://" . self::server('HTTP_HOST');
 
         $port = self::server('SERVER_PORT');
-        if (80 != $port) $url .= ":{$port}";
+
+        if (('http' == $schema && 80 != $port)
+            || ('https' == $schema && 443 != $port)) {
+            $url .= ":{$port}";
+        }
 
         return $url . self::server('REQUEST_URI');
     }
