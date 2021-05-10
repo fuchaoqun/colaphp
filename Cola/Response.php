@@ -71,7 +71,7 @@ class Cola_Response
     public static function status($code, $text = null)
     {
         $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
-        $text = (null === $text) ? self::$statusTexts[$code] : $text;
+        $text = (null === $text) ? self::$status[$code] : $text;
         $status = "$protocol $code $text";
         header($status);
     }
