@@ -276,7 +276,7 @@ class Cola
     {
         $prefix = trim($prefix, '\\') . '\\';
         $base = rtrim($base, DIRECTORY_SEPARATOR);
-        $key = $key;
+        $key = '_psr4.' . $prefix;
         self::setConfig($key, $base);
     }
 
